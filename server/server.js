@@ -1,27 +1,52 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 
-dotenv.config();
+import sequelize from "./config/database.js";
+import HealthCheck from "./models/HealthCheck.js";
 
 const app = express();
 
 const PORT = process.env.PORT || 5000;
-const APP_NAME = process.env.APP_NAME || "NEXUS DevOps Demo";
+const APP_NAME = process.env.APP_NAME || "XS DevOps Demo";
 const NODE_ENV = process.env.NODE_ENV || "development";
 
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    app: APP_NAME,
-    environment: NODE_ENV,
-    message: "Hello from Express backend!",
-  });
+app.get("/api/health", async (req, res) => {
+  try {
+    await sequelize.authenticate();
+
+    const healthCheck = await HealthCheck.create({
+      message: "Health check successful",
+    });
+
+    res.json({
+      status: "ok",
+      app: APP_NAME,
+      environment: NODE_ENV,
+      database: "connected",
+      message: healthCheck.message,
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+
+    res.status(500).json({
+      status: "error",
+      database: "disconnected",
+      message: "Database connection failed",
+    });
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`${APP_NAME} running on port ${PORT}`);
+app.listen(PORT, async () => {
+  try {
+    await sequelize.authenticate();
+
+    console.log("Database connected successfully");
+    console.log(`${APP_NAME} running on port ${PORT}`);
+  } catch (error) {
+    console.error("Unable to connect to database:", error);
+  }
 });
