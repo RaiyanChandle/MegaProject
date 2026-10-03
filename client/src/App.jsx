@@ -20,7 +20,7 @@ function App() {
 
   return (
     <div>
-      <h1>NEXUS DevOps Demo</h1>
+      <h1>NEXUS DevOps Staging</h1>
 
       <p>React Frontend</p>
 
