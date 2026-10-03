@@ -1,0 +1,36 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    name: Deploy to Oracle Staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Oracle
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /var/www/MegaProject
+
+            git fetch origin
+            git checkout staging
+            git reset --hard origin/staging
+
+            cd server
+            npm ci
+
+            cd ../client
+            npm ci
+            npm run build
+
+            pm2 restart xs-staging-api
+
+            pm2 save
