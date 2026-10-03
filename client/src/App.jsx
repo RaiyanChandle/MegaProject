@@ -29,6 +29,7 @@ function App() {
       </button>
 
       <p>{message}</p>
+      <sub>copyright 2026 Nexus School Management System</sub>
     </div>
   );
 }
