@@ -22,14 +22,17 @@ function App() {
     <div>
       <h1>NEXUS DevOps Staging</h1>
 
-      <p>React Frontend</p>
+      <p className="text-red-500">React Frontend</p>
 
-      <button onClick={checkBackend}>
+      <button
+        className="mt-5 px-6 py-3 rounded-lg bg-slate-600 text-white font-medium cursor-pointer"
+        onClick={checkBackend}
+      >
         Check Backend
       </button>
 
       <p>{message}</p>
-      <sub>copyright 2026 Nexus School Management System</sub>
+      <sub className="text-slate-500">copyright 2026 Nexus School Management System</sub>
     </div>
   );
 }
