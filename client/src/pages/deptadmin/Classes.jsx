@@ -7,7 +7,7 @@ import Modal from '../../components/ui/Modal';
 import Field from '../../components/ui/Field';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
-import { Plus, Eye, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Eye, Edit2, Trash2, Copy } from 'lucide-react';
 
 export default function Classes() {
   const navigate = useNavigate();
@@ -75,6 +75,30 @@ export default function Classes() {
     }
   };
 
+  const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
+  const [cloneBatchYear, setCloneBatchYear] = useState('');
+
+  const openCloneModal = (cls) => {
+    setSelectedClass(cls);
+    setCloneBatchYear(''); // Reset
+    setIsCloneModalOpen(true);
+  };
+
+  const handleCloneSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await apiClient.post(`/classes/${selectedClass.id}/clone`, { newBatchYear: cloneBatchYear });
+      toast.success('Class cloned successfully! Check your new curriculum instance.');
+      setIsCloneModalOpen(false);
+      fetchClasses();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const columns = [
     { title: 'Class Name', key: 'name', className: 'font-semibold' },
     { title: 'Batch Year', key: 'batchYear' },
@@ -95,6 +119,14 @@ export default function Classes() {
             title="View Details"
           >
             <Eye size={16} />
+          </button>
+          <div className="h-4 w-px bg-border"></div>
+          <button 
+            onClick={() => openCloneModal(row)}
+            className="text-text-500 hover:text-ink-700"
+            title="Clone to new Batch Year"
+          >
+            <Copy size={16} />
           </button>
           <button 
             onClick={() => openModal(row)}
@@ -178,6 +210,38 @@ export default function Classes() {
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? 'Saving...' : (selectedClass ? 'Save Changes' : 'Create Class')}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal 
+        isOpen={isCloneModalOpen} 
+        onClose={() => setIsCloneModalOpen(false)} 
+        title="Clone Class to Next Batch"
+      >
+        <form onSubmit={handleCloneSubmit} className="space-y-4">
+          <p className="text-sm text-text-500 mb-2">
+            Cloning <span className="font-semibold text-text-900">{selectedClass?.name} (Batch: {selectedClass?.batchYear}, Sem: {selectedClass?.semesterNumber})</span>.
+            This will copy all divisions, subjects, marking schemes, and elective slots into a new batch year.
+          </p>
+
+          <Field label="New Batch Year">
+            <input 
+              type="text"
+              value={cloneBatchYear}
+              onChange={(e) => setCloneBatchYear(e.target.value)}
+              placeholder="e.g. 2025-2029"
+              required
+            />
+          </Field>
+
+          <div className="pt-4 flex justify-end gap-3">
+            <Button type="button" variant="secondary" onClick={() => setIsCloneModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Cloning...' : 'Clone Class'}
             </Button>
           </div>
         </form>
