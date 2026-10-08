@@ -9,6 +9,7 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
 import { Plus, ArrowLeft, Edit2, Trash2, BookOpen } from 'lucide-react';
+import ElectiveSlotsManager from './components/ElectiveSlotsManager';
 
 export default function ClassDetails() {
   const { id } = useParams();
@@ -243,6 +244,9 @@ export default function ClassDetails() {
         </div>
 
       </div>
+
+      {/* ELECTIVE SLOTS MANAGER */}
+      <ElectiveSlotsManager classId={id} />
 
       {/* Division Modal */}
       <Modal isOpen={isDivModalOpen} onClose={() => setIsDivModalOpen(false)} title={selectedDivision ? 'Edit Division' : 'Create New Division'}>

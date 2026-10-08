@@ -1,4 +1,4 @@
-import { Subject, Class } from '../models/index.js';
+import { Subject, Class, Department } from '../models/index.js';
 
 export const createSubject = async (req, res) => {
   const { classId, name, code, subjectType, credits } = req.body;
@@ -119,6 +119,23 @@ export const deleteSubject = async (req, res) => {
     res.json({ message: 'Subject deleted successfully' });
   } catch (error) {
     console.error('Delete subject error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getGlobalElectives = async (req, res) => {
+  try {
+    const subjects = await Subject.findAll({
+      where: { subjectType: ['PROGRAM_ELECTIVE', 'OPEN_ELECTIVE'] },
+      include: [
+        { model: Class, as: 'class', attributes: ['name', 'batchYear', 'semesterNumber'] },
+        { model: Department, as: 'department', attributes: ['name'] }
+      ],
+      order: [['code', 'ASC']]
+    });
+    res.json(subjects);
+  } catch (error) {
+    console.error('Get global electives error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

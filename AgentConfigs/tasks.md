@@ -78,7 +78,7 @@ widening to more modules.
 - [x] **T5.2** Create `Division`s under a class.--done
 - [x] **T5.3** Create `Subject`s attached to a class (unique code).--done
 - [x] **T5.4** Marking-scheme editor: add `AssessmentComponent`s per subject; validate the sum equals the intended total; block edits once marks exist (rules 19, 24).--done
-- [ ] **T5.5** Elective slots + options: type PE/OE, cross-department offering, optional `maxCapacity`.
+- [x] **T5.5** Elective slots + options: type PE/OE, cross-department offering, optional `maxCapacity`.--done
 - [ ] **T5.6** "Clone class to next batch": copies subjects, components and slots into a new `batchYear`, never touching the old class (rules 3).
 
 ---
