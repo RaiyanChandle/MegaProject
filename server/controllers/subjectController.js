@@ -122,3 +122,23 @@ export const deleteSubject = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getSubjectById = async (req, res) => {
+  const { id } = req.params;
+  const departmentId = req.user.departmentId;
+
+  try {
+    const targetSubject = await Subject.findByPk(id, {
+      include: [{ model: Class, as: 'class', attributes: ['name', 'batchYear', 'semesterNumber', 'departmentId'] }]
+    });
+
+    if (!targetSubject || targetSubject.class.departmentId !== departmentId) {
+      return res.status(404).json({ error: 'Subject not found in your department' });
+    }
+
+    res.json(targetSubject);
+  } catch (error) {
+    console.error('Get subject error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

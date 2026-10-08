@@ -8,7 +8,7 @@ import Field from '../../components/ui/Field';
 import StatusBadge from '../../components/ui/StatusBadge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
-import { Plus, ArrowLeft, Edit2, Trash2 } from 'lucide-react';
+import { Plus, ArrowLeft, Edit2, Trash2, BookOpen } from 'lucide-react';
 
 export default function ClassDetails() {
   const { id } = useParams();
@@ -153,7 +153,16 @@ export default function ClassDetails() {
   ];
 
   const subColumns = [
-    { title: 'Subject Code', key: 'code', className: 'font-mono text-sm' },
+    { 
+      title: 'Subject Code', 
+      key: 'code', 
+      className: 'font-mono text-sm',
+      render: (val, row) => (
+        <Link to={`/deptadmin/subjects/${row.id}`} className="text-ink-700 hover:underline font-medium">
+          {val}
+        </Link>
+      )
+    },
     { title: 'Name', key: 'name', className: 'font-semibold' },
     { 
       title: 'Type', 
@@ -165,7 +174,15 @@ export default function ClassDetails() {
       title: 'Actions',
       key: 'actions',
       render: (_, row) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <Link 
+            to={`/deptadmin/subjects/${row.id}`} 
+            className="inline-flex items-center gap-1 text-ink-700 hover:text-ink-900 font-medium text-sm"
+            title="Manage Marking Scheme"
+          >
+            <BookOpen size={16} /> Manage Scheme
+          </Link>
+          <div className="h-4 w-px bg-border"></div>
           <button onClick={() => openSubModal(row)} className="text-text-500 hover:text-ink-700" title="Edit Subject">
             <Edit2 size={16} />
           </button>

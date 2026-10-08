@@ -26,7 +26,16 @@ export default function Subjects() {
   }, []);
 
   const columns = [
-    { title: 'Subject Code', key: 'code', className: 'font-mono text-sm' },
+    { 
+      title: 'Subject Code', 
+      key: 'code', 
+      className: 'font-mono text-sm',
+      render: (val, row) => (
+        <Link to={`/deptadmin/subjects/${row.id}`} className="text-ink-700 hover:underline font-medium">
+          {val}
+        </Link>
+      )
+    },
     { title: 'Name', key: 'name', className: 'font-semibold' },
     { 
       title: 'Class', 
@@ -42,7 +51,20 @@ export default function Subjects() {
       key: 'subjectType',
       render: (val) => <StatusBadge status={val} />
     },
-    { title: 'Credits', key: 'credits' }
+    { title: 'Credits', key: 'credits' },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, row) => (
+        <Link 
+          to={`/deptadmin/subjects/${row.id}`} 
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-ink-100 text-ink-700 hover:bg-ink-200 rounded-md text-sm font-medium transition-colors"
+        >
+          <BookOpen size={14} />
+          Manage Scheme
+        </Link>
+      )
+    }
   ];
 
   return (

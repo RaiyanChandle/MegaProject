@@ -23,6 +23,7 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import classRoutes from './routes/classRoutes.js';
 import divisionRoutes from './routes/divisionRoutes.js';
 import subjectRoutes from './routes/subjectRoutes.js';
+import assessmentComponentRoutes from './routes/assessmentComponentRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -33,6 +34,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/divisions', divisionRoutes);
 app.use('/api/subjects', subjectRoutes);
+app.use('/api/assessment-components', assessmentComponentRoutes);
 
 app.get("/api/health", async (req, res) => {
   try {
