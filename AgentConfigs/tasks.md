@@ -68,6 +68,7 @@ widening to more modules.
 - [x] **T4.4** Academic terms CRUD; exactly one `isCurrent`.--done
   Done when: setting a term current unsets the previous one in the same transaction.--done
 - [x] **T4.5** Super Admin Settings & Topbar (change password, UI scaffolding).--done
+- [x] **T4.6** Super Admin Dashboard analytics & Sign Out functionality.--done
 
 ---
 
