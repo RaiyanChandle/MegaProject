@@ -10,6 +10,7 @@ export default (sequelize) => {
   password: { type: DataTypes.STRING, allowNull: false },
   departmentId: { type: DataTypes.UUID, allowNull: false },
   createdById: { type: DataTypes.UUID, allowNull: false }, // -> SuperAdmin
+  isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
 }, { tableName: 'department_admins', timestamps: true });
   return DepartmentAdmin;
 };
