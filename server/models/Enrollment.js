@@ -13,7 +13,7 @@ export default (sequelize) => {
 }, {
   tableName: 'enrollments',
   timestamps: true,
-  indexes: [{ unique: true, fields: ['studentId', 'subjectId', 'academicTermId', 'attemptNumber'] }],
+  indexes: [{ unique: true, name: 'enroll_student_sub_term_attempt_idx', fields: ['studentId', 'subjectId', 'academicTermId', 'attemptNumber'] }],
 });
   return Enrollment;
 };
