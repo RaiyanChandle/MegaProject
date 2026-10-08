@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { BookOpen } from 'lucide-react';
 
+import { apiClient } from '../../api/client';
+
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -15,19 +17,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Assuming server runs on 5000, in a real app this uses an env var
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password })
-      });
-      
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-      
+      const data = await apiClient.post('/auth/login', { identifier, password });
       login(data.user, data.token);
     } catch (err) {
       setError(err.message);
