@@ -1,10 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { navigationConfig } from '../../config/navigation.js';
 import { LogOut } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar({ role = 'SUPER_ADMIN' }) {
   const location = useLocation();
   const navItems = navigationConfig[role] || [];
+  const { logout } = useAuth();
 
   return (
     <div className="w-64 bg-ink-900 text-white flex flex-col h-full shrink-0">
@@ -34,7 +36,10 @@ export default function Sidebar({ role = 'SUPER_ADMIN' }) {
       </nav>
 
       <div className="p-4 border-t border-ink-700">
-        <button className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium text-text-500 hover:bg-ink-700 hover:text-white transition-colors">
+        <button 
+          onClick={logout}
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium text-text-500 hover:bg-ink-700 hover:text-white transition-colors"
+        >
           <LogOut size={18} />
           Sign Out
         </button>
