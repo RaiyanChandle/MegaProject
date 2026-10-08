@@ -62,11 +62,11 @@ widening to more modules.
 
 ## Phase 4 — Org setup (Super Admin) · flows 1
 
-- [ ] **T4.1** Departments CRUD.
-- [ ] **T4.2** Create/list/deactivate Department Admins (gets `DAKIT` id).
-- [ ] **T4.3** Create/list Exam Staff (gets `EXKIT` id).
-- [ ] **T4.4** Academic terms CRUD; exactly one `isCurrent`.
-  Done when: setting a term current unsets the previous one in the same transaction.
+- [x] **T4.1** Departments CRUD.--done
+- [x] **T4.2** Create/list/deactivate Department Admins (gets `DAKIT` id).--done
+- [x] **T4.3** Create/list Exam Staff (gets `EXKIT` id).--done
+- [x] **T4.4** Academic terms CRUD; exactly one `isCurrent`.--done
+  Done when: setting a term current unsets the previous one in the same transaction.--done
 
 ---
 

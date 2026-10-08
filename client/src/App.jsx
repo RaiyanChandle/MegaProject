@@ -4,6 +4,11 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import SuperAdminDashboard from './pages/superadmin/Dashboard';
+import Departments from './pages/superadmin/Departments';
+import DeptAdmins from './pages/superadmin/DeptAdmins';
+import ExamStaff from './pages/superadmin/ExamStaff';
+import AcademicTerms from './pages/superadmin/AcademicTerms';
+import Settings from './pages/superadmin/Settings';
 
 function App() {
   return (
@@ -20,7 +25,11 @@ function App() {
             element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} title="Super Admin Dashboard" />}
           >
             <Route index element={<SuperAdminDashboard />} />
-            {/* Additional superadmin routes go here */}
+            <Route path="departments" element={<Departments />} />
+            <Route path="admins" element={<DeptAdmins />} />
+            <Route path="exam-staff" element={<ExamStaff />} />
+            <Route path="academic-terms" element={<AcademicTerms />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
 
           {/* Catch-all */}

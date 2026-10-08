@@ -9,16 +9,16 @@ export function AuthProvider({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Attempt to load session from localStorage on mount
-    const token = localStorage.getItem('nexus_token');
-    const savedUser = localStorage.getItem('nexus_user');
+    // Attempt to load session from sessionStorage on mount
+    const token = sessionStorage.getItem('nexus_token');
+    const savedUser = sessionStorage.getItem('nexus_user');
     
     if (token && savedUser) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
-        localStorage.removeItem('nexus_token');
-        localStorage.removeItem('nexus_user');
+        sessionStorage.removeItem('nexus_token');
+        sessionStorage.removeItem('nexus_user');
       }
     }
     setLoading(false);
@@ -26,8 +26,8 @@ export function AuthProvider({ children }) {
 
   const login = (userData, token) => {
     setUser(userData);
-    localStorage.setItem('nexus_token', token);
-    localStorage.setItem('nexus_user', JSON.stringify(userData));
+    sessionStorage.setItem('nexus_token', token);
+    sessionStorage.setItem('nexus_user', JSON.stringify(userData));
     
     // Route based on role
     const routes = {
@@ -44,8 +44,8 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('nexus_token');
-    localStorage.removeItem('nexus_user');
+    sessionStorage.removeItem('nexus_token');
+    sessionStorage.removeItem('nexus_user');
     navigate('/login');
   };
 

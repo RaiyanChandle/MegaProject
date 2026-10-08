@@ -15,7 +15,16 @@ app.use(cors());
 app.use(express.json());
 
 import authRoutes from './routes/authRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
+import deptAdminRoutes from './routes/deptAdminRoutes.js';
+import examStaffRoutes from './routes/examStaffRoutes.js';
+import academicTermRoutes from './routes/academicTermRoutes.js';
+
 app.use('/api/auth', authRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/dept-admins', deptAdminRoutes);
+app.use('/api/exam-staff', examStaffRoutes);
+app.use('/api/academic-terms', academicTermRoutes);
 
 app.get("/api/health", async (req, res) => {
   try {

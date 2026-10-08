@@ -4,8 +4,9 @@ export const navigationConfig = {
   SUPER_ADMIN: [
     { name: 'Dashboard', href: '/superadmin', icon: LayoutDashboard },
     { name: 'Departments', href: '/superadmin/departments', icon: Settings },
-    { name: 'Admins', href: '/superadmin/admins', icon: Users },
-    { name: 'Academic Terms', href: '/superadmin/terms', icon: Calendar },
+    { name: 'Dept Admins', href: '/superadmin/admins', icon: Users },
+    { name: 'Exam Staff', href: '/superadmin/exam-staff', icon: FileCheck },
+    { name: 'Academic Terms', href: '/superadmin/academic-terms', icon: Calendar },
   ],
   DEPARTMENT_ADMIN: [
     { name: 'Dashboard', href: '/deptadmin', icon: LayoutDashboard },
