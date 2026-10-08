@@ -74,12 +74,12 @@ widening to more modules.
 
 ## Phase 5 — Curriculum (Department Admin) · flows 2, 10
 
-- [ ] **T5.1** Create `Class` (department, batchYear, semester); friendly error on the unique clash.
-- [ ] **T5.2** Create `Division`s under a class.
-- [ ] **T5.3** Create `Subject`s attached to a class (unique code).
-- [ ] **T5.4** Marking-scheme editor: add `AssessmentComponent`s per subject; validate the sum equals the intended total; block edits once marks exist (rules 19, 24).
-- [ ] **T5.5** Elective slots + options: type PE/OE, cross-department offering, optional `maxCapacity`.
-- [ ] **T5.6** "Clone class to next batch": copies subjects, components and slots into a new `batchYear`, never touching the old class (rules 3).
+- [x] **T5.1** Create `Class` (department, batchYear, semester); friendly error on the unique clash.--done
+- [x] **T5.2** Create `Division`s under a class.--done
+- [x] **T5.3** Create `Subject`s attached to a class (unique code).--done
+- [x] **T5.4** Marking-scheme editor: add `AssessmentComponent`s per subject; validate the sum equals the intended total; block edits once marks exist (rules 19, 24).--done
+- [x] **T5.5** Elective slots + options: type PE/OE, cross-department offering, optional `maxCapacity`.--done
+- [x] **T5.6** "Clone class to next batch": copies subjects, components and slots into a new `batchYear`, never touching the old class (rules 3).--done
 
 ---
 
