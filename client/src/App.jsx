@@ -12,7 +12,6 @@ import Settings from './pages/superadmin/Settings';
 import Classes from './pages/deptadmin/Classes';
 import ClassDetails from './pages/deptadmin/ClassDetails';
 import Subjects from './pages/deptadmin/Subjects';
-import SubjectDetails from './pages/deptadmin/SubjectDetails';
 
 function App() {
   return (
@@ -24,8 +23,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
 
           {/* Protected Routes: Super Admin */}
-          <Route 
-            path="/superadmin" 
+          <Route
+            path="/superadmin"
             element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} title="Super Admin Dashboard" />}
           >
             <Route index element={<SuperAdminDashboard />} />
@@ -37,15 +36,14 @@ function App() {
           </Route>
 
           {/* Protected Routes: Department Admin */}
-          <Route 
-            path="/deptadmin" 
+          <Route
+            path="/deptadmin"
             element={<ProtectedRoute allowedRoles={['DEPARTMENT_ADMIN']} title="Department Dashboard" />}
           >
             <Route index element={<div className="p-6 text-text-900">Department Dashboard (Coming Soon)</div>} />
             <Route path="classes" element={<Classes />} />
             <Route path="classes/:id" element={<ClassDetails />} />
             <Route path="subjects" element={<Subjects />} />
-            <Route path="subjects/:id" element={<SubjectDetails />} />
           </Route>
 
           {/* Catch-all */}

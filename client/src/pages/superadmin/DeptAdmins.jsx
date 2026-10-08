@@ -6,7 +6,7 @@ import Modal from '../../components/ui/Modal';
 import Field from '../../components/ui/Field';
 import StatusBadge from '../../components/ui/StatusBadge';
 import { toast } from '../../components/ui/Toast';
-import { Plus, Power, PowerOff } from 'lucide-react';
+import { Plus, Power, PowerOff, Eye, EyeOff } from 'lucide-react';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function DeptAdmins() {
@@ -20,6 +20,7 @@ export default function DeptAdmins() {
   const [newStatus, setNewStatus] = useState(false);
   
   const [formData, setFormData] = useState({ name: '', email: '', departmentId: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchData = async () => {
@@ -153,12 +154,22 @@ export default function DeptAdmins() {
           </Field>
 
           <Field label="Temporary Password">
-            <input 
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-            />
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-400 hover:text-ink-700 focus:outline-none"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </Field>
 
           <div className="pt-4 flex justify-end gap-3">
