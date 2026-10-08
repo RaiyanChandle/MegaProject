@@ -17,10 +17,10 @@ export default function ElectiveSlotsManager({ classId }) {
   const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);
   const [isOptionModalOpen, setIsOptionModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  
+
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [slotFormData, setSlotFormData] = useState({ slotName: '', slotType: 'PROGRAM_ELECTIVE', credits: 3 });
-  
+
   const [optionFormData, setOptionFormData] = useState({ subjectId: '', maxCapacity: '' });
 
   const fetchSlots = async () => {
@@ -100,7 +100,7 @@ export default function ElectiveSlotsManager({ classId }) {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await apiClient.post('/electives/options', { 
+      await apiClient.post('/electives/options', {
         slotId: selectedSlot.id,
         subjectId: optionFormData.subjectId,
         maxCapacity: optionFormData.maxCapacity ? parseInt(optionFormData.maxCapacity) : null
@@ -165,7 +165,7 @@ export default function ElectiveSlotsManager({ classId }) {
               <div className="bg-surface-0 rounded-md p-3 border border-border">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-text-500 uppercase tracking-wider">Options</span>
-                  <button 
+                  <button
                     onClick={() => openOptionModal(slot)}
                     className="text-xs font-medium text-ink-700 hover:text-ink-900 flex items-center gap-1"
                   >
@@ -187,7 +187,7 @@ export default function ElectiveSlotsManager({ classId }) {
                           Offered by: {opt.offeredByDepartment?.name} | Capacity: {opt.maxCapacity || 'Unlimited'}
                         </span>
                       </div>
-                      <button 
+                      <button
                         onClick={() => handleRemoveOption(opt.id)}
                         className="p-1.5 text-text-400 hover:text-danger hover:bg-danger/10 rounded-md transition-colors"
                         title="Remove Option"
@@ -207,7 +207,7 @@ export default function ElectiveSlotsManager({ classId }) {
       <Modal isOpen={isSlotModalOpen} onClose={() => setIsSlotModalOpen(false)} title={selectedSlot ? 'Edit Slot' : 'Create New Slot'}>
         <form onSubmit={handleSlotSubmit} className="space-y-4">
           <Field label="Slot Name">
-            <input 
+            <input
               type="text"
               value={slotFormData.slotName}
               onChange={(e) => setSlotFormData({ ...slotFormData, slotName: e.target.value })}
@@ -217,8 +217,8 @@ export default function ElectiveSlotsManager({ classId }) {
           </Field>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Slot Type">
-              <select 
-                value={slotFormData.slotType} 
+              <select
+                value={slotFormData.slotType}
                 onChange={(e) => setSlotFormData({ ...slotFormData, slotType: e.target.value })}
                 className="w-full rounded-md border border-border px-3 py-2 text-sm bg-surface-0"
               >
@@ -227,7 +227,7 @@ export default function ElectiveSlotsManager({ classId }) {
               </select>
             </Field>
             <Field label="Credits">
-              <input 
+              <input
                 type="number"
                 step="0.5"
                 min="1"
@@ -251,28 +251,24 @@ export default function ElectiveSlotsManager({ classId }) {
             Adding option to <span className="font-semibold text-text-900">{selectedSlot?.slotName}</span>
           </p>
           <Field label="Subject">
-            <select 
-              value={optionFormData.subjectId} 
+            <select
+              value={optionFormData.subjectId}
               onChange={(e) => setOptionFormData({ ...optionFormData, subjectId: e.target.value })}
               className="w-full rounded-md border border-border px-3 py-2 text-sm bg-surface-0"
               required
             >
               <option value="">-- Select Subject --</option>
               {globalElectives
-                .filter(s => 
-                  s.subjectType === selectedSlot?.slotType && 
-                  s.credits === selectedSlot?.credits &&
-                  !selectedSlot?.options?.some(opt => opt.subjectId === s.id)
-                )
+                .filter(s => s.subjectType === selectedSlot?.slotType && s.credits === selectedSlot?.credits)
                 .map(sub => (
                   <option key={sub.id} value={sub.id}>
                     {sub.code} - {sub.name} (Dept: {sub.department?.name})
                   </option>
-              ))}
+                ))}
             </select>
           </Field>
           <Field label="Max Capacity (Optional)">
-            <input 
+            <input
               type="number"
               min="1"
               value={optionFormData.maxCapacity}
@@ -287,7 +283,7 @@ export default function ElectiveSlotsManager({ classId }) {
         </form>
       </Modal>
 
-      <ConfirmDialog 
+      <ConfirmDialog
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleSlotDelete}
