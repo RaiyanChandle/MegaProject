@@ -14,6 +14,9 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 app.use(cors());
 app.use(express.json());
 
+import authRoutes from './routes/authRoutes.js';
+app.use('/api/auth', authRoutes);
+
 app.get("/api/health", async (req, res) => {
   try {
     await sequelize.authenticate();

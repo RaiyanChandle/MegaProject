@@ -1,39 +1,33 @@
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/auth/LoginPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import SuperAdminDashboard from './pages/superadmin/Dashboard';
 
 function App() {
-  const [message, setMessage] = useState("");
-
-  const checkBackend = async () => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/health`
-      );
-
-      const data = await response.json();
-
-      setMessage(data.message);
-    } catch (error) {
-      console.error(error);
-      setMessage("Backend connection failed");
-    }
-  };
-
   return (
-    <div>
-      <h1>NEXUS DevOps Staging</h1>
+    <Router>
+      <AuthProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
 
-      <p className="text-red-500">React Frontend</p>
+          {/* Protected Routes: Super Admin */}
+          <Route 
+            path="/superadmin" 
+            element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} title="Super Admin Dashboard" />}
+          >
+            <Route index element={<SuperAdminDashboard />} />
+            {/* Additional superadmin routes go here */}
+          </Route>
 
-      <button
-        className="mt-5 px-6 py-3 rounded-lg bg-slate-600 text-white font-medium cursor-pointer"
-        onClick={checkBackend}
-      >
-        Check Backend
-      </button>
-
-      <p>{message}</p>
-      <sub className="text-slate-500">copyright 2026 Nexus School Management System</sub>
-    </div>
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 

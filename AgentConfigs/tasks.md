@@ -12,49 +12,49 @@ widening to more modules.
 
 ## Phase 0 — Project setup
 
-- [ ] **T0.1** Create the repo with `/server` (Express) and `/client` (Vite + React).
-  Done when: each starts with one command; `.env.example` is committed.
-- [ ] **T0.2** Install server deps: `express sequelize pg pg-hstore bcrypt jsonwebtoken zod cors helmet dotenv`, dev: `sequelize-cli nodemon jest supertest`.
-  Done when: server boots and returns 200 on `/health`.
-- [ ] **T0.3** Add `/docs` with prd, rules, flows, design, models, tasks, plus a short `CLAUDE.md` pointing the agent to them.
-  Done when: an agent opening the repo is told to read `prd.md` first.
-- [ ] **T0.4** ESLint + Prettier, local Postgres database, git branch convention (one branch per task).
+- [x] **T0.1** Create the repo with `/server` (Express) and `/client` (Vite + React).
+  Done when: each starts with one command; `.env.example` is committed.--done
+- [x] **T0.2** Install server deps: `express sequelize pg pg-hstore bcrypt jsonwebtoken zod cors helmet dotenv`, dev: `sequelize-cli nodemon jest supertest`.
+  Done when: server boots and returns 200 on `/health`.--done
+- [x] **T0.3** Add `/docs` with prd, rules, flows, design, models, tasks, plus a short `CLAUDE.md` pointing the agent to them.
+  Done when: an agent opening the repo is told to read `prd.md` first.--done
+- [x] **T0.4** ESLint + Prettier, local Postgres database, git branch convention (one branch per task).--done
 
 ---
 
 ## Phase 1 — Database foundation
 
-- [ ] **T1.1** Put `nexus_models.js` at `server/src/models/index.js`; connect via `DATABASE_URL`.
-  Done when: `sequelize.authenticate()` succeeds.
-- [ ] **T1.2** Set up sequelize-cli and write the initial migration for every table, enum and unique index (dependency order).
-  Done when: `db:migrate` on an empty DB creates all tables and `db:migrate:undo:all` leaves it clean. (rules 34)
-- [ ] **T1.3** Seeders: one Super Admin (hashed password), `IdSequence` rows for `STKIT FCKIT DAKIT SAKIT EXKIT`, one current `AcademicTerm`.
-  Done when: seeding twice doesn't duplicate anything.
-- [ ] **T1.4** `generateInstituteIds(prefix, count, transaction)` util (flows 1a, rules 5).
-  Done when: a test running 50 concurrent calls yields zero duplicates, and a bulk call of 500 reserves one contiguous block.
-- [ ] **T1.5** Export enum value arrays from one shared constants file.
+- [] **T1.1** Put `nexus_models.js` at `server/src/models/index.js`; connect via `DATABASE_URL`.
+  Done when: `sequelize.authenticate()` succeeds.--done
+- [] **T1.2** Set up sequelize-cli and write the initial migration for every table, enum and unique index (dependency order).
+  Done when: `db:migrate` on an empty DB creates all tables and `db:migrate:undo:all` leaves it clean. (rules 34)--done
+- [] **T1.3** Seeders: one Super Admin (hashed password), `IdSequence` rows for `STKIT FCKIT DAKIT SAKIT EXKIT`, one current `AcademicTerm`.
+  Done when: seeding twice doesn't duplicate anything.--done
+- [x] **T1.4** `generateInstituteIds(prefix, count, transaction)` util (flows 1a, rules 5).
+  Done when: a test running 50 concurrent calls yields zero duplicates, and a bulk call of 500 reserves one contiguous block.--done
+- [x] **T1.5** Export enum value arrays from one shared constants file.--done
 
 ---
 
 ## Phase 2 — Auth & access control
 
-- [ ] **T2.1** Login: resolve the account type from the `instituteId` prefix (STKIT → Student, etc.); parents log in by email.
-  Done when: all six roles can log in; wrong password returns a generic error.
-- [ ] **T2.2** JWT issue/verify with payload `{ id, role, departmentId }`; hashed passwords; `password` never in responses (rules 6).
-- [ ] **T2.3** Middleware: `requireAuth`, `requireRole(...roles)`.
-- [ ] **T2.4** Scoping helpers: department scope, teacher → `SubjectAllocation`, parent → `ParentStudent`, student → self (rules 38, 39).
-- [ ] **T2.5** Change-password endpoint.
-- [ ] **T2.6** Auth tests: a student cannot call a teacher endpoint; Department Admin A cannot read department B.
+- [x] **T2.1** Login: resolve the account type from the `instituteId` prefix (STKIT → Student, etc.); parents log in by email.
+  Done when: all six roles can log in; wrong password returns a generic error.--done
+- [x] **T2.2** JWT issue/verify with payload `{ id, role, departmentId }`; hashed passwords; `password` never in responses (rules 6).--done
+- [x] **T2.3** Middleware: `requireAuth`, `requireRole(...roles)`.--done
+- [x] **T2.4** Scoping helpers: department scope, teacher → `SubjectAllocation`, parent → `ParentStudent`, student → self (rules 38, 39).--done
+- [x] **T2.5** Change-password endpoint.--done
+- [x] **T2.6** Auth tests: a student cannot call a teacher endpoint; Department Admin A cannot read department B.--done
 
 ---
 
 ## Phase 3 — Frontend foundation
 
-- [ ] **T3.1** Tailwind config from `design.md` §9; load IBM Plex Sans/Serif/Mono.
-- [ ] **T3.2** App shell: sidebar + top bar, role-aware nav config.
-- [ ] **T3.3** Auth context, login page, protected routes per role.
-- [ ] **T3.4** Shared components: Button variants, Field with error state, `StatusBadge` mapped to every enum, DataTable, EmptyState, Modal, ConfirmDialog, Toast.
-- [ ] **T3.5** API client with token handling and error mapping.
+- [x] **T3.1** Tailwind config from `design.md` §9; load IBM Plex Sans/Serif/Mono.--done
+- [x] **T3.2** App shell: sidebar + top bar, role-aware nav config.--done
+- [x] **T3.3** Auth context, login page, protected routes per role.--done
+- [x] **T3.4** Shared components: Button variants, Field with error state, `StatusBadge` mapped to every enum, DataTable, EmptyState, Modal, ConfirmDialog, Toast.--done
+- [x] **T3.5** API client with token handling and error mapping.--done
 
 **Milestone M0:** log in as the seeded Super Admin and see the empty shell, styled per `design.md`.
 
