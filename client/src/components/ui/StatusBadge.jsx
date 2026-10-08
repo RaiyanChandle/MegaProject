@@ -39,6 +39,11 @@ const statusMap = {
   INACTIVE: 'bg-neutral/10 text-neutral',
   ARCHIVED: 'bg-neutral/10 text-neutral',
   COMPLETED: 'bg-neutral/10 text-neutral', // Note: could be success, but neutral fits finished historical data sometimes.
+
+  // subjects
+  CORE: 'bg-info/10 text-info',
+  PROGRAM_ELECTIVE: 'bg-warning/10 text-warning',
+  OPEN_ELECTIVE: 'bg-success/10 text-success',
 };
 
 export default function StatusBadge({ status, className = '' }) {
