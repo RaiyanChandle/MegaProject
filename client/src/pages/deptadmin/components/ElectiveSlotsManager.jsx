@@ -259,10 +259,11 @@ export default function ElectiveSlotsManager({ classId }) {
             >
               <option value="">-- Select Subject --</option>
               {globalElectives
-                .filter(s => s.subjectType === selectedSlot?.slotType && s.credits === selectedSlot?.credits)
+                .filter(s => s.subjectType === selectedSlot?.slotType)
+                .filter(s => selectedSlot?.slotType === 'PROGRAM_ELECTIVE' ? s.classId === classId : true)
                 .map(sub => (
                   <option key={sub.id} value={sub.id}>
-                    {sub.code} - {sub.name} (Dept: {sub.department?.name})
+                    {sub.code} - {sub.name} (Credits: {sub.credits}, Class: {sub.class?.name})
                   </option>
                 ))}
             </select>
