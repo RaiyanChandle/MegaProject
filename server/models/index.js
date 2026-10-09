@@ -168,6 +168,8 @@ Subject.hasMany(SubjectAllocation, { foreignKey: 'subjectId', as: 'subjectAlloca
 SubjectAllocation.belongsTo(Subject, { foreignKey: 'subjectId', as: 'subject' });
 Class.hasMany(SubjectAllocation, { foreignKey: 'classId', as: 'subjectAllocations' });
 SubjectAllocation.belongsTo(Class, { foreignKey: 'classId', as: 'class' });
+Division.hasMany(SubjectAllocation, { foreignKey: 'divisionId', as: 'subjectAllocations' });
+SubjectAllocation.belongsTo(Division, { foreignKey: 'divisionId', as: 'division' });
 DepartmentAdmin.hasMany(SubjectAllocation, { foreignKey: 'allocatedById', as: 'subjectAllocations' });
 SubjectAllocation.belongsTo(DepartmentAdmin, { foreignKey: 'allocatedById', as: 'allocatedBy' });
 
@@ -186,6 +188,8 @@ Subject.hasMany(AttendanceSession, { foreignKey: 'subjectId', as: 'attendanceSes
 AttendanceSession.belongsTo(Subject, { foreignKey: 'subjectId', as: 'subject' });
 Class.hasMany(AttendanceSession, { foreignKey: 'classId', as: 'attendanceSessions' });
 AttendanceSession.belongsTo(Class, { foreignKey: 'classId', as: 'class' });
+Division.hasMany(AttendanceSession, { foreignKey: 'divisionId', as: 'attendanceSessions' });
+AttendanceSession.belongsTo(Division, { foreignKey: 'divisionId', as: 'division' });
 Teacher.hasMany(AttendanceSession, { foreignKey: 'teacherId', as: 'attendanceSessions' });
 AttendanceSession.belongsTo(Teacher, { foreignKey: 'teacherId', as: 'teacher' });
 
@@ -201,11 +205,15 @@ Teacher.hasMany(Note, { foreignKey: 'teacherId', as: 'notes' });
 Note.belongsTo(Teacher, { foreignKey: 'teacherId', as: 'teacher' });
 Subject.hasMany(Note, { foreignKey: 'subjectId', as: 'notes' });
 Note.belongsTo(Subject, { foreignKey: 'subjectId', as: 'subject' });
+Division.hasMany(Note, { foreignKey: 'divisionId', as: 'notes' });
+Note.belongsTo(Division, { foreignKey: 'divisionId', as: 'division' });
 
 Teacher.hasMany(Assignment, { foreignKey: 'teacherId', as: 'assignments' });
 Assignment.belongsTo(Teacher, { foreignKey: 'teacherId', as: 'teacher' });
 Subject.hasMany(Assignment, { foreignKey: 'subjectId', as: 'assignments' });
 Assignment.belongsTo(Subject, { foreignKey: 'subjectId', as: 'subject' });
+Division.hasMany(Assignment, { foreignKey: 'divisionId', as: 'assignments' });
+Assignment.belongsTo(Division, { foreignKey: 'divisionId', as: 'division' });
 
 Assignment.hasMany(Submission, { foreignKey: 'assignmentId', as: 'submissions' });
 Submission.belongsTo(Assignment, { foreignKey: 'assignmentId', as: 'assignment' });
@@ -218,6 +226,8 @@ Subject.hasMany(Meeting, { foreignKey: 'subjectId', as: 'meetings' });
 Meeting.belongsTo(Subject, { foreignKey: 'subjectId', as: 'subject' });
 Class.hasMany(Meeting, { foreignKey: 'classId', as: 'meetings' });
 Meeting.belongsTo(Class, { foreignKey: 'classId', as: 'class' });
+Division.hasMany(Meeting, { foreignKey: 'divisionId', as: 'meetings' });
+Meeting.belongsTo(Division, { foreignKey: 'divisionId', as: 'division' });
 Teacher.hasMany(Meeting, { foreignKey: 'teacherId', as: 'meetings' });
 Meeting.belongsTo(Teacher, { foreignKey: 'teacherId', as: 'teacher' });
 
@@ -288,6 +298,8 @@ Teacher.hasMany(OnlineTest, { foreignKey: 'teacherId', as: 'onlineTests' });
 OnlineTest.belongsTo(Teacher, { foreignKey: 'teacherId', as: 'teacher' });
 Subject.hasMany(OnlineTest, { foreignKey: 'subjectId', as: 'onlineTests' });
 OnlineTest.belongsTo(Subject, { foreignKey: 'subjectId', as: 'subject' });
+Division.hasMany(OnlineTest, { foreignKey: 'divisionId', as: 'onlineTests' });
+OnlineTest.belongsTo(Division, { foreignKey: 'divisionId', as: 'division' });
 
 OnlineTest.hasMany(TestQuestion, { foreignKey: 'testId', as: 'questions' });
 TestQuestion.belongsTo(OnlineTest, { foreignKey: 'testId', as: 'test' });

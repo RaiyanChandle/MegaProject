@@ -91,7 +91,7 @@ widening to more modules.
 - [x] **T6.4** Student CSV bulk import (same behavior as T6.2).--done
 - [x] **T6.5** Assign student(s) to a division → transactional bulk enrollment in core subjects (rules 11).--done
   Done when: re-running creates no duplicates; electives are not enrolled.
-- [ ] **T6.6** Subject allocation UI (teacher + subject + class).
+- [x] **T6.6** Subject allocation UI (teacher + subject + class).--done
 - [ ] **T6.7** Create parents and link to students via `ParentStudent`.
 - [ ] **T6.8** Teacher "my subjects/classes" page.
 
