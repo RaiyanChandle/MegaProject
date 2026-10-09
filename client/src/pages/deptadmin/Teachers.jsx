@@ -99,7 +99,7 @@ export default function Teachers() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-text-900">Teachers</h2>
-          <p className="text-sm text-text-500 mt-1">Manage faculty members for your department.</p>
+          <p className="text-sm text-text-500 mt-1">Manage faculty members for your department</p>
         </div>
         <div className="flex gap-3">
           <Button variant="secondary" onClick={() => setIsBulkModalOpen(true)}>
