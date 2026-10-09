@@ -13,6 +13,7 @@ import Classes from './pages/deptadmin/Classes';
 import ClassDetails from './pages/deptadmin/ClassDetails';
 import Subjects from './pages/deptadmin/Subjects';
 import Teachers from './pages/deptadmin/Teachers';
+import Students from './pages/deptadmin/Students';
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
             <Route path="classes/:id" element={<ClassDetails />} />
             <Route path="subjects" element={<Subjects />} />
             <Route path="teachers" element={<Teachers />} />
+            <Route path="students" element={<Students />} />
           </Route>
 
           {/* Catch-all */}

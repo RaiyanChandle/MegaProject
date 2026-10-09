@@ -26,6 +26,7 @@ import subjectRoutes from './routes/subjectRoutes.js';
 import assessmentComponentRoutes from './routes/assessmentComponentRoutes.js';
 import electiveRoutes from './routes/electiveRoutes.js';
 import teacherRoutes from './routes/teacherRoutes.js';
+import studentRoutes from './routes/studentRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -39,6 +40,7 @@ app.use('/api/subjects', subjectRoutes);
 app.use('/api/assessment-components', assessmentComponentRoutes);
 app.use('/api/electives', electiveRoutes);
 app.use('/api/teachers', teacherRoutes);
+app.use('/api/students', studentRoutes);
 
 app.get("/api/health", async (req, res) => {
   try {
