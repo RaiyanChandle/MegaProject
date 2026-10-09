@@ -19,6 +19,8 @@ export default function ClassDetails() {
   const [divisions, setDivisions] = useState([]);
   const [isDivModalOpen, setIsDivModalOpen] = useState(false);
   const [isDivConfirmOpen, setIsDivConfirmOpen] = useState(false);
+  const [isViewStudentsModalOpen, setIsViewStudentsModalOpen] = useState(false);
+  const [divisionStudents, setDivisionStudents] = useState([]);
   const [selectedDivision, setSelectedDivision] = useState(null);
   const [divFormData, setDivFormData] = useState({ name: '' });
   const [isDivLoading, setIsDivLoading] = useState(false);
@@ -57,6 +59,17 @@ export default function ClassDetails() {
       setDivFormData({ name: '' });
     }
     setIsDivModalOpen(true);
+  };
+
+  const handleViewStudents = async (div) => {
+    setSelectedDivision(div);
+    try {
+      const studs = await apiClient.get(`/divisions/${div.id}/students`);
+      setDivisionStudents(studs);
+      setIsViewStudentsModalOpen(true);
+    } catch (error) {
+      toast.error('Failed to load students');
+    }
   };
 
   const handleDivSubmit = async (e) => {
@@ -142,6 +155,10 @@ export default function ClassDetails() {
       key: 'actions',
       render: (_, row) => (
         <div className="flex items-center gap-3">
+          <button onClick={() => handleViewStudents(row)} className="text-text-500 hover:text-primary" title="View Students">
+            <BookOpen size={16} />
+          </button>
+          <div className="h-4 w-px bg-border"></div>
           <button onClick={() => openDivModal(row)} className="text-text-500 hover:text-ink-700" title="Edit Division">
             <Edit2 size={16} />
           </button>
@@ -151,6 +168,12 @@ export default function ClassDetails() {
         </div>
       )
     }
+  ];
+
+  const studentColumns = [
+    { title: 'Roll No', key: 'rollNumber', className: 'font-mono' },
+    { title: 'Name', key: 'name', className: 'font-semibold' },
+    { title: 'Email', key: 'email', className: 'text-sm' },
   ];
 
   const subColumns = [
@@ -259,6 +282,27 @@ export default function ClassDetails() {
             <Button type="submit" disabled={isDivLoading}>{isDivLoading ? 'Saving...' : 'Save'}</Button>
           </div>
         </form>
+      </Modal>
+
+      {/* View Students Modal */}
+      <Modal 
+        isOpen={isViewStudentsModalOpen} 
+        onClose={() => setIsViewStudentsModalOpen(false)} 
+        title={`Students - Division ${selectedDivision?.name}`}
+        maxWidth="max-w-4xl"
+      >
+        <div className="max-h-[60vh] overflow-y-auto">
+          {divisionStudents.length > 0 ? (
+            <DataTable columns={studentColumns} data={divisionStudents} />
+          ) : (
+            <div className="text-center p-6 text-text-500 bg-surface-50 rounded-md">
+              No students assigned to this division yet.
+            </div>
+          )}
+        </div>
+        <div className="pt-4 flex justify-end">
+          <Button type="button" variant="secondary" onClick={() => setIsViewStudentsModalOpen(false)}>Close</Button>
+        </div>
       </Modal>
 
       {/* Subject Modal */}

@@ -6,6 +6,7 @@ export default (sequelize) => {
   ...uuidPk,
   teacherId: { type: DataTypes.UUID, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.TEXT, allowNull: false },
   marks: { type: DataTypes.INTEGER, allowNull: false },

@@ -7,6 +7,7 @@ export default (sequelize) => {
   subjectId: { type: DataTypes.UUID, allowNull: false },
   classId: { type: DataTypes.UUID, allowNull: false },
   teacherId: { type: DataTypes.UUID, allowNull: false },
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   date: { type: DataTypes.DATEONLY, allowNull: false },
   startTime: { type: DataTypes.STRING, allowNull: false },
   endTime: { type: DataTypes.STRING, allowNull: false },

@@ -159,3 +159,33 @@ export const getSubjectById = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getSubjectStudents = async (req, res) => {
+  const { id } = req.params;
+  const departmentId = req.user.departmentId;
+
+  const { Enrollment, Student, Class } = await import('../models/index.js');
+
+  try {
+    const targetSubject = await Subject.findByPk(id, {
+      include: [{ model: Class, as: 'class', attributes: ['departmentId'] }]
+    });
+
+    if (!targetSubject || targetSubject.class.departmentId !== departmentId) {
+      return res.status(404).json({ error: 'Subject not found in your department' });
+    }
+
+    const enrollments = await Enrollment.findAll({
+      where: { subjectId: id, status: 'ENROLLED' },
+      include: [
+        { model: Student, as: 'student', attributes: ['id', 'instituteId', 'name', 'email', 'rollNumber'] }
+      ]
+    });
+
+    const students = enrollments.map(e => e.student);
+    res.json(students);
+  } catch (error) {
+    console.error('Get subject students error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

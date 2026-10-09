@@ -7,11 +7,12 @@ export default (sequelize) => {
   teacherId: { type: DataTypes.UUID, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
   classId: { type: DataTypes.UUID, allowNull: false },
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   allocatedById: { type: DataTypes.UUID, allowNull: true }, // -> DepartmentAdmin
 }, {
   tableName: 'subject_allocations',
   timestamps: true,
-  indexes: [{ unique: true, fields: ['teacherId', 'subjectId', 'classId'] }],
+  indexes: [{ unique: true, fields: ['teacherId', 'subjectId', 'classId', 'divisionId'] }],
 });
   return SubjectAllocation;
 };

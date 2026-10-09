@@ -112,3 +112,121 @@ export const deleteDivision = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const assignStudentsToDivision = async (req, res) => {
+  const { id } = req.params; // divisionId
+  const { studentIds } = req.body;
+  const departmentId = req.user.departmentId;
+
+  if (!Array.isArray(studentIds) || studentIds.length === 0) {
+    return res.status(400).json({ error: 'studentIds array is required' });
+  }
+
+  const { Student, Enrollment, Subject, AcademicTerm } = await import('../models/index.js');
+  const sequelize = (await import('../config/database.js')).default;
+
+  try {
+    const targetDivision = await Division.findByPk(id, {
+      include: [{ model: Class, as: 'class', attributes: ['departmentId', 'id'] }]
+    });
+
+    if (!targetDivision || targetDivision.class.departmentId !== departmentId) {
+      return res.status(404).json({ error: 'Division not found in your department' });
+    }
+
+    const currentTerm = await AcademicTerm.findOne({ where: { isCurrent: true } });
+    if (!currentTerm) {
+      return res.status(400).json({ error: 'No active academic term found. Please set a current term first.' });
+    }
+
+    const coreSubjects = await Subject.findAll({
+      where: { classId: targetDivision.classId, subjectType: 'CORE' }
+    });
+
+    const t = await sequelize.transaction();
+
+    try {
+      // 1. Assign division to students
+      await Student.update(
+        { divisionId: id },
+        { where: { id: studentIds, departmentId }, transaction: t }
+      );
+
+      // 2. Transactional bulk enrollment in CORE subjects
+      if (coreSubjects.length > 0) {
+        // Fetch existing enrollments for these students, subjects, and term
+        const existingEnrollments = await Enrollment.findAll({
+          where: {
+            studentId: studentIds,
+            subjectId: coreSubjects.map(s => s.id),
+            academicTermId: currentTerm.id,
+            attemptNumber: 1
+          },
+          attributes: ['studentId', 'subjectId'],
+          transaction: t
+        });
+
+        const existingSet = new Set(
+          existingEnrollments.map(e => `${e.studentId}_${e.subjectId}`)
+        );
+
+        const newEnrollments = [];
+        for (const studentId of studentIds) {
+          for (const subject of coreSubjects) {
+            if (!existingSet.has(`${studentId}_${subject.id}`)) {
+              newEnrollments.push({
+                studentId,
+                subjectId: subject.id,
+                classId: targetDivision.classId,
+                academicTermId: currentTerm.id,
+                attemptNumber: 1,
+                status: 'ENROLLED'
+              });
+            }
+          }
+        }
+
+        if (newEnrollments.length > 0) {
+          await Enrollment.bulkCreate(newEnrollments, { transaction: t });
+        }
+      }
+
+      await t.commit();
+      res.json({ message: 'Students assigned to division and enrolled in core subjects successfully' });
+    } catch (txError) {
+      await t.rollback();
+      throw txError;
+    }
+  } catch (error) {
+    console.error('Assign students error:', error);
+    res.status(500).json({ error: 'Internal server error during assignment' });
+  }
+};
+
+export const getDivisionStudents = async (req, res) => {
+  const { id } = req.params;
+  const departmentId = req.user.departmentId;
+
+  const { Student } = await import('../models/index.js');
+
+  try {
+    const targetDivision = await Division.findByPk(id, {
+      include: [{ model: Class, as: 'class', attributes: ['departmentId'] }]
+    });
+
+    if (!targetDivision || targetDivision.class.departmentId !== departmentId) {
+      return res.status(404).json({ error: 'Division not found in your department' });
+    }
+
+    const students = await Student.findAll({
+      where: { divisionId: id },
+      attributes: ['id', 'instituteId', 'name', 'email', 'rollNumber'],
+      order: [['rollNumber', 'ASC']]
+    });
+
+    res.json(students);
+  } catch (error) {
+    console.error('Get division students error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

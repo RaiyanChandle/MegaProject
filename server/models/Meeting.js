@@ -8,6 +8,7 @@ export default (sequelize) => {
   subjectId: { type: DataTypes.UUID, allowNull: false },
   classId: { type: DataTypes.UUID, allowNull: false },
   teacherId: { type: DataTypes.UUID, allowNull: false },
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   startTime: { type: DataTypes.DATE, allowNull: false },
 }, { tableName: 'meetings', timestamps: true });
   return Meeting;
