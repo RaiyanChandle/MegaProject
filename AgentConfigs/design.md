@@ -142,6 +142,7 @@ except empty states and auth screens.
 - Grid/spacing: stick to Tailwind's default spacing scale (4px steps) —
   no arbitrary `px-[13px]` values. Section spacing is `space-y-6`;
   within-card spacing is `space-y-4`; form field spacing is `space-y-3`.
+- **Mobile-Friendly Views**: All screens meant for the **Parent** and **Student** portals MUST be fully responsive and optimized for mobile devices. Unlike the admin dashboards (which are typically viewed on large monitors), students and parents will primarily access NEXUS via their phones. Use responsive grid layouts (`grid-cols-1 md:grid-cols-2`), collapsible cards, and horizontal-scrolling tables (`overflow-x-auto`) to ensure usability on small screens.
 
 ---
 

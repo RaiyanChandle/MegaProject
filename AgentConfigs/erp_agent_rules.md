@@ -163,13 +163,15 @@ module below.
     "no department." Same logic for `target_batch_year = NULL` meaning "all
     batches." Never treat NULL as "broken data" and filter it out — it's a
     wildcard by design.
-29. `leave_requests.requester_id` is shared between students and faculty.
+29. The same wildcard logic applies to `division_id`. Models like `subject_allocations`, `attendance_sessions`, `notes`, `assignments`, `meetings`, and `online_tests` use an optional `division_id` to target a specific division, or leave it NULL to target the entire class.
+30. `leave_requests.requester_id` is shared between students and faculty.
     Approval routing logic must check the requester's role to decide who
     approves (faculty leave → HOD/admin; student leave → their faculty or
     admin) — don't assume a single approver chain for both.
-30. `check_ins` is a generic table for gate/hostel/exam-hall check-ins. Add
+31. `check_ins` is a generic table for gate/hostel/exam-hall check-ins. Add
     new `check_in_type` values instead of creating new tables when a new
     check-in context appears.
+32. Parent accounts are authenticated primarily by **Phone Number**, not email. Email is optional and should not be relied upon as the primary unique identifier for parents.
 
 ---
 

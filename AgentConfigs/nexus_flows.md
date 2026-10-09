@@ -49,7 +49,7 @@ Every account — Super Admin, Department Admin, Teacher, Student, Exam Staff �
 ## 3. Faculty Onboarding & Subject Allocation Flow
 
 1. Department Admin creates `Teacher` accounts (single add or bulk CSV import), scoped to their department.
-2. Department Admin creates a `SubjectAllocation`: (teacher, subject, class) — this is "assigning subjects to faculty."
+2. Department Admin creates a `SubjectAllocation`: (teacher, subject, class, division) — this is "assigning subjects to faculty." Division is optional for class-wide subjects.
 3. Teacher logs in and sees only the subjects/classes they've been allocated — queried via `SubjectAllocation.teacherId`, never a manual list.
 4. If a teacher needs to be reassigned mid-term, a new `SubjectAllocation` row can be added/removed — old attendance/notes/assignments already created stay linked to whichever teacher originally created them (don't reassign historical `Note`/`Assignment`/`AttendanceSession` records).
 
@@ -173,7 +173,8 @@ to arrive at that number.
 ## 15. Parent Access Flow
 
 1. Parent account is linked to one or more `Student` records via `ParentStudent`.
-2. On login, Parent selects (or is shown, if only one) which child's data to view.
+2. Parent logs in using their **phone number** (or optional email) and password.
+3. On login, Parent selects (or is shown, if only one) which child's data to view.
 3. All parent-facing screens (attendance, results, fees, notices) reuse the exact same queries as the student-facing screens, just executed with the child's `studentId` instead of a self-referencing session — do not build separate parent-only query logic that could drift from the student-side logic.
 
 ---

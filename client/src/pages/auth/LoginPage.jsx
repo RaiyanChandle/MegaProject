@@ -44,7 +44,7 @@ export default function LoginPage() {
           )}
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-text-900">Institute ID or Email</label>
+            <label className="block text-sm font-medium text-text-900">Institute ID, Email, or Phone Number</label>
             <input 
               type="text" 
               value={identifier}
