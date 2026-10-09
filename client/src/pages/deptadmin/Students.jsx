@@ -7,7 +7,10 @@ import Field from '../../components/ui/Field';
 import { toast } from '../../components/ui/Toast';
 import { Plus, Eye, EyeOff } from 'lucide-react';
 
+import { useSearch } from '../../context/SearchContext';
+
 export default function Students() {
+  const { searchQuery } = useSearch();
   const [students, setStudents] = useState([]);
   const [availableBatchYears, setAvailableBatchYears] = useState([]);
   const [selectedBatchYear, setSelectedBatchYear] = useState('');
@@ -195,9 +198,26 @@ export default function Students() {
     : students;
 
   const filteredStudents = studentsInBatch.filter(s => {
-    if (selectedDivisionFilter === 'ALL') return true;
-    if (selectedDivisionFilter === 'UNASSIGNED') return !s.divisionId;
-    return s.division?.name === selectedDivisionFilter;
+    // Apply division filter
+    if (selectedDivisionFilter !== 'ALL') {
+      if (selectedDivisionFilter === 'UNASSIGNED' && s.divisionId) return false;
+      if (selectedDivisionFilter !== 'UNASSIGNED' && s.division?.name !== selectedDivisionFilter) return false;
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      const lowerQ = searchQuery.toLowerCase();
+      if (
+        !s.name?.toLowerCase().includes(lowerQ) &&
+        !s.email?.toLowerCase().includes(lowerQ) &&
+        !s.instituteId?.toLowerCase().includes(lowerQ) &&
+        !s.rollNumber?.toLowerCase().includes(lowerQ)
+      ) {
+        return false;
+      }
+    }
+
+    return true;
   });
 
   const availableDivisionsInBatch = Array.from(new Set(studentsInBatch.map(s => s.division?.name).filter(Boolean))).sort();

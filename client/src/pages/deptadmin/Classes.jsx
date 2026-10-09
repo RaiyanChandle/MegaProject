@@ -8,9 +8,11 @@ import Field from '../../components/ui/Field';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
 import { Plus, Eye, Edit2, Trash2, Copy } from 'lucide-react';
+import { useSearch } from '../../context/SearchContext';
 
 export default function Classes() {
   const navigate = useNavigate();
+  const { searchQuery } = useSearch();
   const [classes, setClasses] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -150,6 +152,15 @@ export default function Classes() {
     }
   ];
 
+  const filteredClasses = classes.filter(c => {
+    if (!searchQuery) return true;
+    const lowerQ = searchQuery.toLowerCase();
+    return (
+      c.name?.toLowerCase().includes(lowerQ) ||
+      c.batchYear?.toLowerCase().includes(lowerQ)
+    );
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -163,7 +174,7 @@ export default function Classes() {
         </Button>
       </div>
 
-      <DataTable columns={columns} data={classes} />
+      <DataTable columns={columns} data={filteredClasses} />
 
       <Modal 
         isOpen={isModalOpen} 

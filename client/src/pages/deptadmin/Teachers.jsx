@@ -7,7 +7,10 @@ import Field from '../../components/ui/Field';
 import { toast } from '../../components/ui/Toast';
 import { Plus, Eye, EyeOff } from 'lucide-react';
 
+import { useSearch } from '../../context/SearchContext';
+
 export default function Teachers() {
+  const { searchQuery } = useSearch();
   const [teachers, setTeachers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -94,6 +97,16 @@ export default function Teachers() {
     { title: 'Created At', key: 'createdAt', render: (val) => new Date(val).toLocaleDateString() },
   ];
 
+  const filteredTeachers = teachers.filter(t => {
+    if (!searchQuery) return true;
+    const lowerQ = searchQuery.toLowerCase();
+    return (
+      t.name?.toLowerCase().includes(lowerQ) ||
+      t.email?.toLowerCase().includes(lowerQ) ||
+      t.instituteId?.toLowerCase().includes(lowerQ)
+    );
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -114,7 +127,7 @@ export default function Teachers() {
 
       <DataTable 
         columns={columns}
-        data={teachers}
+        data={filteredTeachers}
       />
 
       <Modal 
