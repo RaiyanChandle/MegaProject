@@ -85,8 +85,8 @@ widening to more modules.
 
 ## Phase 6 — People & allocation · flows 3, 4
 
-- [ ] **T6.1** Create teachers (single) with `FCKIT` id; list/search.
-- [ ] **T6.2** Teacher CSV bulk import with block ID reservation and a row-level error report.
+- [x] **T6.1** Create teachers (single) with `FCKIT` id; list/search.--done
+- [x] **T6.2** Teacher CSV bulk import with block ID reservation and a row-level error report.--done
 - [ ] **T6.3** Create students (single) with `STKIT` id, `batchYear`, `rollNumber`.
 - [ ] **T6.4** Student CSV bulk import (same behavior as T6.2).
 - [ ] **T6.5** Assign student(s) to a division → transactional bulk enrollment in core subjects (rules 11).
