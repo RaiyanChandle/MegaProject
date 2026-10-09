@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, UserCircle, LogOut, Settings as SettingsIcon, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useSearch } from '../../context/SearchContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from '../ui/Toast';
 
 export default function Topbar({ title = 'Dashboard' }) {
   const { user, logout } = useAuth();
+  const { searchQuery, setSearchQuery } = useSearch();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -17,15 +19,16 @@ export default function Topbar({ title = 'Dashboard' }) {
         setIsDropdownOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Clear search on page navigation
+  useEffect(() => {
+    setSearchQuery('');
+  }, [location.pathname, setSearchQuery]);
+
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      toast.info(`Search for "${searchQuery}" is not implemented yet.`);
-    }
   };
 
   const handleLogout = () => {

@@ -7,8 +7,10 @@ import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { BookOpen, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSearch } from '../../context/SearchContext';
 
 export default function Subjects() {
+  const { searchQuery } = useSearch();
   const [subjects, setSubjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [availableBatchYears, setAvailableBatchYears] = useState([]);
@@ -108,9 +110,24 @@ export default function Subjects() {
     { title: 'Email', key: 'email', className: 'text-sm' },
   ];
 
-  const filteredSubjects = selectedBatchYear 
-    ? subjects.filter(s => s.class?.batchYear === selectedBatchYear)
-    : subjects;
+  const filteredSubjects = subjects.filter(s => {
+    // 1. Batch Year filter
+    if (selectedBatchYear && s.class?.batchYear !== selectedBatchYear) {
+      return false;
+    }
+    
+    // 2. Search filter
+    if (searchQuery) {
+      const lowerQ = searchQuery.toLowerCase();
+      if (
+        !s.name?.toLowerCase().includes(lowerQ) &&
+        !s.code?.toLowerCase().includes(lowerQ)
+      ) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6">
