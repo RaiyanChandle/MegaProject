@@ -5,7 +5,7 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import Field from '../../components/ui/Field';
 import { toast } from '../../components/ui/Toast';
-import { Plus, Eye, EyeOff } from 'lucide-react';
+import { Plus, Eye, EyeOff, Trash2 } from 'lucide-react';
 
 import { useSearch } from '../../context/SearchContext';
 
@@ -17,8 +17,11 @@ export default function Students() {
   const [selectedDivisionFilter, setSelectedDivisionFilter] = useState('ALL');
   const [selectedStudentForDetails, setSelectedStudentForDetails] = useState(null);
   const [studentEnrollments, setStudentEnrollments] = useState([]);
+  const [studentParents, setStudentParents] = useState([]);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isLinkParentModalOpen, setIsLinkParentModalOpen] = useState(false);
+  const [parentFormData, setParentFormData] = useState({ name: '', email: '', phoneNumber: '', password: '' });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', batchYear: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -171,12 +174,49 @@ export default function Students() {
     setIsDetailsModalOpen(true);
     setIsDetailsLoading(true);
     try {
-      const enrolls = await apiClient.get(`/students/${student.id}/enrollments`);
+      const [enrolls, parents] = await Promise.all([
+        apiClient.get(`/students/${student.id}/enrollments`),
+        apiClient.get(`/parents/student/${student.id}`)
+      ]);
       setStudentEnrollments(enrolls);
+      setStudentParents(parents);
     } catch (error) {
-      toast.error('Failed to load student enrollments');
+      toast.error('Failed to load student details');
     } finally {
       setIsDetailsLoading(false);
+    }
+  };
+
+  const handleLinkParent = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await apiClient.post('/parents', {
+        ...parentFormData,
+        studentId: selectedStudentForDetails.id
+      });
+      toast.success('Parent linked successfully');
+      setIsLinkParentModalOpen(false);
+      setParentFormData({ name: '', email: '', phoneNumber: '', password: '' });
+      // Refresh parents list
+      const parents = await apiClient.get(`/parents/student/${selectedStudentForDetails.id}`);
+      setStudentParents(parents);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUnlinkParent = async (parentId) => {
+    if (!window.confirm('Are you sure you want to unlink this parent?')) return;
+    try {
+      await apiClient.delete(`/parents/student/${selectedStudentForDetails.id}/parent/${parentId}`);
+      toast.success('Parent unlinked successfully');
+      const parents = await apiClient.get(`/parents/student/${selectedStudentForDetails.id}`);
+      setStudentParents(parents);
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
@@ -541,11 +581,108 @@ export default function Students() {
               )}
             </div>
 
+            <div className="border-t border-border pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-base font-semibold text-text-900">Parents/Guardians</h4>
+                <Button size="sm" variant="secondary" onClick={() => setIsLinkParentModalOpen(true)}>
+                  <Plus size={14} className="mr-1" /> Add Parent
+                </Button>
+              </div>
+              
+              {isDetailsLoading ? (
+                <div className="text-sm text-text-500 italic">Loading parents...</div>
+              ) : studentParents.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {studentParents.map(parent => (
+                    <div key={parent.id} className="p-4 border border-border rounded-lg bg-surface-0 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-text-900">{parent.name}</div>
+                        <div className="text-sm text-text-500">Phone: {parent.phoneNumber} {parent.email && ` | Email: ${parent.email}`}</div>
+                      </div>
+                      <button 
+                        onClick={() => handleUnlinkParent(parent.id)}
+                        className="text-danger hover:bg-danger/10 p-2 rounded-md transition-colors"
+                        title="Unlink Parent"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-text-500 p-4 bg-surface-50 rounded-lg text-center border border-dashed border-border">
+                  No parents linked to this student yet.
+                </div>
+              )}
+            </div>
+
             <div className="pt-2 flex justify-end">
               <Button onClick={() => setIsDetailsModalOpen(false)} variant="secondary">Close</Button>
             </div>
           </div>
         )}
+      </Modal>
+      <Modal 
+        isOpen={isLinkParentModalOpen}
+        onClose={() => setIsLinkParentModalOpen(false)}
+        title="Link Parent/Guardian"
+      >
+        <form onSubmit={handleLinkParent} className="space-y-4">
+          <p className="text-sm text-text-500">
+            If the parent already exists in the system (by phone number), they will be linked to this student. Otherwise, a new parent account will be created.
+          </p>
+          <Field label="Parent Phone Number (Required)">
+            <input 
+              type="tel"
+              value={parentFormData.phoneNumber}
+              onChange={(e) => setParentFormData({ ...parentFormData, phoneNumber: e.target.value })}
+              placeholder="e.g. 9876543210"
+              required
+            />
+          </Field>
+          
+          <div className="grid grid-cols-1 gap-4 border-t border-border pt-4">
+            <p className="text-sm text-text-500 font-medium">For New Parents Only:</p>
+            <Field label="Parent Name">
+              <input 
+                type="text"
+                value={parentFormData.name}
+                onChange={(e) => setParentFormData({ ...parentFormData, name: e.target.value })}
+              />
+            </Field>
+
+            <Field label="Parent Email (Optional)">
+              <input 
+                type="email"
+                value={parentFormData.email}
+                onChange={(e) => setParentFormData({ ...parentFormData, email: e.target.value })}
+              />
+            </Field>
+            
+            <Field label="Temporary Password">
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  value={parentFormData.password}
+                  onChange={(e) => setParentFormData({ ...parentFormData, password: e.target.value })}
+                  className="w-full pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-400 hover:text-ink-700 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </Field>
+          </div>
+
+          <div className="pt-4 flex justify-end gap-3">
+            <Button type="button" variant="secondary" onClick={() => setIsLinkParentModalOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? 'Linking...' : 'Link Parent'}</Button>
+          </div>
+        </form>
       </Modal>
     </div>
   );

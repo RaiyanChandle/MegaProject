@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { Teacher } from '../models/index.js';
+import { Teacher, SubjectAllocation, Subject, Class, Division } from '../models/index.js';
 import { generateInstituteIds } from '../utils/idGenerator.js';
 import sequelize from '../config/database.js';
 
@@ -128,5 +128,26 @@ export const bulkImportTeachers = async (req, res) => {
     await t.rollback();
     console.error('Bulk import teachers error:', error);
     res.status(500).json({ error: 'Internal server error during bulk import' });
+  }
+};
+
+export const getMyAllocations = async (req, res) => {
+  const teacherId = req.user.id;
+
+  try {
+    const allocations = await SubjectAllocation.findAll({
+      where: { teacherId },
+      include: [
+        { model: Subject, as: 'subject', attributes: ['id', 'name', 'code', 'subjectType', 'credits'] },
+        { model: Class, as: 'class', attributes: ['id', 'name', 'batchYear', 'semesterNumber'] },
+        { model: Division, as: 'division', attributes: ['id', 'name'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json(allocations);
+  } catch (error) {
+    console.error('Get my allocations error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

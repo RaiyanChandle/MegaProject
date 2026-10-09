@@ -14,11 +14,17 @@ export const login = async (req, res) => {
     let role = null;
     let userId = null;
 
-    // Check if identifier is an email (for parents)
+    // Check if identifier is an email
     if (identifier.includes('@')) {
       user = await Parent.findOne({ where: { email: identifier } });
       if (user) role = 'PARENT';
-    } else {
+    } 
+    // Check if identifier is a phone number (all digits)
+    else if (/^\d+$/.test(identifier)) {
+      user = await Parent.findOne({ where: { phoneNumber: identifier } });
+      if (user) role = 'PARENT';
+    } 
+    else {
       // It's an instituteId, resolve by prefix
       const prefix = identifier.substring(0, 5).toUpperCase();
       const whereClause = { instituteId: identifier };
@@ -82,7 +88,8 @@ export const login = async (req, res) => {
         name: user.name,
         role: role,
         instituteId: user.instituteId || null,
-        email: user.email
+        email: user.email,
+        phoneNumber: user.phoneNumber
       }
     });
 

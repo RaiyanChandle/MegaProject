@@ -16,6 +16,10 @@ import SubjectDetails from './pages/deptadmin/SubjectDetails';
 import Teachers from './pages/deptadmin/Teachers';
 import Students from './pages/deptadmin/Students';
 
+import TeacherClasses from './pages/teacher/TeacherClasses';
+import StudentDashboard from './pages/student/StudentDashboard';
+import ParentDashboard from './pages/parent/ParentDashboard';
+
 import { SearchProvider } from './context/SearchContext';
 
 function App() {
@@ -53,6 +57,31 @@ function App() {
               <Route path="subjects/:id" element={<SubjectDetails />} />
               <Route path="teachers" element={<Teachers />} />
               <Route path="students" element={<Students />} />
+            </Route>
+
+            {/* Protected Routes: Teacher */}
+            <Route
+              path="/teacher"
+              element={<ProtectedRoute allowedRoles={['TEACHER']} title="Teacher Dashboard" />}
+            >
+              <Route index element={<div className="p-6 text-text-900">Teacher Dashboard (Coming Soon)</div>} />
+              <Route path="classes" element={<TeacherClasses />} />
+            </Route>
+
+            {/* Protected Routes: Student */}
+            <Route
+              path="/student"
+              element={<ProtectedRoute allowedRoles={['STUDENT']} title="Student Dashboard" />}
+            >
+              <Route index element={<StudentDashboard />} />
+            </Route>
+
+            {/* Protected Routes: Parent */}
+            <Route
+              path="/parent"
+              element={<ProtectedRoute allowedRoles={['PARENT']} title="Parent Dashboard" />}
+            >
+              <Route index element={<ParentDashboard />} />
             </Route>
 
             {/* Catch-all */}

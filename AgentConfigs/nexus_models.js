@@ -113,7 +113,8 @@ const Student = sequelize.define('Student', {
 const Parent = sequelize.define('Parent', {
   ...uuidPk,
   name: { type: DataTypes.STRING, allowNull: false },
-  email: { type: DataTypes.STRING, unique: true, allowNull: false },
+  phoneNumber: { type: DataTypes.STRING, unique: true, allowNull: false },
+  email: { type: DataTypes.STRING, unique: true, allowNull: true },
   password: { type: DataTypes.STRING, allowNull: false },
 }, { tableName: 'parents', timestamps: true });
 
@@ -231,11 +232,12 @@ const SubjectAllocation = sequelize.define('SubjectAllocation', {
   teacherId: { type: DataTypes.UUID, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
   classId: { type: DataTypes.UUID, allowNull: false },
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   allocatedById: { type: DataTypes.UUID, allowNull: true }, // -> DepartmentAdmin
 }, {
   tableName: 'subject_allocations',
   timestamps: true,
-  indexes: [{ unique: true, fields: ['teacherId', 'subjectId', 'classId'] }],
+  indexes: [{ unique: true, fields: ['teacherId', 'subjectId', 'classId', 'divisionId'] }],
 });
 
 
@@ -277,6 +279,7 @@ const AttendanceSession = sequelize.define('AttendanceSession', {
   ...uuidPk,
   subjectId: { type: DataTypes.UUID, allowNull: false },
   classId: { type: DataTypes.UUID, allowNull: false },
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   teacherId: { type: DataTypes.UUID, allowNull: false },
   date: { type: DataTypes.DATEONLY, allowNull: false },
   startTime: { type: DataTypes.STRING, allowNull: false },
@@ -310,6 +313,8 @@ const Note = sequelize.define('Note', {
   ...uuidPk,
   teacherId: { type: DataTypes.UUID, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
+  classId: { type: DataTypes.UUID, allowNull: true }, // Not originally here, but logically useful if divisionId exists. Let's just add divisionId per migration.
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   topic: { type: DataTypes.STRING, allowNull: false },
   pdfUrl: { type: DataTypes.STRING, allowNull: false },
 }, { tableName: 'notes', timestamps: true });
@@ -325,6 +330,8 @@ const Assignment = sequelize.define('Assignment', {
   ...uuidPk,
   teacherId: { type: DataTypes.UUID, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
+  classId: { type: DataTypes.UUID, allowNull: true },
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.TEXT, allowNull: false },
   marks: { type: DataTypes.INTEGER, allowNull: false },
@@ -353,6 +360,7 @@ const Meeting = sequelize.define('Meeting', {
   roomName: { type: DataTypes.STRING, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
   classId: { type: DataTypes.UUID, allowNull: false },
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   teacherId: { type: DataTypes.UUID, allowNull: false },
   startTime: { type: DataTypes.DATE, allowNull: false },
 }, { tableName: 'meetings', timestamps: true });
@@ -501,6 +509,8 @@ const OnlineTest = sequelize.define('OnlineTest', {
   ...uuidPk,
   teacherId: { type: DataTypes.UUID, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
+  classId: { type: DataTypes.UUID, allowNull: true },
+  divisionId: { type: DataTypes.UUID, allowNull: true },
   title: { type: DataTypes.STRING, allowNull: false },
   durationMinutes: { type: DataTypes.INTEGER, allowNull: false },
   startTime: { type: DataTypes.DATE, allowNull: false },

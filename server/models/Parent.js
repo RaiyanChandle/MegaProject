@@ -5,7 +5,8 @@ export default (sequelize) => {
   const Parent = sequelize.define('Parent', {
   ...uuidPk,
   name: { type: DataTypes.STRING, allowNull: false },
-  email: { type: DataTypes.STRING, unique: true, allowNull: false },
+  phoneNumber: { type: DataTypes.STRING, unique: true, allowNull: false },
+  email: { type: DataTypes.STRING, unique: true, allowNull: true },
   password: { type: DataTypes.STRING, allowNull: false },
 }, { tableName: 'parents', timestamps: true });
   return Parent;
