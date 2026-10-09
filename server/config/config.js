@@ -22,6 +22,12 @@ export default {
     ...sslConfig,
   },
 
+  staging: {
+    url: process.env.DATABASE_URL,
+    dialect: "postgres",
+    ...sslConfig,
+  },
+
   production: {
     url: process.env.DATABASE_URL,
     dialect: "postgres",
