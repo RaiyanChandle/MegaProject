@@ -19,8 +19,10 @@ import AttendanceReport from './pages/deptadmin/AttendanceReport';
 
 import TeacherClasses from './pages/teacher/TeacherClasses';
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
+import TeacherNotes from './pages/teacher/TeacherNotes';
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentAttendance from './pages/student/StudentAttendance';
+import StudentNotes from './pages/student/StudentNotes';
 import ParentDashboard from './pages/parent/ParentDashboard';
 import ParentAttendance from './pages/parent/ParentAttendance';
 
@@ -72,6 +74,7 @@ function App() {
               <Route index element={<div className="p-6 text-text-900">Teacher Dashboard (Coming Soon)</div>} />
               <Route path="classes" element={<TeacherClasses />} />
               <Route path="attendance" element={<TeacherAttendance />} />
+              <Route path="notes" element={<TeacherNotes />} />
             </Route>
 
             {/* Protected Routes: Student */}
@@ -81,6 +84,7 @@ function App() {
             >
               <Route index element={<StudentDashboard />} />
               <Route path="attendance" element={<StudentAttendance />} />
+              <Route path="notes" element={<StudentNotes />} />
             </Route>
 
             {/* Protected Routes: Parent */}

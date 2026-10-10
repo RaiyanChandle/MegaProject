@@ -114,7 +114,7 @@ widening to more modules.
 ## Phase 8 — Files, notes, assignments · flows 7, 8
 
 - [x] **T8.1** File storage (Cloudinary/S3) + upload middleware with type/size limits.--done
-- [ ] **T8.2** Notes: teacher upload; students see notes only for enrolled subjects.
+- [x] **T8.2** Notes: teacher upload; students see notes only for enrolled subjects.--done
 - [ ] **T8.3** Library (admin upload, everyone views).
 - [ ] **T8.4** Assignments: teacher creates; student submits before the deadline, one per enrollment.
 - [ ] **T8.5** Grading: marks + feedback, status to `ACCEPTED`; student sees the result.
