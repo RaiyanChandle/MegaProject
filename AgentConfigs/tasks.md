@@ -123,7 +123,7 @@ widening to more modules.
 
 ## Phase 9 — Elective registration · flows 5
 
-- [x] **T9.1** Migration: add `registrationOpensAt` / `registrationClosesAt` to `ElectiveSlot` (PRD open decision 4).
+- [x] **T9.1** Migration: add `registrationOpensAt` / `registrationClosesAt` to `ElectiveSlot` (PRD open decision 4)
 - [ ] **T9.2** Student view of slots/options with seats remaining, within the window.
 - [ ] **T9.3** Choose + confirm in a transaction with a row lock; create the `Enrollment` on confirm (rules 12, 13).
 - [ ] **T9.4** Job that moves `CONFIRMED` → `LOCKED` when the window closes.
