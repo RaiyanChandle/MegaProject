@@ -12,6 +12,7 @@ export default (sequelize) => {
   submittedAt: { type: DataTypes.DATE, allowNull: true },
   acceptedAt: { type: DataTypes.DATE, allowNull: true },
   marksAwarded: { type: DataTypes.INTEGER, allowNull: true },
+  feedback: { type: DataTypes.TEXT, allowNull: true },
 }, {
   tableName: 'submissions',
   timestamps: true,

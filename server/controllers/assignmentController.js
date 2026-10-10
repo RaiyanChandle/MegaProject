@@ -416,3 +416,82 @@ export const deleteAssignment = async (req, res) => {
     res.status(500).json({ error: 'Internal server error while deleting assignment.' });
   }
 };
+
+/**
+ * T8.5: Teacher grades student submission:
+ * sets marksAwarded, optional feedback, status to 'ACCEPTED', acceptedAt timestamp (Flow 8)
+ */
+export const gradeSubmission = async (req, res) => {
+  const { id, submissionId } = req.params; // assignmentId, submissionId
+  const { marksAwarded, feedback } = req.body;
+  const user = req.user;
+
+  if (marksAwarded === undefined || marksAwarded === null || marksAwarded === '') {
+    return res.status(400).json({ error: 'Marks awarded is required to evaluate the submission.' });
+  }
+
+  const marksNum = parseInt(marksAwarded, 10);
+  if (isNaN(marksNum) || marksNum < 0) {
+    return res.status(400).json({ error: 'Marks awarded must be a non-negative integer.' });
+  }
+
+  try {
+    const assignment = await Assignment.findByPk(id, {
+      include: [{ model: Subject, as: 'subject', attributes: ['departmentId'] }]
+    });
+
+    if (!assignment) {
+      return res.status(404).json({ error: 'Assignment not found.' });
+    }
+
+    // RBAC: verify teacher allocation/ownership or department admin
+    if (user.role === 'TEACHER' && assignment.teacherId !== user.id) {
+      return res.status(403).json({ error: 'Forbidden: You did not create this assignment.' });
+    }
+
+    if (user.role === 'DEPARTMENT_ADMIN' && assignment.subject?.departmentId !== user.departmentId) {
+      return res.status(403).json({ error: 'Forbidden: Assignment belongs to another department.' });
+    }
+
+    if (marksNum > assignment.marks) {
+      return res.status(400).json({ 
+        error: `Marks awarded (${marksNum}) cannot exceed total assignment marks (${assignment.marks}).` 
+      });
+    }
+
+    const submission = await Submission.findOne({
+      where: {
+        id: submissionId,
+        assignmentId: id
+      },
+      include: [
+        { 
+          model: Student, 
+          as: 'student', 
+          attributes: ['id', 'name', 'rollNumber', 'email'],
+          include: [{ model: Division, as: 'division', attributes: ['id', 'name'] }]
+        }
+      ]
+    });
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found for this assignment.' });
+    }
+
+    // Update submission with grade, feedback, status = ACCEPTED, acceptedAt = now
+    await submission.update({
+      marksAwarded: marksNum,
+      feedback: feedback && typeof feedback === 'string' ? feedback.trim() : null,
+      status: 'ACCEPTED',
+      acceptedAt: new Date()
+    });
+
+    res.json({
+      message: 'Submission evaluated and accepted successfully.',
+      submission
+    });
+  } catch (error) {
+    console.error('Grade submission error:', error);
+    res.status(500).json({ error: 'Internal server error while grading submission.' });
+  }
+};

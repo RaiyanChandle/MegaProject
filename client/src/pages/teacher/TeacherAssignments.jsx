@@ -20,7 +20,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Paperclip,
-  Search
+  Search,
+  Award
 } from 'lucide-react';
 
 export default function TeacherAssignments() {
@@ -48,6 +49,11 @@ export default function TeacherAssignments() {
   const [assignmentDetails, setAssignmentDetails] = useState(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [submissionFilterText, setSubmissionFilterText] = useState('');
+
+  // Grading Modal (T8.5)
+  const [submissionToGrade, setSubmissionToGrade] = useState(null);
+  const [gradeForm, setGradeForm] = useState({ marksAwarded: '', feedback: '' });
+  const [isGrading, setIsGrading] = useState(false);
 
   // Delete Confirm
   const [assignmentToDelete, setAssignmentToDelete] = useState(null);
@@ -195,6 +201,65 @@ export default function TeacherAssignments() {
       toast.error(error.message || 'Failed to delete assignment');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Open Grading Modal (T8.5)
+  const handleOpenGradeModal = (submission) => {
+    setSubmissionToGrade(submission);
+    setGradeForm({
+      marksAwarded: submission.marksAwarded !== null && submission.marksAwarded !== undefined 
+        ? String(submission.marksAwarded) 
+        : '',
+      feedback: submission.feedback || ''
+    });
+  };
+
+  // Submit Grade (T8.5: marks + feedback -> ACCEPTED)
+  const handleSubmitGrade = async (e) => {
+    e.preventDefault();
+    if (!submissionToGrade || !selectedAssignmentForView) return;
+
+    const marksNum = parseInt(gradeForm.marksAwarded, 10);
+    if (isNaN(marksNum) || marksNum < 0) {
+      toast.error('Please enter a valid marks value (0 or greater).');
+      return;
+    }
+
+    if (marksNum > selectedAssignmentForView.marks) {
+      toast.error(`Marks cannot exceed total assignment marks (${selectedAssignmentForView.marks}).`);
+      return;
+    }
+
+    setIsGrading(true);
+    try {
+      const response = await apiClient.put(
+        `/assignments/${selectedAssignmentForView.id}/submissions/${submissionToGrade.id}/grade`,
+        {
+          marksAwarded: marksNum,
+          feedback: gradeForm.feedback
+        }
+      );
+
+      toast.success('Submission evaluated and accepted successfully!');
+
+      const updated = response.submission;
+      setAssignmentDetails(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          submissions: prev.submissions.map(s => 
+            s.id === updated.id ? { ...s, ...updated } : s
+          )
+        };
+      });
+
+      setSubmissionToGrade(null);
+      fetchAssignments();
+    } catch (error) {
+      toast.error(error.message || 'Failed to submit grade');
+    } finally {
+      setIsGrading(false);
     }
   };
 
@@ -632,7 +697,8 @@ export default function TeacherAssignments() {
                     <th className="py-3 px-4">Division</th>
                     <th className="py-3 px-4">Submitted At</th>
                     <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Submitted Document</th>
+                    <th className="py-3 px-4">Score & Feedback</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -675,16 +741,43 @@ export default function TeacherAssignments() {
                         <td className="py-3 px-4">
                           <StatusBadge status={sub.status} />
                         </td>
+                        <td className="py-3 px-4">
+                          {sub.status === 'ACCEPTED' && sub.marksAwarded !== null && sub.marksAwarded !== undefined ? (
+                            <div>
+                              <span className="font-mono font-bold text-success text-xs">
+                                {sub.marksAwarded} / {selectedAssignmentForView?.marks} pts
+                              </span>
+                              {sub.feedback && (
+                                <div className="text-[11px] text-text-600 line-clamp-1 italic mt-0.5 max-w-xs" title={sub.feedback}>
+                                  "{sub.feedback}"
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-text-400 font-mono italic">Pending evaluation</span>
+                          )}
+                        </td>
                         <td className="py-3 px-4 text-right">
-                          <a
-                            href={sub.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border bg-surface-0 hover:bg-surface-100 text-ink-900 transition-colors"
-                          >
-                            <span>View Solution</span>
-                            <ExternalLink size={12} />
-                          </a>
+                          <div className="flex items-center justify-end gap-2">
+                            <a
+                              href={sub.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-border bg-surface-0 hover:bg-surface-100 text-ink-900 transition-colors"
+                              title="View Document"
+                            >
+                              <span>File</span>
+                              <ExternalLink size={12} />
+                            </a>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleOpenGradeModal(sub)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border-border hover:bg-surface-100 h-auto"
+                            >
+                              <Award size={13} className="text-brass-500" />
+                              <span>{sub.status === 'ACCEPTED' ? 'Edit Grade' : 'Grade'}</span>
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -706,6 +799,94 @@ export default function TeacherAssignments() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Modal: Grade Submission (T8.5) */}
+      <Modal
+        isOpen={!!submissionToGrade}
+        onClose={() => setSubmissionToGrade(null)}
+        title={`Evaluate: ${submissionToGrade?.student?.name || 'Student'}`}
+        maxWidth="max-w-md"
+      >
+        {submissionToGrade && (
+          <form onSubmit={handleSubmitGrade} className="space-y-4">
+            <div className="bg-surface-50 border border-border rounded-lg p-3 space-y-1.5 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-text-500">Student:</span>
+                <span className="font-semibold text-text-900">{submissionToGrade.student?.name}</span>
+              </div>
+              <div className="flex justify-between items-center font-mono">
+                <span className="text-text-500">Roll Number:</span>
+                <span className="text-text-900">{submissionToGrade.student?.rollNumber || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center font-mono">
+                <span className="text-text-500">Assignment Max Marks:</span>
+                <span className="font-bold text-text-900">{selectedAssignmentForView?.marks} pts</span>
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-border">
+                <span className="text-text-500">Submitted File:</span>
+                <a
+                  href={submissionToGrade.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-ink-700 hover:text-ink-900 font-medium underline inline-flex items-center gap-1"
+                >
+                  <span>Open Student Solution</span>
+                  <ExternalLink size={11} />
+                </a>
+              </div>
+            </div>
+
+            <Field label={`Marks Awarded (out of ${selectedAssignmentForView?.marks})`} required>
+              <input
+                type="number"
+                min="0"
+                max={selectedAssignmentForView?.marks || 100}
+                required
+                placeholder={`0 - ${selectedAssignmentForView?.marks}`}
+                value={gradeForm.marksAwarded}
+                onChange={(e) => setGradeForm(prev => ({ ...prev, marksAwarded: e.target.value }))}
+                className="w-full rounded-md border border-border bg-surface-0 px-3 py-2 text-sm text-text-900 font-mono focus:border-ink-700 focus:ring-1 focus:ring-ink-700"
+              />
+            </Field>
+
+            <Field 
+              label="Feedback & Comments (Optional)"
+              helperText="Constructive feedback visible to the student upon evaluation."
+            >
+              <textarea
+                rows={3}
+                placeholder="e.g. Excellent methodology and clear explanations. Pay closer attention to boundary edge conditions."
+                value={gradeForm.feedback}
+                onChange={(e) => setGradeForm(prev => ({ ...prev, feedback: e.target.value }))}
+                className="w-full rounded-md border border-border bg-surface-0 px-3 py-2 text-sm text-text-900 focus:border-ink-700 focus:ring-1 focus:ring-ink-700"
+              />
+            </Field>
+
+            <div className="p-2.5 rounded bg-success/10 text-success text-xs flex items-center gap-2">
+              <CheckCircle2 size={16} className="shrink-0" />
+              <span>Saving marks will set submission status to <strong>ACCEPTED</strong> and notify the student.</span>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setSubmissionToGrade(null)}
+                disabled={isGrading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isGrading}
+                className="bg-ink-900 hover:bg-ink-800 text-white shadow-none"
+              >
+                {isGrading ? 'Saving Grade...' : 'Save & Accept'}
+              </Button>
+            </div>
+          </form>
+        )}
       </Modal>
 
       {/* Confirm Delete Dialog */}

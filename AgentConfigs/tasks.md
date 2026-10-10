@@ -117,7 +117,7 @@ widening to more modules.
 - [x] **T8.2** Notes: teacher upload; students see notes only for enrolled subjects.--done
 - [x] **T8.3** Library (admin upload, everyone views).--done
 - [x] **T8.4** Assignments: teacher creates; student submits before the deadline, one per enrollment.--done
-- [ ] **T8.5** Grading: marks + feedback, status to `ACCEPTED`; student sees the result.
+- [x] **T8.5** Grading: marks + feedback, status to `ACCEPTED`; student sees the result.--done
 
 ---
 

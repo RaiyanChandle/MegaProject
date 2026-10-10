@@ -269,25 +269,56 @@ export default function StudentAssignments() {
 
                   {/* Submission details if already submitted */}
                   {hasSubmitted && (
-                    <div className="p-2.5 rounded bg-surface-50 border border-border mt-2 space-y-1">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-text-500">Submitted file:</span>
+                    <div className="p-3 rounded-lg bg-surface-50 border border-border mt-2 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-text-500">Your Submission:</span>
                         <a
                           href={submission.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-ink-700 hover:text-ink-900 font-medium underline inline-flex items-center gap-1"
+                          className="text-ink-700 hover:text-ink-900 font-medium underline inline-flex items-center gap-1 text-xs"
                         >
-                          <span>View Submission</span>
-                          <ExternalLink size={10} />
+                          <span>View Solution File</span>
+                          <ExternalLink size={12} />
                         </a>
                       </div>
-                      <div className="text-[10px] text-text-500 font-mono">
-                        On: {new Date(submission.submittedAt).toLocaleString()}
+                      <div className="text-[11px] text-text-500 font-mono">
+                        Submitted: {new Date(submission.submittedAt).toLocaleString([], {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </div>
-                      {submission.marksAwarded !== null && submission.marksAwarded !== undefined && (
-                        <div className="text-xs font-mono font-semibold text-success pt-1 border-t border-border mt-1">
-                          Score: {submission.marksAwarded} / {assignment.marks}
+
+                      {/* Evaluated Marks & Feedback (T8.5) */}
+                      {isAccepted && (
+                        <div className="pt-2 border-t border-border space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-700">Marks Awarded:</span>
+                            <span className="text-sm font-mono font-bold text-success">
+                              {submission.marksAwarded} / {assignment.marks} pts
+                            </span>
+                          </div>
+
+                          {submission.feedback && (
+                            <div className="bg-surface-0 border border-border rounded-md p-2.5 text-xs text-text-700 mt-1">
+                              <span className="text-[10px] font-semibold text-text-500 uppercase tracking-wider block mb-0.5">
+                                Faculty Feedback:
+                              </span>
+                              <p className="italic text-text-900">"{submission.feedback}"</p>
+                            </div>
+                          )}
+
+                          {submission.acceptedAt && (
+                            <div className="text-[10px] text-text-400 font-mono text-right pt-0.5">
+                              Graded: {new Date(submission.acceptedAt).toLocaleDateString([], {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

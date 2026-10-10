@@ -44,6 +44,13 @@ router.post(
   assignmentController.submitAssignment
 );
 
+// Teacher/Admin grade submission (T8.5: marks + feedback, status to ACCEPTED)
+router.put(
+  '/:id/submissions/:submissionId/grade',
+  requireRole('TEACHER', 'DEPARTMENT_ADMIN'),
+  assignmentController.gradeSubmission
+);
+
 // Teacher/Admin delete assignment (T8.4)
 router.delete(
   '/:id',
