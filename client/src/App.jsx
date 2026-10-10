@@ -25,6 +25,8 @@ import StudentAttendance from './pages/student/StudentAttendance';
 import StudentNotes from './pages/student/StudentNotes';
 import ParentDashboard from './pages/parent/ParentDashboard';
 import ParentAttendance from './pages/parent/ParentAttendance';
+import SuperAdminLibrary from './pages/superadmin/Library';
+import DigitalLibrary from './pages/common/Library';
 
 import { SearchProvider } from './context/SearchContext';
 
@@ -48,6 +50,7 @@ function App() {
               <Route path="admins" element={<DeptAdmins />} />
               <Route path="exam-staff" element={<ExamStaff />} />
               <Route path="academic-terms" element={<AcademicTerms />} />
+              <Route path="library" element={<SuperAdminLibrary />} />
               <Route path="settings" element={<Settings />} />
             </Route>
 
@@ -75,6 +78,7 @@ function App() {
               <Route path="classes" element={<TeacherClasses />} />
               <Route path="attendance" element={<TeacherAttendance />} />
               <Route path="notes" element={<TeacherNotes />} />
+              <Route path="library" element={<DigitalLibrary />} />
             </Route>
 
             {/* Protected Routes: Student */}
@@ -85,6 +89,7 @@ function App() {
               <Route index element={<StudentDashboard />} />
               <Route path="attendance" element={<StudentAttendance />} />
               <Route path="notes" element={<StudentNotes />} />
+              <Route path="library" element={<DigitalLibrary />} />
             </Route>
 
             {/* Protected Routes: Parent */}
