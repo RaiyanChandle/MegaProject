@@ -101,7 +101,9 @@ export const getAssignments = async (req, res) => {
   try {
     let whereClause = {};
     if (subjectId) whereClause.subjectId = subjectId;
-    if (divisionId) whereClause.divisionId = divisionId;
+    if (divisionId) {
+      whereClause.divisionId = { [Op.or]: [divisionId, null] };
+    }
 
     if (user.role === 'TEACHER') {
       whereClause.teacherId = user.id;
@@ -152,24 +154,7 @@ export const getAssignmentById = async (req, res) => {
       include: [
         { model: Subject, as: 'subject', attributes: ['id', 'name', 'code', 'subjectType', 'departmentId'] },
         { model: Teacher, as: 'teacher', attributes: ['id', 'name', 'instituteId'] },
-        { model: Division, as: 'division', attributes: ['id', 'name'] },
-        {
-          model: Submission,
-          as: 'submissions',
-          include: [
-            { 
-              model: Student, 
-              as: 'student', 
-              attributes: ['id', 'name', 'instituteId', 'rollNumber', 'email', 'divisionId'],
-              include: [{ model: Division, as: 'division', attributes: ['id', 'name'] }]
-            },
-            {
-              model: Enrollment,
-              as: 'enrollment',
-              attributes: ['id', 'attemptNumber', 'status']
-            }
-          ]
-        }
+        { model: Division, as: 'division', attributes: ['id', 'name'] }
       ]
     });
 
@@ -185,7 +170,70 @@ export const getAssignmentById = async (req, res) => {
       return res.status(403).json({ error: 'Forbidden: Assignment belongs to another department.' });
     }
 
-    res.json(assignment);
+    // Fetch all active enrollments for this subject
+    const currentTerm = await AcademicTerm.findOne({ where: { isCurrent: true } });
+    const enrollmentWhere = { 
+      subjectId: assignment.subjectId,
+      status: { [Op.in]: ['ENROLLED', 'PASSED'] }
+    };
+    if (currentTerm) {
+      enrollmentWhere.academicTermId = currentTerm.id;
+    }
+
+    // If assignment is restricted to a division, filter students by that division
+    const studentInclude = {
+      model: Student,
+      as: 'student',
+      attributes: ['id', 'name', 'instituteId', 'rollNumber', 'email', 'divisionId'],
+      include: [{ model: Division, as: 'division', attributes: ['id', 'name'] }]
+    };
+    if (assignment.divisionId) {
+      studentInclude.where = { divisionId: assignment.divisionId };
+    }
+
+    const enrollments = await Enrollment.findAll({
+      where: enrollmentWhere,
+      include: [studentInclude]
+    });
+
+    // Fetch existing submissions
+    const existingSubmissions = await Submission.findAll({
+      where: { assignmentId: id }
+    });
+    
+    const submissionMap = new Map();
+    existingSubmissions.forEach(sub => submissionMap.set(sub.enrollmentId, sub.toJSON()));
+
+    // Construct full list including pending
+    const fullSubmissions = enrollments.map(enrollment => {
+      const existing = submissionMap.get(enrollment.id);
+      if (existing) {
+        return {
+          ...existing,
+          student: enrollment.student,
+          enrollment: { id: enrollment.id, attemptNumber: enrollment.attemptNumber, status: enrollment.status }
+        };
+      } else {
+        return {
+          id: `pending-${enrollment.id}`, // pseudo ID for React key
+          assignmentId: id,
+          enrollmentId: enrollment.id,
+          studentId: enrollment.student.id,
+          student: enrollment.student,
+          enrollment: { id: enrollment.id, attemptNumber: enrollment.attemptNumber, status: enrollment.status },
+          status: 'PENDING',
+          marksAwarded: null,
+          feedback: null,
+          fileUrl: null,
+          submittedAt: null
+        };
+      }
+    });
+
+    const assignmentData = assignment.toJSON();
+    assignmentData.submissions = fullSubmissions;
+
+    res.json(assignmentData);
   } catch (error) {
     console.error('Get assignment by ID error:', error);
     res.status(500).json({ error: 'Internal server error while fetching assignment details.' });

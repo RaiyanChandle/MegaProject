@@ -88,7 +88,7 @@ export default function DataTable({
                     className={`px-4 py-3 text-sm text-text-900 ${col.className || ''}`}
                   >
                     {col.render 
-                      ? (col.render.length === 1 ? col.render(row) : col.render(value, row)) 
+                      ? col.render(value, row)
                       : (value !== undefined ? value : '')}
                   </td>
                 );

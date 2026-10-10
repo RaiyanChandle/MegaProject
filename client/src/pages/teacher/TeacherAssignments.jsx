@@ -263,13 +263,20 @@ export default function TeacherAssignments() {
     }
   };
 
-  // Selected subject's available divisions from allocations
   const activeSubjectAllocations = allocations.filter(
     a => a.subjectId === assignmentForm.subjectId
   );
-  const availableDivisions = activeSubjectAllocations
-    .map(a => a.division)
-    .filter(Boolean);
+  
+  let availableDivisions = [];
+  activeSubjectAllocations.forEach(a => {
+    if (a.division) {
+      availableDivisions.push(a.division);
+    } else if (a.class?.divisions) {
+      availableDivisions.push(...a.class.divisions);
+    }
+  });
+  
+  availableDivisions = Array.from(new Map(availableDivisions.map(d => [d.id, d])).values());
 
   const columns = [
     {
