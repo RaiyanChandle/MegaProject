@@ -13,6 +13,7 @@ import {
   ParentStudent,
   AcademicTerm
 } from '../models/index.js';
+import { lockExpiredElectives } from '../jobs/electiveLockJob.js';
 
 export const createSlot = async (req, res) => {
   const { classId, slotName, slotType, credits, registrationOpensAt, registrationClosesAt } = req.body;
@@ -50,6 +51,9 @@ export const getSlots = async (req, res) => {
   if (!classId) return res.status(400).json({ error: 'classId is required' });
 
   try {
+    // Auto-lock any slots whose window has passed
+    await lockExpiredElectives();
+
     const targetClass = await Class.findOne({ where: { id: classId, departmentId } });
     if (!targetClass) return res.status(404).json({ error: 'Class not found' });
 
@@ -194,6 +198,9 @@ export const removeOption = async (req, res) => {
 
 export const getStudentElectiveSlots = async (req, res) => {
   try {
+    // Ensure any expired slots are locked immediately
+    await lockExpiredElectives();
+
     let studentId = req.user.id;
 
     // Support parent viewing student's electives (Rule 32 & Flow 15)
@@ -733,5 +740,245 @@ export const confirmElective = async (req, res) => {
     if (!t.finished) await t.rollback();
     console.error('Confirm elective error:', error);
     res.status(500).json({ error: 'Internal server error during elective confirmation' });
+  }
+};
+
+export const lockClosedSlotsManual = async (req, res) => {
+  try {
+    const result = await lockExpiredElectives();
+    res.json({
+      message: `Elective lock job completed: locked ${result.lockedChoicesCount} confirmed choices across ${result.closedSlotsCount} closed slots.`,
+      ...result
+    });
+  } catch (error) {
+    console.error('Manual lock error:', error);
+    res.status(500).json({ error: 'Failed to process elective lock job' });
+  }
+};
+
+/**
+ * Admin view of all student choices in a given elective slot.
+ */
+export const getSlotChoices = async (req, res) => {
+  const { slotId } = req.params;
+  const user = req.user;
+
+  try {
+    const slot = await ElectiveSlot.findByPk(slotId, {
+      include: [
+        { model: Class, as: 'class' },
+        { 
+          model: ElectiveOption, 
+          as: 'options',
+          include: [
+            { model: Subject, as: 'subject', attributes: ['id', 'name', 'code', 'credits'] },
+            { model: Department, as: 'offeredByDepartment', attributes: ['id', 'name', 'code'] }
+          ]
+        }
+      ]
+    });
+
+    if (!slot) return res.status(404).json({ error: 'Slot not found' });
+    if (user.role === 'DEPARTMENT_ADMIN' && slot.class.departmentId !== user.departmentId) {
+      return res.status(403).json({ error: 'Unauthorized to view choices for this slot' });
+    }
+
+    const choices = await StudentElectiveChoice.findAll({
+      where: { slotId },
+      include: [
+        {
+          model: Student,
+          as: 'student',
+          attributes: ['id', 'instituteId', 'rollNumber', 'name', 'email'],
+          include: [
+            {
+              model: Division,
+              as: 'division',
+              attributes: ['id', 'name']
+            }
+          ]
+        },
+        {
+          model: Subject,
+          as: 'chosenSubject',
+          attributes: ['id', 'name', 'code', 'credits']
+        }
+      ],
+      order: [['status', 'ASC'], ['createdAt', 'DESC']]
+    });
+
+    res.json({
+      slot: {
+        id: slot.id,
+        slotName: slot.slotName,
+        slotType: slot.slotType,
+        credits: slot.credits,
+        options: slot.options
+      },
+      choices
+    });
+  } catch (error) {
+    console.error('Get slot choices error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * T9.5: Admin-approved swap after lock (Rule 13, Flow 5 Step 6).
+ * Modifies choice, withdraws old Enrollment, creates new Enrollment in a single transaction.
+ */
+export const adminSwapElective = async (req, res) => {
+  const { studentId, slotId, newSubjectId, overrideCapacity = false, reason = '' } = req.body;
+  const user = req.user;
+
+  if (!studentId || !slotId || !newSubjectId) {
+    return res.status(400).json({ error: 'studentId, slotId, and newSubjectId are required' });
+  }
+
+  const t = await sequelize.transaction();
+
+  try {
+    const slot = await ElectiveSlot.findByPk(slotId, {
+      include: [{ model: Class, as: 'class' }],
+      transaction: t
+    });
+
+    if (!slot) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Elective slot not found' });
+    }
+
+    if (user.role === 'DEPARTMENT_ADMIN' && slot.class.departmentId !== user.departmentId) {
+      await t.rollback();
+      return res.status(403).json({ error: 'Unauthorized to modify electives for this slot' });
+    }
+
+    // Verify student exists
+    const student = await Student.findByPk(studentId, { transaction: t });
+    if (!student) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Student record not found' });
+    }
+
+    // Find student's current elective choice row with lock
+    const currentChoice = await StudentElectiveChoice.findOne({
+      where: { studentId, slotId },
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    });
+
+    if (!currentChoice) {
+      await t.rollback();
+      return res.status(404).json({ error: 'No elective choice found for this student in this slot' });
+    }
+
+    if (currentChoice.chosenSubjectId === newSubjectId) {
+      await t.rollback();
+      return res.status(400).json({ error: 'Student is already enrolled in this elective subject' });
+    }
+
+    const oldSubjectId = currentChoice.chosenSubjectId;
+
+    // Lock target ElectiveOption row to serialize capacity checks (Rule 11)
+    const targetOption = await ElectiveOption.findOne({
+      where: { slotId, subjectId: newSubjectId },
+      include: [{ model: Subject, as: 'subject' }],
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    });
+
+    if (!targetOption) {
+      await t.rollback();
+      return res.status(400).json({ error: 'The selected new subject is not a valid option for this slot' });
+    }
+
+    // Capacity verification
+    if (targetOption.maxCapacity !== null && !overrideCapacity) {
+      const confirmedCount = await StudentElectiveChoice.count({
+        where: {
+          slotId,
+          chosenSubjectId: newSubjectId,
+          status: { [Op.in]: ['CONFIRMED', 'LOCKED'] },
+          studentId: { [Op.ne]: studentId }
+        },
+        transaction: t
+      });
+
+      if (confirmedCount >= targetOption.maxCapacity) {
+        await t.rollback();
+        return res.status(400).json({
+          error: `Seat capacity of ${targetOption.maxCapacity} has been reached for '${targetOption.subject?.name}'. Enable capacity override if this swap has explicit administrative authorization.`
+        });
+      }
+    }
+
+    // Find current active academic term
+    const currentTerm = await AcademicTerm.findOne({
+      where: { isCurrent: true },
+      transaction: t
+    });
+
+    if (!currentTerm) {
+      await t.rollback();
+      return res.status(400).json({ error: 'No active academic term found. Please configure an active academic term.' });
+    }
+
+    // Adjust old Enrollment per Rule 9 & Flow 5 step 6:
+    // Mark old enrollment as WITHDRAWN so historical audit records remain consistent
+    const oldEnrollment = await Enrollment.findOne({
+      where: {
+        studentId,
+        subjectId: oldSubjectId,
+        academicTermId: currentTerm.id,
+        classId: slot.classId
+      },
+      transaction: t
+    });
+
+    if (oldEnrollment) {
+      await oldEnrollment.update({ status: 'WITHDRAWN' }, { transaction: t });
+    }
+
+    // Create or re-activate new Enrollment
+    const [newEnrollment, created] = await Enrollment.findOrCreate({
+      where: {
+        studentId,
+        subjectId: newSubjectId,
+        academicTermId: currentTerm.id,
+        attemptNumber: 1
+      },
+      defaults: {
+        classId: slot.classId,
+        status: 'ENROLLED'
+      },
+      transaction: t
+    });
+
+    if (!created && newEnrollment.status !== 'ENROLLED') {
+      await newEnrollment.update({ status: 'ENROLLED' }, { transaction: t });
+    }
+
+    // Update StudentElectiveChoice to LOCKED with new subject
+    await currentChoice.update({
+      chosenSubjectId: newSubjectId,
+      status: 'LOCKED',
+      chosenAt: new Date()
+    }, { transaction: t });
+
+    await t.commit();
+
+    console.log(`[AdminElectiveSwap] Student ${student.instituteId || studentId} swapped from ${oldSubjectId} to ${newSubjectId} in slot ${slot.slotName}. Reason: ${reason || 'N/A'}`);
+
+    res.json({
+      message: `Elective successfully swapped to '${targetOption.subject?.name || newSubjectId}'.`,
+      choice: currentChoice,
+      newEnrollment,
+      previousSubjectId: oldSubjectId,
+      reason
+    });
+  } catch (error) {
+    if (!t.finished) await t.rollback();
+    console.error('Admin swap elective error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error during administrative swap' });
   }
 };

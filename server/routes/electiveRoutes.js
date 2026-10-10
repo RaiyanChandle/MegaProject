@@ -8,7 +8,10 @@ import {
   removeOption,
   getStudentElectiveSlots,
   chooseElective,
-  confirmElective
+  confirmElective,
+  lockClosedSlotsManual,
+  getSlotChoices,
+  adminSwapElective
 } from '../controllers/electiveController.js';
 import { requireAuth, requireRole } from '../middlewares/authMiddleware.js';
 
@@ -21,7 +24,10 @@ router.get('/my-slots', requireRole('STUDENT', 'PARENT'), getStudentElectiveSlot
 router.post('/choose', requireRole('STUDENT'), chooseElective);
 router.post('/confirm', requireRole('STUDENT'), confirmElective);
 
-// Department Admin routes
+// Department Admin / Super Admin routes
+router.post('/lock-closed', requireRole('DEPARTMENT_ADMIN', 'SUPER_ADMIN'), lockClosedSlotsManual);
+router.post('/swap', requireRole('DEPARTMENT_ADMIN', 'SUPER_ADMIN'), adminSwapElective);
+router.get('/slots/:slotId/choices', requireRole('DEPARTMENT_ADMIN', 'SUPER_ADMIN'), getSlotChoices);
 router.post('/slots', requireRole('DEPARTMENT_ADMIN'), createSlot);
 router.get('/slots', requireRole('DEPARTMENT_ADMIN'), getSlots); // ?classId=...
 router.put('/slots/:id', requireRole('DEPARTMENT_ADMIN'), updateSlot);

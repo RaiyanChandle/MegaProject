@@ -82,12 +82,17 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+import { initElectiveLockJob } from './jobs/electiveLockJob.js';
+
 app.listen(PORT, async () => {
   try {
     await sequelize.authenticate();
 
     console.log("Database connected successfully");
     console.log(`${APP_NAME} running on port ${PORT}`);
+
+    // Initialize elective lock background job (runs every 5 minutes)
+    initElectiveLockJob(5);
   } catch (error) {
     console.error("Unable to connect to database:", error);
   }
