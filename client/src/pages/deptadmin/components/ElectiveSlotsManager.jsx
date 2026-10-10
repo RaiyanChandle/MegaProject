@@ -19,7 +19,13 @@ export default function ElectiveSlotsManager({ classId }) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [slotFormData, setSlotFormData] = useState({ slotName: '', slotType: 'PROGRAM_ELECTIVE', credits: 3 });
+  const [slotFormData, setSlotFormData] = useState({ 
+    slotName: '', 
+    slotType: 'PROGRAM_ELECTIVE', 
+    credits: 3,
+    registrationOpensAt: '',
+    registrationClosesAt: ''
+  });
 
   const [optionFormData, setOptionFormData] = useState({ subjectId: '', maxCapacity: '' });
 
@@ -52,9 +58,21 @@ export default function ElectiveSlotsManager({ classId }) {
   const openSlotModal = (slot = null) => {
     setSelectedSlot(slot);
     if (slot) {
-      setSlotFormData({ slotName: slot.slotName, slotType: slot.slotType, credits: slot.credits });
+      setSlotFormData({ 
+        slotName: slot.slotName, 
+        slotType: slot.slotType, 
+        credits: slot.credits,
+        registrationOpensAt: slot.registrationOpensAt ? new Date(slot.registrationOpensAt).toISOString().slice(0, 16) : '',
+        registrationClosesAt: slot.registrationClosesAt ? new Date(slot.registrationClosesAt).toISOString().slice(0, 16) : ''
+      });
     } else {
-      setSlotFormData({ slotName: '', slotType: 'PROGRAM_ELECTIVE', credits: 3 });
+      setSlotFormData({ 
+        slotName: '', 
+        slotType: 'PROGRAM_ELECTIVE', 
+        credits: 3,
+        registrationOpensAt: '',
+        registrationClosesAt: ''
+      });
     }
     setIsSlotModalOpen(true);
   };
@@ -150,6 +168,13 @@ export default function ElectiveSlotsManager({ classId }) {
                   <div className="flex items-center gap-2 mt-1">
                     <StatusBadge status={slot.slotType} />
                     <span className="text-xs text-text-500">Credits: {slot.credits}</span>
+                    {slot.registrationOpensAt || slot.registrationClosesAt ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-surface-0 border border-border text-text-500 font-mono">
+                        Window: {slot.registrationOpensAt ? new Date(slot.registrationOpensAt).toLocaleDateString() : 'Now'} 
+                        {' → '} 
+                        {slot.registrationClosesAt ? new Date(slot.registrationClosesAt).toLocaleDateString() : 'Open'}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -234,6 +259,24 @@ export default function ElectiveSlotsManager({ classId }) {
                 value={slotFormData.credits}
                 onChange={(e) => setSlotFormData({ ...slotFormData, credits: parseFloat(e.target.value) })}
                 required
+              />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Registration Opens At (Optional)">
+              <input
+                type="datetime-local"
+                value={slotFormData.registrationOpensAt}
+                onChange={(e) => setSlotFormData({ ...slotFormData, registrationOpensAt: e.target.value })}
+                className="w-full rounded-md border border-border px-3 py-2 text-sm bg-surface-0"
+              />
+            </Field>
+            <Field label="Registration Closes At (Optional)">
+              <input
+                type="datetime-local"
+                value={slotFormData.registrationClosesAt}
+                onChange={(e) => setSlotFormData({ ...slotFormData, registrationClosesAt: e.target.value })}
+                className="w-full rounded-md border border-border px-3 py-2 text-sm bg-surface-0"
               />
             </Field>
           </div>

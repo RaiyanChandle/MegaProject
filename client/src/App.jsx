@@ -25,6 +25,7 @@ import StudentDashboard from './pages/student/StudentDashboard';
 import StudentAttendance from './pages/student/StudentAttendance';
 import StudentNotes from './pages/student/StudentNotes';
 import StudentAssignments from './pages/student/StudentAssignments';
+import StudentElectives from './pages/student/StudentElectives';
 import ParentDashboard from './pages/parent/ParentDashboard';
 import ParentAttendance from './pages/parent/ParentAttendance';
 import SuperAdminLibrary from './pages/superadmin/Library';
@@ -90,6 +91,7 @@ function App() {
               element={<ProtectedRoute allowedRoles={['STUDENT']} title="Student Dashboard" />}
             >
               <Route index element={<StudentDashboard />} />
+              <Route path="electives" element={<StudentElectives />} />
               <Route path="attendance" element={<StudentAttendance />} />
               <Route path="notes" element={<StudentNotes />} />
               <Route path="assignments" element={<StudentAssignments />} />

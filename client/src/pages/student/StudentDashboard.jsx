@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { BookOpen, Calendar, Clock, DollarSign, FileCheck } from 'lucide-react';
+import { BookOpen, Calendar, Clock, DollarSign, FileCheck, Layers } from 'lucide-react';
 import { apiClient } from '../../api/client';
 import { Link } from 'react-router-dom';
 
@@ -62,18 +62,20 @@ export default function StudentDashboard() {
           </div>
         </Link>
 
-        <div className="bg-surface-0 border border-border p-6 rounded-xl flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="p-3 bg-warning/10 text-warning rounded-lg">
-            <FileCheck size={24} />
+        <Link to="/student/electives" className="bg-surface-0 border border-border p-6 rounded-md flex items-center gap-4 hover:border-ink-700 transition-colors">
+          <div className="p-3 bg-brass-500/10 text-brass-500 rounded-md">
+            <Layers size={24} />
           </div>
           <div>
-            <div className="text-sm font-medium text-text-500">Recent Marks</div>
-            <div className="text-2xl font-bold text-text-900">--</div>
+            <div className="text-sm font-medium text-text-500">Electives</div>
+            <div className="text-sm font-semibold text-text-900 mt-1">
+              Slots & Quotas
+            </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-surface-0 border border-border p-6 rounded-xl flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="p-3 bg-danger/10 text-danger rounded-lg">
+        <div className="bg-surface-0 border border-border p-6 rounded-md flex items-center gap-4">
+          <div className="p-3 bg-danger/10 text-danger rounded-md">
             <DollarSign size={24} />
           </div>
           <div>

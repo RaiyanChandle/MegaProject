@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers } from 'lucide-react';
 
 export const navigationConfig = {
   SUPER_ADMIN: [
@@ -30,6 +30,7 @@ export const navigationConfig = {
   STUDENT: [
     { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
     { name: 'My Subjects', href: '/student/subjects', icon: BookOpen },
+    { name: 'Electives', href: '/student/electives', icon: Layers },
     { name: 'Attendance', href: '/student/attendance', icon: Clock },
     { name: 'Study Notes', href: '/student/notes', icon: FileText },
     { name: 'Assignments', href: '/student/assignments', icon: FileCheck },
