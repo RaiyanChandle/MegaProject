@@ -19,10 +19,16 @@ import AttendanceReport from './pages/deptadmin/AttendanceReport';
 
 import TeacherClasses from './pages/teacher/TeacherClasses';
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
+import TeacherNotes from './pages/teacher/TeacherNotes';
+import TeacherAssignments from './pages/teacher/TeacherAssignments';
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentAttendance from './pages/student/StudentAttendance';
+import StudentNotes from './pages/student/StudentNotes';
+import StudentAssignments from './pages/student/StudentAssignments';
 import ParentDashboard from './pages/parent/ParentDashboard';
 import ParentAttendance from './pages/parent/ParentAttendance';
+import SuperAdminLibrary from './pages/superadmin/Library';
+import DigitalLibrary from './pages/common/Library';
 
 import { SearchProvider } from './context/SearchContext';
 
@@ -46,6 +52,7 @@ function App() {
               <Route path="admins" element={<DeptAdmins />} />
               <Route path="exam-staff" element={<ExamStaff />} />
               <Route path="academic-terms" element={<AcademicTerms />} />
+              <Route path="library" element={<SuperAdminLibrary />} />
               <Route path="settings" element={<Settings />} />
             </Route>
 
@@ -72,6 +79,9 @@ function App() {
               <Route index element={<div className="p-6 text-text-900">Teacher Dashboard (Coming Soon)</div>} />
               <Route path="classes" element={<TeacherClasses />} />
               <Route path="attendance" element={<TeacherAttendance />} />
+              <Route path="notes" element={<TeacherNotes />} />
+              <Route path="assignments" element={<TeacherAssignments />} />
+              <Route path="library" element={<DigitalLibrary />} />
             </Route>
 
             {/* Protected Routes: Student */}
@@ -81,6 +91,9 @@ function App() {
             >
               <Route index element={<StudentDashboard />} />
               <Route path="attendance" element={<StudentAttendance />} />
+              <Route path="notes" element={<StudentNotes />} />
+              <Route path="assignments" element={<StudentAssignments />} />
+              <Route path="library" element={<DigitalLibrary />} />
             </Route>
 
             {/* Protected Routes: Parent */}

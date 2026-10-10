@@ -139,7 +139,12 @@ export const getMyAllocations = async (req, res) => {
       where: { teacherId },
       include: [
         { model: Subject, as: 'subject', attributes: ['id', 'name', 'code', 'subjectType', 'credits'] },
-        { model: Class, as: 'class', attributes: ['id', 'name', 'batchYear', 'semesterNumber'] },
+        { 
+          model: Class, 
+          as: 'class', 
+          attributes: ['id', 'name', 'batchYear', 'semesterNumber'],
+          include: [{ model: Division, as: 'divisions', attributes: ['id', 'name'] }]
+        },
         { model: Division, as: 'division', attributes: ['id', 'name'] }
       ],
       order: [['createdAt', 'DESC']]
