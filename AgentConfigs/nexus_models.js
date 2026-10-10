@@ -193,6 +193,8 @@ const ElectiveSlot = sequelize.define('ElectiveSlot', {
   slotName: { type: DataTypes.STRING, allowNull: false }, // "PE-1", "OE-2"
   slotType: { type: DataTypes.ENUM(...SUBJECT_TYPES), allowNull: false }, // PROGRAM_ELECTIVE or OPEN_ELECTIVE
   credits: { type: DataTypes.FLOAT, allowNull: false },
+  registrationOpensAt: { type: DataTypes.DATE, allowNull: true },
+  registrationClosesAt: { type: DataTypes.DATE, allowNull: true },
 }, { tableName: 'elective_slots', timestamps: true });
 
 // Which subjects can fill a slot. offeredByDepartmentId lets an open
