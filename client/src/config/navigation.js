@@ -14,6 +14,7 @@ export const navigationConfig = {
     { name: 'Subjects', href: '/deptadmin/subjects', icon: BookOpen },
     { name: 'Teachers', href: '/deptadmin/teachers', icon: Users },
     { name: 'Students', href: '/deptadmin/students', icon: Users },
+    { name: 'Attendance Report', href: '/deptadmin/attendance', icon: Clock },
     { name: 'Timetable', href: '/deptadmin/timetable', icon: Calendar },
   ],
   TEACHER: [
@@ -32,6 +33,7 @@ export const navigationConfig = {
   ],
   PARENT: [
     { name: 'Dashboard', href: '/parent', icon: LayoutDashboard },
+    { name: 'Attendance', href: '/parent/attendance', icon: Clock },
     { name: 'Children', href: '/parent/children', icon: Users },
     { name: 'Fees', href: '/parent/fees', icon: DollarSign },
   ],

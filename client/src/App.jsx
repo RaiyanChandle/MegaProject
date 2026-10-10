@@ -15,10 +15,14 @@ import Subjects from './pages/deptadmin/Subjects';
 import SubjectDetails from './pages/deptadmin/SubjectDetails';
 import Teachers from './pages/deptadmin/Teachers';
 import Students from './pages/deptadmin/Students';
+import AttendanceReport from './pages/deptadmin/AttendanceReport';
 
 import TeacherClasses from './pages/teacher/TeacherClasses';
+import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import StudentDashboard from './pages/student/StudentDashboard';
+import StudentAttendance from './pages/student/StudentAttendance';
 import ParentDashboard from './pages/parent/ParentDashboard';
+import ParentAttendance from './pages/parent/ParentAttendance';
 
 import { SearchProvider } from './context/SearchContext';
 
@@ -57,6 +61,7 @@ function App() {
               <Route path="subjects/:id" element={<SubjectDetails />} />
               <Route path="teachers" element={<Teachers />} />
               <Route path="students" element={<Students />} />
+              <Route path="attendance" element={<AttendanceReport />} />
             </Route>
 
             {/* Protected Routes: Teacher */}
@@ -66,6 +71,7 @@ function App() {
             >
               <Route index element={<div className="p-6 text-text-900">Teacher Dashboard (Coming Soon)</div>} />
               <Route path="classes" element={<TeacherClasses />} />
+              <Route path="attendance" element={<TeacherAttendance />} />
             </Route>
 
             {/* Protected Routes: Student */}
@@ -74,6 +80,7 @@ function App() {
               element={<ProtectedRoute allowedRoles={['STUDENT']} title="Student Dashboard" />}
             >
               <Route index element={<StudentDashboard />} />
+              <Route path="attendance" element={<StudentAttendance />} />
             </Route>
 
             {/* Protected Routes: Parent */}
@@ -82,6 +89,7 @@ function App() {
               element={<ProtectedRoute allowedRoles={['PARENT']} title="Parent Dashboard" />}
             >
               <Route index element={<ParentDashboard />} />
+              <Route path="attendance" element={<ParentAttendance />} />
             </Route>
 
             {/* Catch-all */}
