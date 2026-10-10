@@ -99,13 +99,13 @@ widening to more modules.
 
 ## Phase 7 — Attendance (first vertical slice) · flows 6
 
-- [ ] **T7.1** Create an `AttendanceSession` (only for subjects the teacher is allocated).
-- [ ] **T7.2** Roster endpoint: enrollments for subject + term, including backlog students.
-- [ ] **T7.3** Bulk mark attendance; `studentId` derived from the enrollment (rules 16).
-- [ ] **T7.4** Edit with `editedAt` (rules 17).
-- [ ] **T7.5** Student view: attendance % per subject, low-attendance highlight (computed live, rules 18).
-- [ ] **T7.6** Parent view for the selected child.
-- [ ] **T7.7** Department/teacher attendance report.
+- [x] **T7.1** Create an `AttendanceSession` (only for subjects the teacher is allocated).
+- [x] **T7.2** Roster endpoint: enrollments for subject + term, including backlog students.
+- [x] **T7.3** Bulk mark attendance; `studentId` derived from the enrollment (rules 16).
+- [x] **T7.4** Edit with `editedAt` (rules 17).
+- [x] **T7.5** Student view: attendance % per subject, low-attendance highlight (computed live, rules 18).
+- [x] **T7.6** Parent view for the selected child.
+- [x] **T7.7** Department/teacher attendance report.
 
 **Milestone M1 (demo):** admin sets up class → imports students → allocates teacher → teacher marks attendance → student and parent see the %.
 
@@ -123,7 +123,7 @@ widening to more modules.
 
 ## Phase 9 — Elective registration · flows 5
 
-- [ ] **T9.1** Migration: add `registrationOpensAt` / `registrationClosesAt` to `ElectiveSlot` (PRD open decision 4).
+- [x] **T9.1** Migration: add `registrationOpensAt` / `registrationClosesAt` to `ElectiveSlot` (PRD open decision 4).
 - [ ] **T9.2** Student view of slots/options with seats remaining, within the window.
 - [ ] **T9.3** Choose + confirm in a transaction with a row lock; create the `Enrollment` on confirm (rules 12, 13).
 - [ ] **T9.4** Job that moves `CONFIRMED` → `LOCKED` when the window closes.
