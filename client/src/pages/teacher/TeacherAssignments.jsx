@@ -19,7 +19,8 @@ import {
   Eye, 
   AlertCircle,
   CheckCircle2,
-  Paperclip
+  Paperclip,
+  Search
 } from 'lucide-react';
 
 export default function TeacherAssignments() {
@@ -46,6 +47,7 @@ export default function TeacherAssignments() {
   const [selectedAssignmentForView, setSelectedAssignmentForView] = useState(null);
   const [assignmentDetails, setAssignmentDetails] = useState(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [submissionFilterText, setSubmissionFilterText] = useState('');
 
   // Delete Confirm
   const [assignmentToDelete, setAssignmentToDelete] = useState(null);
@@ -412,6 +414,7 @@ export default function TeacherAssignments() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title="Create Course Assignment"
+        maxWidth="max-w-xl"
       >
         <form onSubmit={handleCreateAssignment} className="space-y-4">
           <Field label="Subject" required>
@@ -537,89 +540,154 @@ export default function TeacherAssignments() {
         onClose={() => {
           setSelectedAssignmentForView(null);
           setAssignmentDetails(null);
+          setSubmissionFilterText('');
         }}
-        title={`Submissions: ${selectedAssignmentForView?.title || ''}`}
+        title={`Student Submissions: ${selectedAssignmentForView?.title || ''}`}
+        maxWidth="max-w-6xl"
       >
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+        <div className="space-y-4">
           {/* Assignment Overview Bar */}
-          <div className="bg-surface-50 border border-border rounded-md p-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="bg-surface-50 border border-border rounded-lg p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
             <div>
-              <span className="text-text-500 block">Subject:</span>
-              <span className="font-semibold text-text-900 font-mono">
+              <span className="text-text-500 block mb-1">Subject & Code:</span>
+              <span className="font-semibold text-text-900 font-mono text-sm block">
                 {selectedAssignmentForView?.subject?.code}
+              </span>
+              <span className="text-text-500 text-[11px] truncate block">
+                {selectedAssignmentForView?.subject?.name}
               </span>
             </div>
             <div>
-              <span className="text-text-500 block">Max Marks:</span>
-              <span className="font-semibold text-text-900 font-mono">
+              <span className="text-text-500 block mb-1">Total Marks:</span>
+              <span className="font-semibold text-text-900 font-mono text-sm block">
                 {selectedAssignmentForView?.marks} pts
               </span>
             </div>
-            <div className="col-span-2">
-              <span className="text-text-500 block">Deadline:</span>
-              <span className="font-semibold text-text-900 font-mono">
-                {selectedAssignmentForView?.deadline ? new Date(selectedAssignmentForView.deadline).toLocaleString() : ''}
+            <div>
+              <span className="text-text-500 block mb-1">Deadline:</span>
+              <span className="font-semibold text-text-900 font-mono text-xs block">
+                {selectedAssignmentForView?.deadline ? new Date(selectedAssignmentForView.deadline).toLocaleString([], {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }) : '-'}
+              </span>
+            </div>
+            <div>
+              <span className="text-text-500 block mb-1">Submissions Count:</span>
+              <span className="inline-flex items-center gap-1 font-semibold text-success font-mono text-sm">
+                <CheckCircle2 size={15} />
+                {assignmentDetails?.submissions?.length || 0} Submitted
               </span>
             </div>
           </div>
 
+          {/* Submissions Search Toolbar */}
+          {assignmentDetails?.submissions?.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3 top-2.5 text-text-400" size={15} />
+                <input
+                  type="text"
+                  placeholder="Filter by student name, roll number, or division..."
+                  value={submissionFilterText}
+                  onChange={(e) => setSubmissionFilterText(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-xs rounded-md border border-border bg-surface-0 focus:border-ink-700 focus:ring-1 focus:ring-ink-700"
+                />
+              </div>
+              <div className="text-xs text-text-500 font-mono">
+                Showing {assignmentDetails.submissions.filter(sub => {
+                  if (!submissionFilterText.trim()) return true;
+                  const q = submissionFilterText.toLowerCase();
+                  return (
+                    sub.student?.name?.toLowerCase().includes(q) ||
+                    sub.student?.rollNumber?.toLowerCase().includes(q) ||
+                    sub.student?.division?.name?.toLowerCase().includes(q)
+                  );
+                }).length} of {assignmentDetails.submissions.length} submission{assignmentDetails.submissions.length === 1 ? '' : 's'}
+              </div>
+            </div>
+          )}
+
           {isLoadingDetails ? (
-            <div className="p-8 text-center text-sm text-text-500">
+            <div className="py-16 text-center text-sm text-text-500">
               Loading student submissions...
             </div>
           ) : !assignmentDetails?.submissions || assignmentDetails.submissions.length === 0 ? (
-            <div className="py-8 text-center">
-              <Clock className="mx-auto text-text-400 mb-2" size={32} />
+            <div className="py-16 text-center">
+              <Clock className="mx-auto text-text-400 mb-2" size={38} />
               <p className="text-sm font-medium text-text-900">No submissions received yet</p>
               <p className="text-xs text-text-500 mt-1">
                 Submissions from enrolled students will appear here as they are uploaded.
               </p>
             </div>
           ) : (
-            <div className="border border-border rounded-md overflow-hidden">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-surface-100 text-text-500 font-medium border-b border-border">
+            <div className="border border-border rounded-lg overflow-hidden max-h-[52vh] overflow-y-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="sticky top-0 bg-surface-100 text-text-600 font-medium border-b border-border text-xs uppercase tracking-wider z-10 shadow-sm">
                   <tr>
-                    <th className="py-2.5 px-3">Student</th>
-                    <th className="py-2.5 px-3">Roll No</th>
-                    <th className="py-2.5 px-3">Submitted At</th>
-                    <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3 text-right">Document</th>
+                    <th className="py-3 px-4">Student</th>
+                    <th className="py-3 px-4">Roll No</th>
+                    <th className="py-3 px-4">Division</th>
+                    <th className="py-3 px-4">Submitted At</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Submitted Document</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {assignmentDetails.submissions.map((sub) => (
-                    <tr key={sub.id} className="hover:bg-surface-50">
-                      <td className="py-2.5 px-3 font-medium text-text-900">
-                        {sub.student?.name}
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-text-500">
-                        {sub.student?.rollNumber || '-'}
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-text-500">
-                        {new Date(sub.submittedAt).toLocaleString([], {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <StatusBadge status={sub.status} />
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <a
-                          href={sub.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-ink-700 hover:text-ink-900 font-medium underline"
-                        >
-                          <span>View File</span>
-                          <ExternalLink size={12} />
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
+                  {assignmentDetails.submissions
+                    .filter(sub => {
+                      if (!submissionFilterText.trim()) return true;
+                      const q = submissionFilterText.toLowerCase();
+                      return (
+                        sub.student?.name?.toLowerCase().includes(q) ||
+                        sub.student?.rollNumber?.toLowerCase().includes(q) ||
+                        sub.student?.division?.name?.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((sub) => (
+                      <tr key={sub.id} className="hover:bg-surface-50 transition-colors">
+                        <td className="py-3 px-4 font-medium text-text-900">
+                          {sub.student?.name}
+                        </td>
+                        <td className="py-3 px-4 font-mono text-text-500 text-xs">
+                          {sub.student?.rollNumber || '-'}
+                        </td>
+                        <td className="py-3 px-4 text-xs">
+                          {sub.student?.division?.name ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-medium bg-neutral/10 text-neutral">
+                              Div {sub.student.division.name}
+                            </span>
+                          ) : (
+                            <span className="text-text-400 font-mono">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 font-mono text-text-600 text-xs">
+                          {new Date(sub.submittedAt).toLocaleString([], {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
+                        <td className="py-3 px-4">
+                          <StatusBadge status={sub.status} />
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <a
+                            href={sub.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border bg-surface-0 hover:bg-surface-100 text-ink-900 transition-colors"
+                          >
+                            <span>View Solution</span>
+                            <ExternalLink size={12} />
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -631,6 +699,7 @@ export default function TeacherAssignments() {
               onClick={() => {
                 setSelectedAssignmentForView(null);
                 setAssignmentDetails(null);
+                setSubmissionFilterText('');
               }}
             >
               Close
