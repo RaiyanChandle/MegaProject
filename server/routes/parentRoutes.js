@@ -11,4 +11,7 @@ router.post('/', requireRole('DEPARTMENT_ADMIN'), parentController.createParent)
 router.get('/student/:studentId', requireRole('DEPARTMENT_ADMIN', 'TEACHER', 'STUDENT'), parentController.getStudentParents);
 router.delete('/student/:studentId/parent/:parentId', requireRole('DEPARTMENT_ADMIN'), parentController.unlinkParent);
 
+// Parent gets linked children
+router.get('/my-children', requireRole('PARENT'), parentController.getMyChildren);
+
 export default router;

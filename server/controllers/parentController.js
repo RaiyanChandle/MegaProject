@@ -118,3 +118,32 @@ export const unlinkParent = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Get linked children for authenticated parent
+export const getMyChildren = async (req, res) => {
+  const parentId = req.user.id;
+  const { Division, Department } = await import('../models/index.js');
+
+  try {
+    const parentLinks = await ParentStudent.findAll({
+      where: { parentId },
+      include: [
+        {
+          model: Student,
+          as: 'student',
+          attributes: ['id', 'instituteId', 'name', 'email', 'rollNumber', 'batchYear', 'departmentId', 'divisionId'],
+          include: [
+            { model: Division, as: 'division', attributes: ['id', 'name'] },
+            { model: Department, as: 'department', attributes: ['id', 'name', 'code'] }
+          ]
+        }
+      ]
+    });
+
+    const children = parentLinks.map(link => link.student).filter(Boolean);
+    res.json(children);
+  } catch (error) {
+    console.error('Get my children error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
