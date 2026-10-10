@@ -6,7 +6,9 @@ import {
   deleteSlot, 
   addOption, 
   removeOption,
-  getStudentElectiveSlots 
+  getStudentElectiveSlots,
+  chooseElective,
+  confirmElective
 } from '../controllers/electiveController.js';
 import { requireAuth, requireRole } from '../middlewares/authMiddleware.js';
 
@@ -14,8 +16,10 @@ const router = express.Router();
 
 router.use(requireAuth);
 
-// Student & Parent routes (T9.2)
+// Student & Parent routes (T9.2 & T9.3)
 router.get('/my-slots', requireRole('STUDENT', 'PARENT'), getStudentElectiveSlots);
+router.post('/choose', requireRole('STUDENT'), chooseElective);
+router.post('/confirm', requireRole('STUDENT'), confirmElective);
 
 // Department Admin routes
 router.post('/slots', requireRole('DEPARTMENT_ADMIN'), createSlot);

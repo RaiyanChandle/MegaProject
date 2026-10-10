@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from '../../api/client';
 import StatusBadge from '../../components/ui/StatusBadge';
 import EmptyState from '../../components/ui/EmptyState';
+import Button from '../../components/ui/Button';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
 import { 
   BookOpen, 
@@ -13,15 +15,23 @@ import {
   Users, 
   Layers, 
   Info, 
-  ArrowRight,
   Building2,
-  Sparkles
+  Sparkles,
+  Check
 } from 'lucide-react';
 
 export default function StudentElectives() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Confirm modal state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    slot: null,
+    option: null
+  });
 
   const fetchElectiveSlots = async () => {
     setIsLoading(true);
@@ -41,6 +51,52 @@ export default function StudentElectives() {
   useEffect(() => {
     fetchElectiveSlots();
   }, []);
+
+  // Handle stage 1: Save as PENDING (Draft)
+  const handleChoose = async (slotId, subjectId) => {
+    setActionLoading(true);
+    try {
+      const res = await apiClient.post('/electives/choose', { slotId, subjectId });
+      toast.success(res.message || 'Choice saved as pending. Please confirm to secure your seat.');
+      await fetchElectiveSlots();
+    } catch (err) {
+      console.error('Choose elective failed:', err);
+      toast.error(err.message || 'Failed to record choice');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Open confirmation modal for stage 2: CONFIRMED + Enrollment
+  const promptConfirmChoice = (slot, option) => {
+    setConfirmDialog({
+      isOpen: true,
+      slot,
+      option
+    });
+  };
+
+  // Execute confirm in transactional endpoint
+  const executeConfirmChoice = async () => {
+    const { slot, option } = confirmDialog;
+    if (!slot || !option) return;
+
+    setActionLoading(true);
+    try {
+      const res = await apiClient.post('/electives/confirm', { 
+        slotId: slot.id, 
+        subjectId: option.subjectId 
+      });
+      toast.success(res.message || 'Elective choice confirmed and enrolled!');
+      await fetchElectiveSlots();
+    } catch (err) {
+      console.error('Confirm elective failed:', err);
+      toast.error(err.message || 'Failed to confirm elective');
+    } finally {
+      setActionLoading(false);
+      setConfirmDialog({ isOpen: false, slot: null, option: null });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -87,7 +143,7 @@ export default function StudentElectives() {
             Elective Subject Registration
           </h1>
           <p className="text-sm text-text-500 mt-1">
-            Browse available Program and Open Electives, monitor remaining seat quotas, and track registration deadlines.
+            Browse available Program and Open Electives, select subjects, and confirm your choice to complete enrollment.
           </p>
         </div>
 
@@ -103,7 +159,7 @@ export default function StudentElectives() {
         )}
       </div>
 
-      {/* Info / Class Alert if no slots or no class */}
+      {/* Info Message if no slots or no class */}
       {message && slots.length === 0 && (
         <div className="p-4 rounded-md border border-warning/20 bg-warning/5 text-sm text-warning flex items-start gap-3">
           <Info size={18} className="shrink-0 mt-0.5" />
@@ -123,6 +179,7 @@ export default function StudentElectives() {
             const choice = slot.studentChoice;
             const isWindowOpen = slot.isWindowOpen;
             const windowStatus = slot.windowStatus;
+            const isLocked = choice?.status === 'LOCKED';
 
             return (
               <div 
@@ -192,20 +249,51 @@ export default function StudentElectives() {
 
                 {/* Current Student Choice Banner (if already chosen) */}
                 {hasChoice && (
-                  <div className="px-5 py-3 bg-surface-50 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className={`px-5 py-3 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+                    choice.status === 'CONFIRMED' 
+                      ? 'bg-success/5' 
+                      : choice.status === 'PENDING' 
+                        ? 'bg-warning/5' 
+                        : 'bg-surface-50'
+                  }`}>
                     <div className="flex items-center gap-2.5">
-                      <div className="p-1 rounded-full bg-success/10 text-success">
+                      <div className={`p-1 rounded-full ${
+                        choice.status === 'CONFIRMED'
+                          ? 'bg-success/10 text-success'
+                          : choice.status === 'PENDING'
+                            ? 'bg-warning/10 text-warning'
+                            : 'bg-info/10 text-info'
+                      }`}>
                         <CheckCircle2 size={16} />
                       </div>
                       <div>
-                        <span className="text-text-500 font-medium">Your Current Selection: </span>
+                        <span className="text-text-500 font-medium">Your Selected Subject: </span>
                         <span className="font-semibold text-text-900">{choice.chosenSubjectName}</span>
                         <span className="text-text-500 font-mono ml-1.5">({choice.chosenSubjectCode})</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-text-500 font-medium">Status:</span>
-                      <StatusBadge status={choice.status} />
+                    
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-text-500 font-medium">Status:</span>
+                        <StatusBadge status={choice.status} />
+                      </div>
+
+                      {choice.status === 'PENDING' && isWindowOpen && !isLocked && (
+                        <Button 
+                          variant="accent" 
+                          size="sm" 
+                          className="text-xs py-1 px-3"
+                          disabled={actionLoading}
+                          onClick={() => {
+                            const opt = slot.options?.find(o => o.subjectId === choice.chosenSubjectId);
+                            if (opt) promptConfirmChoice(slot, opt);
+                          }}
+                        >
+                          Confirm & Enroll
+                        </Button>
+                      )}
+
                       {choice.chosenAt && (
                         <span className="text-[11px] font-mono text-text-500">
                           {new Date(choice.chosenAt).toLocaleDateString()}
@@ -222,7 +310,11 @@ export default function StudentElectives() {
                       Offered Subject Options ({slot.options?.length || 0})
                     </h3>
                     <span className="text-xs text-text-500">
-                      {isWindowOpen ? 'Select an available subject below' : 'Window is currently not accepting changes'}
+                      {isLocked 
+                        ? 'Choice is locked by administration' 
+                        : isWindowOpen 
+                          ? 'Choose or confirm an available subject below' 
+                          : 'Window is currently closed'}
                     </span>
                   </div>
 
@@ -234,6 +326,8 @@ export default function StudentElectives() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {slot.options.map((option) => {
                         const isChosen = option.isSelectedByStudent;
+                        const isConfirmed = isChosen && choice?.status === 'CONFIRMED';
+                        const isPending = isChosen && choice?.status === 'PENDING';
                         const isFull = option.isFull;
                         const hasCapacityLimit = option.maxCapacity !== null;
                         const capacityPct = hasCapacityLimit 
@@ -244,22 +338,29 @@ export default function StudentElectives() {
                           <div
                             key={option.id}
                             className={`rounded-lg border p-4 flex flex-col justify-between transition-all duration-150 ${
-                              isChosen
-                                ? 'border-ink-900 bg-surface-50/80 shadow-sm ring-1 ring-ink-900'
-                                : 'border-border bg-surface-0 hover:border-ink-700 hover:shadow-sm'
+                              isConfirmed
+                                ? 'border-success/80 bg-success/5 shadow-sm ring-1 ring-success/30'
+                                : isPending
+                                  ? 'border-warning/80 bg-warning/5 shadow-sm ring-1 ring-warning/30'
+                                  : 'border-border bg-surface-0 hover:border-ink-700 hover:shadow-sm'
                             }`}
                           >
                             <div className="space-y-2.5">
-                              {/* Subject Code & Status */}
+                              {/* Subject Code & Badges */}
                               <div className="flex items-start justify-between gap-2">
                                 <span className="font-mono text-xs font-medium text-ink-900 bg-ink-900/5 px-2 py-0.5 rounded">
                                   {option.subjectCode}
                                 </span>
                                 
-                                {isChosen ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-ink-900 text-white">
+                                {isConfirmed ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-success/15 text-success">
                                     <CheckCircle2 size={12} />
-                                    Selected
+                                    Confirmed
+                                  </span>
+                                ) : isPending ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-warning/15 text-warning">
+                                    <Clock size={12} />
+                                    Pending Confirm
                                   </span>
                                 ) : isFull ? (
                                   <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-danger/10 text-danger">
@@ -294,7 +395,7 @@ export default function StudentElectives() {
                                   Available Seats:
                                 </span>
                                 
-                                <span className={`font-mono font-medium ${isFull ? 'text-danger' : 'text-text-900'}`}>
+                                <span className={`font-mono font-medium ${isFull && !isChosen ? 'text-danger' : 'text-text-900'}`}>
                                   {hasCapacityLimit ? (
                                     <span>
                                       <strong className={option.seatsRemaining <= 5 && !isFull ? 'text-warning' : ''}>
@@ -324,24 +425,52 @@ export default function StudentElectives() {
                                 </div>
                               )}
 
-                              {/* Selection Guidance Message */}
-                              <div className="pt-1 flex items-center justify-between text-[11px] text-text-500">
-                                {isChosen ? (
-                                  <span className="text-ink-700 font-medium flex items-center gap-1">
-                                    <Sparkles size={12} /> Your recorded choice
-                                  </span>
-                                ) : isFull ? (
-                                  <span className="text-danger">No seats remaining</span>
+                              {/* Action Buttons for T9.3 */}
+                              <div className="pt-2">
+                                {isConfirmed ? (
+                                  <div className="w-full text-center py-1.5 text-xs font-medium text-success bg-success/10 rounded-md border border-success/20 flex items-center justify-center gap-1.5">
+                                    <Check size={14} /> Enrolled in this Subject
+                                  </div>
+                                ) : isLocked ? (
+                                  <div className="w-full text-center py-1.5 text-xs text-text-500 bg-surface-50 rounded-md border border-border">
+                                    Locked by Administration
+                                  </div>
                                 ) : !isWindowOpen ? (
-                                  <span className="text-neutral">Window not active</span>
+                                  <div className="w-full text-center py-1.5 text-xs text-text-500 bg-surface-50 rounded-md border border-border">
+                                    Registration Closed
+                                  </div>
+                                ) : isFull && !isChosen ? (
+                                  <div className="w-full text-center py-1.5 text-xs text-danger bg-danger/5 rounded-md border border-danger/20 font-medium">
+                                    Capacity Full
+                                  </div>
+                                ) : isPending ? (
+                                  <Button
+                                    variant="accent"
+                                    className="w-full text-xs py-1.5"
+                                    disabled={actionLoading}
+                                    onClick={() => promptConfirmChoice(slot, option)}
+                                  >
+                                    Confirm Choice & Enroll
+                                  </Button>
                                 ) : (
-                                  <span className="text-text-500">Ready for selection</span>
-                                )}
-
-                                {hasCapacityLimit && (
-                                  <span className="font-mono text-text-500">
-                                    {option.confirmedCount} confirmed
-                                  </span>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="secondary"
+                                      className="flex-1 text-xs py-1.5"
+                                      disabled={actionLoading}
+                                      onClick={() => handleChoose(slot.id, option.subjectId)}
+                                    >
+                                      Draft Pick
+                                    </Button>
+                                    <Button
+                                      variant="accent"
+                                      className="flex-1 text-xs py-1.5"
+                                      disabled={actionLoading}
+                                      onClick={() => promptConfirmChoice(slot, option)}
+                                    >
+                                      Confirm & Enroll
+                                    </Button>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -356,6 +485,17 @@ export default function StudentElectives() {
           })}
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ isOpen: false, slot: null, option: null })}
+        onConfirm={executeConfirmChoice}
+        title="Confirm Elective Registration"
+        confirmText="Confirm & Enroll"
+        cancelText="Cancel"
+        message={`Are you sure you want to confirm "${confirmDialog.option?.subjectName} (${confirmDialog.option?.subjectCode})" for ${confirmDialog.slot?.slotName}? This will atomically reserve 1 seat and enroll you in this subject for the current academic term.`}
+      />
     </div>
   );
 }

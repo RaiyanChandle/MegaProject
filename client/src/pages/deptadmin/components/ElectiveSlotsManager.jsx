@@ -304,12 +304,26 @@ export default function ElectiveSlotsManager({ classId }) {
               {globalElectives
                 .filter(s => s.subjectType === selectedSlot?.slotType)
                 .filter(s => selectedSlot?.slotType === 'PROGRAM_ELECTIVE' ? s.classId === classId : true)
-                .map(sub => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.code} - {sub.name} (Credits: {sub.credits}, Class: {sub.class?.name})
-                  </option>
-                ))}
+                .map(sub => {
+                  const isAlreadyAdded = selectedSlot?.options?.some(opt => opt.subjectId === sub.id);
+                  const isCreditMismatch = Number(sub.credits) !== Number(selectedSlot?.credits);
+                  const isDisabled = isAlreadyAdded || isCreditMismatch;
+
+                  let note = '';
+                  if (isAlreadyAdded) note = ' [Already added to slot]';
+                  else if (isCreditMismatch) note = ` [Incompatible: ${sub.credits} cr, slot needs ${selectedSlot?.credits} cr]`;
+                  else note = ` [${sub.credits} credits]`;
+
+                  return (
+                    <option key={sub.id} value={sub.id} disabled={isDisabled}>
+                      {sub.code} - {sub.name}{note}
+                    </option>
+                  );
+                })}
             </select>
+            <p className="text-xs text-text-500 mt-1.5 flex items-center justify-between">
+              <span>This slot requires subjects with exactly <strong className="text-text-900 font-mono">{selectedSlot?.credits} credits</strong>.</span>
+            </p>
           </Field>
           <Field label="Max Capacity (Optional)">
             <input

@@ -125,7 +125,7 @@ widening to more modules.
 
 - [x] **T9.1** Migration: add `registrationOpensAt` / `registrationClosesAt` to `ElectiveSlot` (PRD open decision 4)
 - [x] **T9.2** Student view of slots/options with seats remaining, within the window.--done
-- [ ] **T9.3** Choose + confirm in a transaction with a row lock; create the `Enrollment` on confirm (rules 12, 13).
+- [x] **T9.3** Choose + confirm in a transaction with a row lock; create the `Enrollment` on confirm (rules 12, 13).--done
 - [ ] **T9.4** Job that moves `CONFIRMED` → `LOCKED` when the window closes.
 - [ ] **T9.5** Admin-approved swap after lock (rules 15).
 - [ ] **T9.6** Concurrency test: N students racing for the last seat → exactly one succeeds.
