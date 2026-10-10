@@ -313,7 +313,6 @@ const Note = sequelize.define('Note', {
   ...uuidPk,
   teacherId: { type: DataTypes.UUID, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
-  classId: { type: DataTypes.UUID, allowNull: true }, // Not originally here, but logically useful if divisionId exists. Let's just add divisionId per migration.
   divisionId: { type: DataTypes.UUID, allowNull: true },
   topic: { type: DataTypes.STRING, allowNull: false },
   pdfUrl: { type: DataTypes.STRING, allowNull: false },
@@ -330,7 +329,6 @@ const Assignment = sequelize.define('Assignment', {
   ...uuidPk,
   teacherId: { type: DataTypes.UUID, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
-  classId: { type: DataTypes.UUID, allowNull: true },
   divisionId: { type: DataTypes.UUID, allowNull: true },
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.TEXT, allowNull: false },
@@ -509,7 +507,6 @@ const OnlineTest = sequelize.define('OnlineTest', {
   ...uuidPk,
   teacherId: { type: DataTypes.UUID, allowNull: false },
   subjectId: { type: DataTypes.UUID, allowNull: false },
-  classId: { type: DataTypes.UUID, allowNull: true },
   divisionId: { type: DataTypes.UUID, allowNull: true },
   title: { type: DataTypes.STRING, allowNull: false },
   durationMinutes: { type: DataTypes.INTEGER, allowNull: false },
