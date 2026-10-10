@@ -20,9 +20,11 @@ import AttendanceReport from './pages/deptadmin/AttendanceReport';
 import TeacherClasses from './pages/teacher/TeacherClasses';
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import TeacherNotes from './pages/teacher/TeacherNotes';
+import TeacherAssignments from './pages/teacher/TeacherAssignments';
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentAttendance from './pages/student/StudentAttendance';
 import StudentNotes from './pages/student/StudentNotes';
+import StudentAssignments from './pages/student/StudentAssignments';
 import ParentDashboard from './pages/parent/ParentDashboard';
 import ParentAttendance from './pages/parent/ParentAttendance';
 import SuperAdminLibrary from './pages/superadmin/Library';
@@ -78,6 +80,7 @@ function App() {
               <Route path="classes" element={<TeacherClasses />} />
               <Route path="attendance" element={<TeacherAttendance />} />
               <Route path="notes" element={<TeacherNotes />} />
+              <Route path="assignments" element={<TeacherAssignments />} />
               <Route path="library" element={<DigitalLibrary />} />
             </Route>
 
@@ -89,6 +92,7 @@ function App() {
               <Route index element={<StudentDashboard />} />
               <Route path="attendance" element={<StudentAttendance />} />
               <Route path="notes" element={<StudentNotes />} />
+              <Route path="assignments" element={<StudentAssignments />} />
               <Route path="library" element={<DigitalLibrary />} />
             </Route>
 

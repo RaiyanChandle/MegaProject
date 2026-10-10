@@ -116,7 +116,7 @@ widening to more modules.
 - [x] **T8.1** File storage (Cloudinary/S3) + upload middleware with type/size limits.--done
 - [x] **T8.2** Notes: teacher upload; students see notes only for enrolled subjects.--done
 - [x] **T8.3** Library (admin upload, everyone views).--done
-- [ ] **T8.4** Assignments: teacher creates; student submits before the deadline, one per enrollment.
+- [x] **T8.4** Assignments: teacher creates; student submits before the deadline, one per enrollment.--done
 - [ ] **T8.5** Grading: marks + feedback, status to `ACCEPTED`; student sees the result.
 
 ---

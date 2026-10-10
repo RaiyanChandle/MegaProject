@@ -32,6 +32,7 @@ export const navigationConfig = {
     { name: 'My Subjects', href: '/student/subjects', icon: BookOpen },
     { name: 'Attendance', href: '/student/attendance', icon: Clock },
     { name: 'Study Notes', href: '/student/notes', icon: FileText },
+    { name: 'Assignments', href: '/student/assignments', icon: FileCheck },
     { name: 'Digital Library', href: '/student/library', icon: BookOpen },
     { name: 'Marks', href: '/student/marks', icon: FileCheck },
     { name: 'Fees', href: '/student/fees', icon: DollarSign },

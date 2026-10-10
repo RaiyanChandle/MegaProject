@@ -48,14 +48,18 @@ export default function DataTable({
                 />
               </th>
             )}
-            {columns.map((col, idx) => (
-              <th 
-                key={col.key || idx}
-                className={`px-4 py-3 text-xs font-medium uppercase tracking-wide text-text-500 ${col.headerClassName || ''}`}
-              >
-                {col.title}
-              </th>
-            ))}
+            {columns.map((col, idx) => {
+              const colKey = col.key || col.accessor || idx;
+              const colTitle = col.title || col.header || '';
+              return (
+                <th 
+                  key={colKey}
+                  className={`px-4 py-3 text-xs font-medium uppercase tracking-wide text-text-500 ${col.headerClassName || ''}`}
+                >
+                  {colTitle}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -68,21 +72,27 @@ export default function DataTable({
               {selectable && (
                 <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                   <input 
-                    type="checkbox"
+                    type="checkbox" 
                     checked={selectedIds.includes(row[keyField])}
                     onChange={(e) => handleSelectRow(row[keyField], e.target.checked)}
                     className="rounded border-border text-primary focus:ring-primary"
                   />
                 </td>
               )}
-              {columns.map((col, colIndex) => (
-                <td 
-                  key={`${row[keyField] || rowIndex}-${col.key || colIndex}`}
-                  className={`px-4 py-3 text-sm text-text-900 ${col.className || ''}`}
-                >
-                  {col.render ? col.render(row[col.key], row) : row[col.key]}
-                </td>
-              ))}
+              {columns.map((col, colIndex) => {
+                const colKey = col.key || col.accessor;
+                const value = colKey ? row[colKey] : undefined;
+                return (
+                  <td 
+                    key={`${row[keyField] || rowIndex}-${colKey || colIndex}`}
+                    className={`px-4 py-3 text-sm text-text-900 ${col.className || ''}`}
+                  >
+                    {col.render 
+                      ? (col.render.length === 1 ? col.render(row) : col.render(value, row)) 
+                      : (value !== undefined ? value : '')}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
