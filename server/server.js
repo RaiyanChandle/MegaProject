@@ -30,6 +30,7 @@ import studentRoutes from './routes/studentRoutes.js';
 import subjectAllocationRoutes from './routes/subjectAllocationRoutes.js';
 import parentRoutes from './routes/parentRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -47,6 +48,7 @@ app.use('/api/students', studentRoutes);
 app.use('/api/subject-allocations', subjectAllocationRoutes);
 app.use('/api/parents', parentRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/upload', uploadRoutes);
 
 app.get("/api/health", async (req, res) => {
   try {
