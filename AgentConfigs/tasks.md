@@ -134,10 +134,10 @@ widening to more modules.
 
 ## Phase 10 — Marks & subject results · flows 10
 
-- [ ] **T10.1** Resolve PRD open decision 1 (pass criteria).
-- [ ] **T10.2** Teacher marks-entry grid per component (partial save, keyboard friendly).
-- [ ] **T10.3** `SubjectResult` computation service (sum of components, `isPass`).
-- [ ] **T10.4** Student/parent view of component marks and subject results.
+- [x] **T10.1** Resolve PRD open decision 1 (pass criteria).--done
+- [x] **T10.2** Teacher marks-entry grid per component (partial save, keyboard friendly).--done
+- [x] **T10.3** `SubjectResult` computation service (sum of components, `isPass`).--done
+- [x] **T10.4** Student/parent view of component marks and subject results.--done
 
 ---
 
