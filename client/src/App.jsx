@@ -38,6 +38,7 @@ import ParentMarks from './pages/parent/ParentMarks';
 import ParentAssignments from './pages/parent/ParentAssignments';
 import ExamStaffDashboard from './pages/examstaff/ExamStaffDashboard';
 import ExamStaffExams from './pages/examstaff/Exams';
+import ExamStaffQuestionPapers from './pages/examstaff/QuestionPapers';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -129,6 +130,7 @@ function App() {
             >
               <Route index element={<ExamStaffDashboard />} />
               <Route path="exams" element={<ExamStaffExams />} />
+              <Route path="question-papers" element={<ExamStaffQuestionPapers />} />
               <Route path="halltickets" element={<div className="p-6 text-text-700 font-medium">Hall Tickets module (Phase 11.4 - Coming Soon)</div>} />
               <Route path="results" element={<div className="p-6 text-text-700 font-medium">Exam Results module (Phase 11.5 - Coming Soon)</div>} />
             </Route>

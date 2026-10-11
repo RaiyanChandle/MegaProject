@@ -49,7 +49,8 @@ export const navigationConfig = {
   EXAM_STAFF: [
     { name: 'Dashboard', href: '/examstaff', icon: LayoutDashboard },
     { name: 'Exams', href: '/examstaff/exams', icon: Calendar },
-    { name: 'Hall Tickets', href: '/examstaff/halltickets', icon: FileText },
+    { name: 'Question Papers', href: '/examstaff/question-papers', icon: FileText },
+    { name: 'Hall Tickets', href: '/examstaff/halltickets', icon: BookOpen },
     { name: 'Results', href: '/examstaff/results', icon: FileCheck },
   ],
 };

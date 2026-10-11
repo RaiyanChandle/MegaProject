@@ -145,7 +145,7 @@ widening to more modules.
 
 - [x] **T11.1** Resolve PRD decisions 3 and 5 (exam → component mapping, who enters End Sem).--done
 - [x] **T11.2** Exam scheduling by Exam Staff.--done
-- [ ] **T11.3** Question paper upload with draft → submitted → approved workflow.
+- [x] **T11.3** Question paper upload with draft → submitted → approved workflow.--done
 - [ ] **T11.4** Hall tickets per enrollment + printable PDF (Plex Serif, grayscale-safe) (rules 26).
 - [ ] **T11.5** Exam result entry (bulk); `isPass` from `Exam.passingMarks` (rules 27); sync into the mapped `ComponentMark`.
 - [ ] **T11.6** Result processing: `ResultCard` from `SubjectResult`s, SGPA per PRD decision 2 (rules 28).
