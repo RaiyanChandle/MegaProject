@@ -7,7 +7,8 @@ import {
   Enrollment, 
   Student, 
   AcademicTerm, 
-  SubjectAllocation 
+  SubjectAllocation,
+  ParentStudent
 } from '../models/index.js';
 import { Op } from 'sequelize';
 
@@ -246,10 +247,30 @@ export const getAssignmentById = async (req, res) => {
  * Wildcard null divisionId is included alongside matching student divisionId (Rule 29).
  */
 export const getStudentAssignments = async (req, res) => {
-  const studentId = req.user.id;
+  const user = req.user;
+  let studentId = req.query.studentId || user.id;
   const { subjectId } = req.query;
 
   try {
+    if (user.role === 'PARENT') {
+      if (!req.query.studentId) {
+        const link = await ParentStudent.findOne({ where: { parentId: user.id } });
+        if (!link) {
+          return res.status(404).json({ error: 'No student linked to this parent account' });
+        }
+        studentId = link.studentId;
+      } else {
+        const link = await ParentStudent.findOne({
+          where: { parentId: user.id, studentId: req.query.studentId }
+        });
+        if (!link) {
+          return res.status(403).json({ error: 'Unauthorized to view assignments for this student' });
+        }
+      }
+    } else if (user.role === 'STUDENT') {
+      studentId = user.id;
+    }
+
     const student = await Student.findByPk(studentId, {
       attributes: ['id', 'name', 'divisionId', 'departmentId']
     });

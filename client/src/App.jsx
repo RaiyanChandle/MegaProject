@@ -23,6 +23,7 @@ import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import TeacherNotes from './pages/teacher/TeacherNotes';
 import TeacherAssignments from './pages/teacher/TeacherAssignments';
 import StudentDashboard from './pages/student/StudentDashboard';
+import StudentSubjects from './pages/student/StudentSubjects';
 import StudentAttendance from './pages/student/StudentAttendance';
 import StudentNotes from './pages/student/StudentNotes';
 import StudentAssignments from './pages/student/StudentAssignments';
@@ -34,15 +35,18 @@ import DigitalLibrary from './pages/common/Library';
 import TeacherMarks from './pages/teacher/TeacherMarks';
 import StudentMarks from './pages/student/StudentMarks';
 import ParentMarks from './pages/parent/ParentMarks';
+import ParentAssignments from './pages/parent/ParentAssignments';
 
 import { SearchProvider } from './context/SearchContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <SearchProvider>
-          <Routes>
+          <LanguageProvider>
+            <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -96,6 +100,7 @@ function App() {
               element={<ProtectedRoute allowedRoles={['STUDENT']} title="Student Dashboard" />}
             >
               <Route index element={<StudentDashboard />} />
+              <Route path="subjects" element={<StudentSubjects />} />
               <Route path="electives" element={<StudentElectives />} />
               <Route path="attendance" element={<StudentAttendance />} />
               <Route path="notes" element={<StudentNotes />} />
@@ -112,11 +117,13 @@ function App() {
               <Route index element={<ParentDashboard />} />
               <Route path="attendance" element={<ParentAttendance />} />
               <Route path="marks" element={<ParentMarks />} />
+              <Route path="assignments" element={<ParentAssignments />} />
             </Route>
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </LanguageProvider>
         </SearchProvider>
       </AuthProvider>
     </Router>
