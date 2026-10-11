@@ -381,9 +381,6 @@ export default function QuestionPapers() {
             <h1 className="text-2xl font-bold text-text-900 tracking-tight">
               Question Paper Management
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-brass-100 text-brass-800 border border-brass-200">
-              T11.3 Workflow
-            </span>
           </div>
           <p className="text-sm text-text-500 mt-1">
             Upload question papers and guide them through review: <strong className="text-text-700">DRAFT → SUBMITTED → APPROVED</strong>.

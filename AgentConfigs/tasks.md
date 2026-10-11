@@ -147,7 +147,7 @@ widening to more modules.
 - [x] **T11.2** Exam scheduling by Exam Staff.--done
 - [x] **T11.3** Question paper upload with draft → submitted → approved workflow.--done
 - [x] **T11.4** Hall tickets per enrollment + printable PDF (Plex Serif, grayscale-safe) (rules 26).--done
-- [ ] **T11.5** Exam result entry (bulk); `isPass` from `Exam.passingMarks` (rules 27); sync into the mapped `ComponentMark`.
+- [x] **T11.5** Exam result entry (bulk); `isPass` from `Exam.passingMarks` (rules 27); sync into the mapped `ComponentMark`.--done
 - [ ] **T11.6** Result processing: `ResultCard` from `SubjectResult`s, SGPA per PRD decision 2 (rules 28).
 - [ ] **T11.7** Student/parent result view + printable marksheet.
 

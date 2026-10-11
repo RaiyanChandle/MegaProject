@@ -3,7 +3,8 @@ import {
   Subject, 
   AssessmentComponent, 
   ComponentMark, 
-  SubjectResult 
+  SubjectResult,
+  ExamResult
 } from '../models/index.js';
 
 /**
@@ -68,9 +69,13 @@ export const computeSubjectResult = async (enrollmentId, transaction = null) => 
   });
 
   const markMap = new Map();
+  const sourceExamMap = new Map();
   for (const cm of componentMarks) {
     if (cm.marksObtained !== null && cm.marksObtained !== undefined) {
       markMap.set(cm.componentId, Number(cm.marksObtained));
+      if (cm.sourceExamId) {
+        sourceExamMap.set(cm.componentId, cm.sourceExamId);
+      }
     }
   }
 
@@ -92,6 +97,18 @@ export const computeSubjectResult = async (enrollmentId, transaction = null) => 
         const minPassMarks = 0.40 * maxMarks;
         if (marksObtained < minPassMarks) {
           passedAllExternalComponents = false;
+        }
+
+        // If this component was sourced from a formal Exam, respect the Exam's passing threshold
+        if (sourceExamMap.has(comp.id)) {
+          const examId = sourceExamMap.get(comp.id);
+          const er = await ExamResult.findOne({
+            where: { examId, enrollmentId },
+            transaction
+          });
+          if (er && er.isPass === false) {
+            passedAllExternalComponents = false;
+          }
         }
       }
     } else {

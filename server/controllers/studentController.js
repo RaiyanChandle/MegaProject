@@ -235,7 +235,7 @@ export const getMyEnrolledSubjects = async (req, res) => {
   try {
     const student = await Student.findByPk(targetStudentId, {
       include: [
-        { model: Division, as: 'division', attributes: ['id', 'name'] }
+        { model: Division, as: 'division', attributes: ['id', 'name', 'classId'] }
       ]
     });
 
@@ -252,6 +252,31 @@ export const getMyEnrolledSubjects = async (req, res) => {
 
     if (!term) {
       return res.status(400).json({ error: 'No active academic term found' });
+    }
+
+    // Auto-ensure that all CORE subjects assigned to the student's class have active enrollments
+    if (student.division && student.division.classId) {
+      const classCoreSubjects = await Subject.findAll({
+        where: {
+          classId: student.division.classId,
+          subjectType: 'CORE'
+        }
+      });
+
+      for (const coreSubj of classCoreSubjects) {
+        await Enrollment.findOrCreate({
+          where: {
+            studentId: targetStudentId,
+            subjectId: coreSubj.id,
+            academicTermId: term.id
+          },
+          defaults: {
+            classId: student.division.classId,
+            attemptNumber: 1,
+            status: 'ENROLLED'
+          }
+        });
+      }
     }
 
     const enrollments = await Enrollment.findAll({

@@ -530,9 +530,6 @@ export default function Exams() {
             <h1 className="text-2xl font-bold text-text-900 tracking-tight">
               Examination Schedules
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-brass-100 text-brass-800 border border-brass-200">
-              T11.2 Active
-            </span>
           </div>
           <p className="text-sm text-text-500 mt-1">
             Configure examination timetables, mark passing thresholds, and link papers to curriculum assessment components.

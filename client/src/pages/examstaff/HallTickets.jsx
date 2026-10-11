@@ -677,9 +677,6 @@ export default function HallTickets() {
             <h1 className="text-2xl font-bold tracking-tight text-text-900 font-sans">
               Hall Tickets & Admit Cards
             </h1>
-            <span className="bg-brass-500/10 text-brass-700 border border-brass-500/20 text-xs px-2 py-0.5 rounded-full font-mono font-medium">
-              T11.4 • Single Page A4
-            </span>
           </div>
           <p className="text-sm text-text-500 mt-1">
             Official Examination Admit Cards. All exams per student unified into a single printable A4 hall ticket.

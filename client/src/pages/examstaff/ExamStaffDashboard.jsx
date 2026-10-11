@@ -293,20 +293,24 @@ export default function ExamStaffDashboard() {
                 <ArrowRight size={16} className="text-text-400 group-hover:text-brass-600 transition-transform group-hover:translate-x-0.5" />
               </Link>
 
-              <div className="p-3 rounded-lg border border-border/60 bg-surface-50/50 opacity-80 flex items-center justify-between">
+              <Link 
+                to="/examstaff/results" 
+                className="group p-3 rounded-lg border border-border hover:border-brass-400 bg-surface-50 hover:bg-brass-50/30 transition-all flex items-center justify-between"
+              >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-md bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">
+                  <div className="w-8 h-8 rounded-md bg-brass-500 text-white flex items-center justify-center font-bold text-xs">
                     4
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h4 className="text-sm font-medium text-text-800">Bulk Result Entry & Sync</h4>
-                      <span className="text-[10px] bg-slate-200 px-1.5 py-0.2 rounded text-slate-700 font-mono">T11.5</span>
+                      <h4 className="text-sm font-semibold text-text-900 group-hover:text-brass-700">Bulk Result Entry & Sync</h4>
+                      <span className="text-[10px] bg-brass-100 text-brass-800 px-1.5 py-0.2 rounded font-mono font-medium">Active</span>
                     </div>
-                    <p className="text-xs text-text-400">Pass/Fail marks & ComponentMark sync</p>
+                    <p className="text-xs text-text-500">Record marks, verify pass/fail & sync components</p>
                   </div>
                 </div>
-              </div>
+                <ArrowRight size={16} className="text-text-400 group-hover:text-brass-600 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
           </div>
         </div>
