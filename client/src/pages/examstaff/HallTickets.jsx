@@ -39,6 +39,7 @@ export default function HallTickets() {
   const [exams, setExams] = useState([]);
   const [terms, setTerms] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // View Mode: 'BY_STUDENT' (unified admit cards) or 'BY_EXAM'
@@ -48,6 +49,8 @@ export default function HallTickets() {
   const [selectedExamId, setSelectedExamId] = useState('');
   const [selectedTermId, setSelectedTermId] = useState('');
   const [selectedDeptId, setSelectedDeptId] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedExamType, setSelectedExamType] = useState('ALL');
   const [selectedAttemptType, setSelectedAttemptType] = useState('ALL'); // 'ALL', 'REGULAR', 'BACKLOG'
 
   // Modals
@@ -64,12 +67,20 @@ export default function HallTickets() {
   // Generate Form state
   const [genForm, setGenForm] = useState({
     academicTermId: '',
-    examId: 'ALL_IN_TERM',
+    departmentId: '',
+    classId: '',
+    examType: 'MIDTERM',
     examCenter: 'Main Campus Examination Hall, Block A',
     seatPrefix: 'HALL-A-',
     startSequence: 1,
     attemptFilter: 'ALL'
   });
+
+  // Preview State for Batch Generation Modal
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewExams, setPreviewExams] = useState([]);
+  const [previewStats, setPreviewStats] = useState(null);
+  const [selectedExamIds, setSelectedExamIds] = useState([]);
 
   // Edit Form state
   const [editForm, setEditForm] = useState({
@@ -82,17 +93,19 @@ export default function HallTickets() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [ticketsData, examsData, termsData, deptsData] = await Promise.all([
+      const [ticketsData, examsData, termsData, deptsData, classesData] = await Promise.all([
         apiClient.get('/hall-tickets'),
         apiClient.get('/exams'),
         apiClient.get('/academic-terms'),
-        apiClient.get('/departments')
+        apiClient.get('/departments'),
+        apiClient.get('/classes')
       ]);
 
       setTickets(ticketsData || []);
       setExams(examsData || []);
       setTerms(termsData || []);
       setDepartments(deptsData || []);
+      setClasses(classesData || []);
 
       const current = (termsData || []).find(t => t.isCurrent);
       if (current && !selectedTermId) {
@@ -129,6 +142,16 @@ export default function HallTickets() {
         return false;
       }
 
+      // Class filter
+      if (selectedClassId && ticket.exam?.classId !== selectedClassId) {
+        return false;
+      }
+
+      // Exam Type filter (MIDTERM, FINAL, INTERNAL, MAKEUP)
+      if (selectedExamType !== 'ALL' && ticket.exam?.examType !== selectedExamType) {
+        return false;
+      }
+
       // Attempt filter (Rule 18 / Flow 11)
       const attemptNum = ticket.enrollment?.attemptNumber || 1;
       if (selectedAttemptType === 'REGULAR' && attemptNum > 1) {
@@ -161,17 +184,21 @@ export default function HallTickets() {
 
       return true;
     });
-  }, [tickets, selectedExamId, selectedTermId, selectedDeptId, selectedAttemptType, searchQuery]);
+  }, [tickets, selectedExamId, selectedTermId, selectedDeptId, selectedClassId, selectedExamType, selectedAttemptType, searchQuery]);
 
-  // Grouped by Student: One unified admit card per student across all exams in term
+  // Grouped by Student and Exam Series: Strictly one admit card per student per exam type in term
   const studentCards = useMemo(() => {
     const map = new Map();
 
     for (const ticket of filteredTickets) {
       const studentId = ticket.studentId;
-      if (!map.has(studentId)) {
-        map.set(studentId, {
+      const ticketExamType = ticket.exam?.examType || 'MIDTERM';
+      const key = `${studentId}_${ticketExamType}_${ticket.exam?.academicTermId || ''}`;
+
+      if (!map.has(key)) {
+        map.set(key, {
           studentId,
+          examType: ticketExamType,
           student: ticket.student,
           seatNumber: ticket.seatNumber,
           examCenter: ticket.examCenter,
@@ -183,7 +210,7 @@ export default function HallTickets() {
         });
       }
 
-      const card = map.get(studentId);
+      const card = map.get(key);
       const attempt = ticket.enrollment?.attemptNumber || 1;
       if (attempt > 1) card.hasBacklog = true;
 
@@ -218,20 +245,58 @@ export default function HallTickets() {
     return { totalAllocations, uniqueStudents, uniqueExams, backlogCount };
   }, [tickets]);
 
+  // Fetch Preview for Batch Generation Modal
+  const fetchPreview = async (formOverride) => {
+    const form = formOverride || genForm;
+    if (!form.academicTermId && !form.classId && !form.departmentId) return;
+
+    try {
+      setPreviewLoading(true);
+      const params = new URLSearchParams();
+      if (form.academicTermId) params.append('academicTermId', form.academicTermId);
+      if (form.classId) params.append('classId', form.classId);
+      if (form.departmentId) params.append('departmentId', form.departmentId);
+      if (form.examType && form.examType !== 'ALL') params.append('examType', form.examType);
+
+      const res = await apiClient.get(`/hall-tickets/preview-exams?${params.toString()}`);
+      const discovered = res.exams || [];
+      setPreviewExams(discovered);
+      setPreviewStats({
+        totalExams: res.totalExams,
+        candidateStudentCount: res.candidateStudentCount
+      });
+      setSelectedExamIds(discovered.map(e => e.id));
+    } catch (err) {
+      console.error('Error fetching preview exams:', err);
+      setPreviewExams([]);
+      setPreviewStats(null);
+      setSelectedExamIds([]);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   // Handle Generate Batch Submit
   const handleGenerate = async (e) => {
     e.preventDefault();
-    if (!genForm.examId && !genForm.academicTermId) {
-      toast.error('Please select an Academic Term or Examination');
+    if (!selectedExamIds || selectedExamIds.length === 0) {
+      toast.error('Please select at least one subject/exam from the preview to generate hall tickets');
       return;
     }
 
     try {
       setSubmitting(true);
-      const payload = { ...genForm };
-      if (payload.examId === 'ALL_IN_TERM') {
-        delete payload.examId;
-      }
+      const payload = {
+        academicTermId: genForm.academicTermId,
+        departmentId: genForm.departmentId || undefined,
+        classId: genForm.classId || undefined,
+        examType: genForm.examType,
+        examIds: selectedExamIds,
+        examCenter: genForm.examCenter,
+        seatPrefix: genForm.seatPrefix,
+        startSequence: genForm.startSequence,
+        attemptFilter: genForm.attemptFilter
+      };
 
       const res = await apiClient.post('/hall-tickets/generate', payload);
       toast.success(res.message || 'Hall tickets generated successfully');
@@ -302,15 +367,19 @@ export default function HallTickets() {
     }
   };
 
-  // Open Unified Print Admit Card Modal (with ALL exams for the student)
+  // Open Unified Print Admit Card Modal (with exams strictly for that exam series)
   const openPrintModal = async (ticketOrCard) => {
     try {
       setLoading(true);
       const studentId = ticketOrCard.studentId || ticketOrCard.student?.id;
-      
-      // Query full student admit card endpoint
       const termId = ticketOrCard.academicTerm?.id || ticketOrCard.exam?.academicTermId || selectedTermId;
-      const res = await apiClient.get(`/hall-tickets/student/${studentId}${termId ? `?academicTermId=${termId}` : ''}`);
+      const exType = ticketOrCard.examType || ticketOrCard.exam?.examType;
+      
+      const queryParams = new URLSearchParams();
+      if (termId) queryParams.append('academicTermId', termId);
+      if (exType) queryParams.append('examType', exType);
+
+      const res = await apiClient.get(`/hall-tickets/student/${studentId}?${queryParams.toString()}`);
       setAdmitCardData(res);
       setIsPrintModalOpen(true);
     } catch (err) {
@@ -323,6 +392,7 @@ export default function HallTickets() {
           examCenter: ticketOrCard.examCenter,
           academicTerm: ticketOrCard.academicTerm,
           generatedAt: ticketOrCard.generatedAt,
+          examType: ticketOrCard.examType || ticketOrCard.exam?.examType,
           allExams: ticketOrCard.exams
         });
         setIsPrintModalOpen(true);
@@ -492,6 +562,21 @@ export default function HallTickets() {
             {row.student?.department?.name || 'Department'}
           </div>
         </div>
+      )
+    },
+    {
+      header: 'Exam Series',
+      accessor: 'examType',
+      render: (_, row) => (
+        <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${
+          row.examType === 'MIDTERM'
+            ? 'bg-blue-50 text-blue-700 border-blue-200'
+            : row.examType === 'FINAL'
+            ? 'bg-purple-50 text-purple-700 border-purple-200'
+            : 'bg-amber-50 text-amber-700 border-amber-200'
+        }`}>
+          {row.examType || 'EXAM'}
+        </span>
       )
     },
     {
@@ -695,15 +780,20 @@ export default function HallTickets() {
           <Button
             variant="primary"
             onClick={() => {
-              setGenForm({
-                academicTermId: selectedTermId || (terms.find(t => t.isCurrent)?.id) || '',
-                examId: 'ALL_IN_TERM',
+              const currentTermId = selectedTermId || (terms.find(t => t.isCurrent)?.id) || '';
+              const initForm = {
+                academicTermId: currentTermId,
+                departmentId: selectedDeptId || '',
+                classId: selectedClassId || (classes[0]?.id || ''),
+                examType: selectedExamType !== 'ALL' ? selectedExamType : 'MIDTERM',
                 examCenter: 'Main Campus Examination Hall, Room 101',
                 seatPrefix: 'HALL-A-',
                 startSequence: (studentCards.length + 1) || 1,
                 attemptFilter: 'ALL'
-              });
+              };
+              setGenForm(initForm);
               setIsGenerateModalOpen(true);
+              fetchPreview(initForm);
             }}
             className="flex items-center gap-2 text-xs font-semibold"
           >
@@ -792,11 +882,13 @@ export default function HallTickets() {
           </div>
 
           {/* Quick Clear filters */}
-          {(selectedExamId || selectedDeptId || selectedAttemptType !== 'ALL' || searchQuery) && (
+          {(selectedExamId || selectedDeptId || selectedClassId || selectedExamType !== 'ALL' || selectedAttemptType !== 'ALL' || searchQuery) && (
             <button
               onClick={() => {
                 setSelectedExamId('');
                 setSelectedDeptId('');
+                setSelectedClassId('');
+                setSelectedExamType('ALL');
                 setSelectedAttemptType('ALL');
                 setSearchQuery('');
               }}
@@ -808,8 +900,8 @@ export default function HallTickets() {
         </div>
 
         {/* Filters Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-border/60">
-          {/* Academic Term Filter */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 pt-2 border-t border-border/60">
+          {/* 1. Academic Term Filter */}
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-text-500 mb-1">
               Academic Term
@@ -817,7 +909,7 @@ export default function HallTickets() {
             <select
               value={selectedTermId}
               onChange={(e) => setSelectedTermId(e.target.value)}
-              className="w-full text-xs rounded-lg border border-border bg-surface-50 px-3 py-2 text-text-800 focus:outline-none focus:border-brass-500"
+              className="w-full text-xs rounded-lg border border-border bg-surface-50 px-3 py-2 text-text-800 focus:outline-none focus:border-brass-500 font-medium"
             >
               <option value="">All Terms</option>
               {terms.map(t => (
@@ -828,7 +920,63 @@ export default function HallTickets() {
             </select>
           </div>
 
-          {/* Exam Filter */}
+          {/* 2. Exam Series / Type Filter */}
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-text-500 mb-1">
+              Exam Series / Type
+            </label>
+            <select
+              value={selectedExamType}
+              onChange={(e) => setSelectedExamType(e.target.value)}
+              className="w-full text-xs rounded-lg border border-border bg-surface-50 px-3 py-2 text-text-800 focus:outline-none focus:border-brass-500 font-bold"
+            >
+              <option value="ALL">All Series</option>
+              <option value="MIDTERM">MIDTERM Only</option>
+              <option value="FINAL">FINAL Only</option>
+              <option value="INTERNAL">INTERNAL Only</option>
+              <option value="MAKEUP">MAKEUP Only</option>
+            </select>
+          </div>
+
+          {/* 3. Class Filter */}
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-text-500 mb-1">
+              Class (FY, SY, TY...)
+            </label>
+            <select
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(e.target.value)}
+              className="w-full text-xs rounded-lg border border-border bg-surface-50 px-3 py-2 text-text-800 focus:outline-none focus:border-brass-500"
+            >
+              <option value="">All Classes</option>
+              {classes.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.batchYear})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 4. Department Filter */}
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-text-500 mb-1">
+              Branch / Dept
+            </label>
+            <select
+              value={selectedDeptId}
+              onChange={(e) => setSelectedDeptId(e.target.value)}
+              className="w-full text-xs rounded-lg border border-border bg-surface-50 px-3 py-2 text-text-800 focus:outline-none focus:border-brass-500"
+            >
+              <option value="">All Branches</option>
+              {departments.map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.name} ({d.code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 5. Exam Filter */}
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-text-500 mb-1">
               Filter By Exam
@@ -847,26 +995,7 @@ export default function HallTickets() {
             </select>
           </div>
 
-          {/* Department Filter */}
-          <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-text-500 mb-1">
-              Department
-            </label>
-            <select
-              value={selectedDeptId}
-              onChange={(e) => setSelectedDeptId(e.target.value)}
-              className="w-full text-xs rounded-lg border border-border bg-surface-50 px-3 py-2 text-text-800 focus:outline-none focus:border-brass-500"
-            >
-              <option value="">All Departments</option>
-              {departments.map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.code})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Attempt Filter */}
+          {/* 6. Attempt Filter */}
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-text-500 mb-1">
               Attempt Type
@@ -877,8 +1006,8 @@ export default function HallTickets() {
               className="w-full text-xs rounded-lg border border-border bg-surface-50 px-3 py-2 text-text-800 focus:outline-none focus:border-brass-500 font-medium"
             >
               <option value="ALL">All Enrolled</option>
-              <option value="REGULAR">Regular (Attempt 1)</option>
-              <option value="BACKLOG">Backlog (Attempt &gt; 1)</option>
+              <option value="REGULAR">Regular (Att. 1)</option>
+              <option value="BACKLOG">Backlog (Att. &gt; 1)</option>
             </select>
           </div>
         </div>
@@ -910,48 +1039,291 @@ export default function HallTickets() {
       <Modal
         isOpen={isGenerateModalOpen}
         onClose={() => setIsGenerateModalOpen(false)}
-        title="Batch Generate Examination Hall Tickets"
+        title="Generate Examination Hall Tickets"
       >
-        <form onSubmit={handleGenerate} className="space-y-4">
+        <form onSubmit={handleGenerate} className="space-y-4 max-h-[80vh] overflow-y-auto pr-1">
           <div className="p-3 bg-brass-50/60 border border-brass-200 rounded-lg text-xs text-brass-900 flex items-start gap-2">
             <Info size={16} className="text-brass-600 shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold">Unified Hall Ticket Model:</span> Each candidate receives one consistent seat number across all scheduled exams in the term. All scheduled subjects appear automatically on their single printable admit card.
+              <span className="font-semibold">Series-Isolated Generation:</span> Select Branch, Class, Academic Term, and Exam Series (e.g. Midterm or Final). Scheduled subjects are automatically discovered and can be checked, removed, or added manually before generating.
             </div>
           </div>
 
-          <Field label="Academic Term" required>
-            <select
-              value={genForm.academicTermId}
-              onChange={(e) => setGenForm({ ...genForm, academicTermId: e.target.value })}
-              className="w-full rounded-md border border-border bg-surface-50 px-3 py-2 text-sm text-text-900 focus:outline-none focus:border-brass-500"
-              required
-            >
-              <option value="">-- Choose Academic Term --</option>
-              {terms.map(term => (
-                <option key={term.id} value={term.id}>
-                  {term.name} {term.isCurrent ? '(Current Term)' : ''}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Target Examination Scope">
-            <select
-              value={genForm.examId}
-              onChange={(e) => setGenForm({ ...genForm, examId: e.target.value })}
-              className="w-full rounded-md border border-border bg-surface-50 px-3 py-2 text-sm text-text-900 focus:outline-none focus:border-brass-500"
-            >
-              <option value="ALL_IN_TERM">★ All Scheduled Exams in Term (Recommended)</option>
-              {exams
-                .filter(ex => !genForm.academicTermId || ex.academicTermId === genForm.academicTermId)
-                .map(exam => (
-                  <option key={exam.id} value={exam.id}>
-                    {exam.subject?.code} - {exam.subject?.name} ({exam.examType})
+          {/* Scope Selectors */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* 1. Branch / Department */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-text-600 mb-1">
+                Branch / Department
+              </label>
+              <select
+                value={genForm.departmentId}
+                onChange={(e) => {
+                  const deptId = e.target.value;
+                  const newClassId = deptId ? '' : genForm.classId;
+                  const updated = { ...genForm, departmentId: deptId, classId: newClassId };
+                  setGenForm(updated);
+                  fetchPreview(updated);
+                }}
+                className="w-full rounded-md border border-border bg-surface-50 px-3 py-2 text-xs text-text-900 focus:outline-none focus:border-brass-500"
+              >
+                <option value="">All Branches / Departments</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({d.code})
                   </option>
                 ))}
-            </select>
-          </Field>
+              </select>
+            </div>
+
+            {/* 2. Class & Year (FY, SY, TY, etc.) */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-text-600 mb-1">
+                Class & Year (e.g. FY, SY, TY)
+              </label>
+              <select
+                value={genForm.classId}
+                onChange={(e) => {
+                  const classId = e.target.value;
+                  const updated = { ...genForm, classId };
+                  setGenForm(updated);
+                  fetchPreview(updated);
+                }}
+                className="w-full rounded-md border border-border bg-surface-50 px-3 py-2 text-xs text-text-900 focus:outline-none focus:border-brass-500 font-medium"
+              >
+                <option value="">-- Select Target Class --</option>
+                {classes
+                  .filter(c => !genForm.departmentId || c.departmentId === genForm.departmentId)
+                  .map(cls => (
+                    <option key={cls.id} value={cls.id}>
+                      {cls.name} • Batch {cls.batchYear} (Sem {cls.semesterNumber})
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* 3. Academic Term */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-text-600 mb-1">
+                Academic Term / Year <span className="text-danger">*</span>
+              </label>
+              <select
+                value={genForm.academicTermId}
+                onChange={(e) => {
+                  const termId = e.target.value;
+                  const updated = { ...genForm, academicTermId: termId };
+                  setGenForm(updated);
+                  fetchPreview(updated);
+                }}
+                className="w-full rounded-md border border-border bg-surface-50 px-3 py-2 text-xs text-text-900 focus:outline-none focus:border-brass-500 font-medium"
+                required
+              >
+                <option value="">-- Choose Academic Term --</option>
+                {terms.map(term => (
+                  <option key={term.id} value={term.id}>
+                    {term.name} {term.isCurrent ? '(Current Term)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 4. Exam Series / Type (MIDTERM, FINAL, INTERNAL, MAKEUP) */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-text-600 mb-1">
+                Exam Series / Type <span className="text-danger">*</span>
+              </label>
+              <select
+                value={genForm.examType}
+                onChange={(e) => {
+                  const exType = e.target.value;
+                  const updated = { ...genForm, examType: exType };
+                  setGenForm(updated);
+                  fetchPreview(updated);
+                }}
+                className="w-full rounded-md border border-border bg-surface-50 px-3 py-2 text-xs text-text-900 focus:outline-none focus:border-brass-500 font-bold"
+                required
+              >
+                <option value="MIDTERM">MIDTERM (Mid-Semester Exams Only)</option>
+                <option value="FINAL">FINAL (End-Semester Exams Only)</option>
+                <option value="INTERNAL">INTERNAL (Continuous Evaluation / CIE)</option>
+                <option value="MAKEUP">MAKEUP (Remedial / Backlog Only)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Interactive Preview & Editing Section */}
+          <div className="border border-border rounded-lg p-3 bg-surface-50/50 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-text-800">
+                  Allocated Subjects Preview & Checklist
+                </span>
+                {previewLoading && (
+                  <span className="text-[11px] text-brass-600 animate-pulse font-mono">
+                    Discovering subjects...
+                  </span>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fetchPreview()}
+                disabled={previewLoading || (!genForm.classId && !genForm.academicTermId && !genForm.departmentId)}
+                className="text-[11px] h-7 px-2"
+              >
+                Refresh Subjects
+              </Button>
+            </div>
+
+            {previewLoading ? (
+              <div className="py-6 text-center text-xs text-text-500 space-y-1">
+                <div className="w-5 h-5 border-2 border-brass-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                <p>Finding allocated {genForm.examType} subjects...</p>
+              </div>
+            ) : previewExams.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-text-600 bg-surface-100 p-2 rounded border border-border">
+                  <span>
+                    Auto-discovered <strong>{previewExams.length}</strong> {genForm.examType} exam(s) for <strong>{previewStats?.candidateStudentCount || 'enrolled'}</strong> candidate(s).
+                  </span>
+                  <div className="flex items-center gap-2 font-mono text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedExamIds(previewExams.map(e => e.id))}
+                      className="text-brass-700 hover:underline font-semibold"
+                    >
+                      Select All
+                    </button>
+                    <span>•</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedExamIds([])}
+                      className="text-text-500 hover:underline"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
+
+                {/* Table of Discovered Subjects */}
+                <div className="max-h-48 overflow-y-auto border border-border rounded-md bg-white">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-surface-100 border-b border-border text-[11px] font-semibold text-text-600 sticky top-0">
+                      <tr>
+                        <th className="p-2 w-8 text-center">Include</th>
+                        <th className="p-2">Subject Code & Name</th>
+                        <th className="p-2">Exam Schedule</th>
+                        <th className="p-2 text-center">Enrolled</th>
+                        <th className="p-2 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/60">
+                      {previewExams.map((exam) => {
+                        const isSelected = selectedExamIds.includes(exam.id);
+                        return (
+                          <tr key={exam.id} className={isSelected ? 'bg-white hover:bg-surface-50' : 'bg-surface-50/70 text-text-400'}>
+                            <td className="p-2 text-center">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedExamIds(prev => [...prev, exam.id]);
+                                  } else {
+                                    setSelectedExamIds(prev => prev.filter(id => id !== exam.id));
+                                  }
+                                }}
+                                className="rounded border-border text-brass-600 focus:ring-brass-500"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <div className="font-semibold text-text-900">{exam.subject?.name}</div>
+                              <div className="text-[10px] text-text-500 font-mono">
+                                {exam.subject?.code} • <span className="uppercase text-brass-700 font-bold">{exam.examType}</span>
+                              </div>
+                            </td>
+                            <td className="p-2 text-[11px]">
+                              <div>{exam.examDate ? new Date(exam.examDate).toLocaleDateString('en-GB') : 'Date TBD'}</div>
+                              <div className="text-text-400 font-mono">{exam.startTime || '10:00 AM'}</div>
+                            </td>
+                            <td className="p-2 text-center font-mono text-xs">
+                              {exam.enrollmentCount || 0}
+                            </td>
+                            <td className="p-2 text-right">
+                              {isSelected ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedExamIds(prev => prev.filter(id => id !== exam.id))}
+                                  className="text-[11px] text-danger/80 hover:text-danger font-medium hover:underline"
+                                >
+                                  Remove
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedExamIds(prev => [...prev, exam.id])}
+                                  className="text-[11px] text-brass-700 hover:text-brass-800 font-semibold hover:underline"
+                                >
+                                  + Keep
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Optional: Add other scheduled exam of the same type */}
+                {exams.filter(e => 
+                  e.examType === genForm.examType && 
+                  (!genForm.academicTermId || e.academicTermId === genForm.academicTermId) &&
+                  !previewExams.some(pe => pe.id === e.id)
+                ).length > 0 && (
+                  <div className="pt-1 flex items-center gap-2">
+                    <span className="text-[11px] text-text-500 shrink-0">Add other exam:</span>
+                    <select
+                      onChange={(e) => {
+                        const addedId = e.target.value;
+                        if (!addedId) return;
+                        const found = exams.find(ex => ex.id === addedId);
+                        if (found) {
+                          setPreviewExams(prev => [...prev, found]);
+                          setSelectedExamIds(prev => [...prev, found.id]);
+                        }
+                        e.target.value = '';
+                      }}
+                      className="text-xs rounded border border-border bg-white px-2 py-1 text-text-800 focus:outline-none flex-1"
+                      defaultValue=""
+                    >
+                      <option value="">-- Add another scheduled exam --</option>
+                      {exams
+                        .filter(e => 
+                          e.examType === genForm.examType && 
+                          (!genForm.academicTermId || e.academicTermId === genForm.academicTermId) &&
+                          !previewExams.some(pe => pe.id === e.id)
+                        )
+                        .map(ex => (
+                          <option key={ex.id} value={ex.id}>
+                            + {ex.subject?.code} - {ex.subject?.name} ({ex.examType})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 text-center bg-white rounded border border-border/80 text-xs text-text-500 space-y-1">
+                <AlertCircle size={20} className="mx-auto text-text-400" />
+                <p>No scheduled {genForm.examType} exams found for the selected Class/Term.</p>
+                <p className="text-[11px] text-text-400">Please choose a Class and Academic Term above, or verify exams are created in the Exams tab.</p>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Seat Number Prefix" required>
@@ -1040,9 +1412,11 @@ export default function HallTickets() {
             <Button
               type="submit"
               variant="primary"
-              disabled={submitting}
+              disabled={submitting || selectedExamIds.length === 0}
             >
-              {submitting ? 'Generating...' : 'Generate Hall Tickets'}
+              {submitting 
+                ? 'Generating...' 
+                : `Generate Hall Tickets (${selectedExamIds.length} Subject${selectedExamIds.length === 1 ? '' : 's'})`}
             </Button>
           </div>
         </form>
@@ -1181,7 +1555,7 @@ export default function HallTickets() {
                   </h2>
                   <div className="pt-1">
                     <span className="inline-block px-3 py-0.5 border border-black font-mono font-bold text-xs tracking-wider uppercase bg-gray-100">
-                      EXAMINATION HALL TICKET / ADMIT CARD
+                      {admitCardData.examType ? `${admitCardData.examType} ` : ''}EXAMINATION HALL TICKET / ADMIT CARD
                     </span>
                   </div>
                   <div className="text-[10px] font-mono font-medium text-gray-800 pt-0.5">

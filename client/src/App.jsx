@@ -34,6 +34,7 @@ import SuperAdminLibrary from './pages/superadmin/Library';
 import DigitalLibrary from './pages/common/Library';
 import TeacherMarks from './pages/teacher/TeacherMarks';
 import StudentMarks from './pages/student/StudentMarks';
+import StudentHallTicket from './pages/student/StudentHallTicket';
 import ParentMarks from './pages/parent/ParentMarks';
 import ParentAssignments from './pages/parent/ParentAssignments';
 import ExamStaffDashboard from './pages/examstaff/ExamStaffDashboard';
@@ -112,6 +113,7 @@ function App() {
               <Route path="assignments" element={<StudentAssignments />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<StudentMarks />} />
+              <Route path="hall-ticket" element={<StudentHallTicket />} />
             </Route>
 
             {/* Protected Routes: Parent */}

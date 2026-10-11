@@ -20,21 +20,37 @@ import { Op } from 'sequelize';
 export const generateHallTickets = async (req, res) => {
   const { 
     examId, 
+    examIds, // array of selected exam IDs from preview
     academicTermId,
+    classId,
+    departmentId,
+    examType, // 'MIDTERM', 'FINAL', etc.
     examCenter = 'Main Campus Examination Center', 
     seatPrefix = 'SEAT-', 
     startSequence = 1,
     attemptFilter // optional: 'ALL', 'REGULAR' (attempt=1), 'BACKLOG' (attempt>1)
   } = req.body;
 
-  if (!examId && !academicTermId) {
-    return res.status(400).json({ error: 'Either Exam ID or Academic Term ID is required' });
+  if (!examId && !examIds && !academicTermId && !classId) {
+    return res.status(400).json({ error: 'Exam selection, Class ID, or Academic Term ID is required' });
   }
 
   try {
     let targetExams = [];
 
-    if (examId && examId !== 'ALL_IN_TERM') {
+    if (examIds && Array.isArray(examIds) && examIds.length > 0) {
+      targetExams = await Exam.findAll({
+        where: { id: { [Op.in]: examIds } },
+        include: [
+          { model: Subject, as: 'subject', attributes: ['id', 'name', 'code'] },
+          { model: Class, as: 'class', attributes: ['id', 'batchYear', 'semesterNumber'] },
+          { model: AcademicTerm, as: 'academicTerm', attributes: ['id', 'name'] }
+        ]
+      });
+      if (targetExams.length === 0) {
+        return res.status(404).json({ error: 'None of the selected exams were found' });
+      }
+    } else if (examId && examId !== 'ALL_IN_TERM') {
       const singleExam = await Exam.findByPk(examId, {
         include: [
           { model: Subject, as: 'subject', attributes: ['id', 'name', 'code'] },
@@ -47,9 +63,14 @@ export const generateHallTickets = async (req, res) => {
       }
       targetExams = [singleExam];
     } else {
-      // Find all exams in the academic term
+      // Find all exams matching the class, term, and examType criteria
+      const examWhere = {};
+      if (academicTermId) examWhere.academicTermId = academicTermId;
+      if (classId) examWhere.classId = classId;
+      if (examType && examType !== 'ALL') examWhere.examType = examType;
+
       targetExams = await Exam.findAll({
-        where: { academicTermId },
+        where: examWhere,
         include: [
           { model: Subject, as: 'subject', attributes: ['id', 'name', 'code'] },
           { model: Class, as: 'class', attributes: ['id', 'batchYear', 'semesterNumber'] },
@@ -58,7 +79,9 @@ export const generateHallTickets = async (req, res) => {
       });
 
       if (targetExams.length === 0) {
-        return res.status(400).json({ error: 'No scheduled exams found for this academic term.' });
+        return res.status(400).json({ 
+          error: `No scheduled ${examType ? `'${examType}' ` : ''}exams found for the selected criteria.` 
+        });
       }
     }
 
@@ -88,8 +111,8 @@ export const generateHallTickets = async (req, res) => {
           { 
             model: Student, 
             as: 'student', 
-            attributes: ['id', 'name', 'instituteId', 'rollNumber', 'divisionId'],
-            include: [{ model: Division, as: 'division', attributes: ['name'] }]
+            attributes: ['id', 'name', 'instituteId', 'rollNumber', 'divisionId', 'departmentId'],
+            include: [{ model: Division, as: 'division', attributes: ['name', 'classId'] }]
           }
         ],
         order: [
@@ -110,19 +133,30 @@ export const generateHallTickets = async (req, res) => {
           continue;
         }
 
-        // Check if student already has a seat number assigned in this academic term
+        if (departmentId && enrollment.student?.departmentId && enrollment.student.departmentId !== departmentId) {
+          continue;
+        }
+
+        if (classId && enrollment.student?.division?.classId && enrollment.student.division.classId !== classId) {
+          continue;
+        }
+
+        // Check if student already has a seat number assigned in this academic term & exam series
         let seatNumber = null;
         const existingStudentTicketInTerm = await HallTicket.findOne({
           where: { studentId: enrollment.studentId },
           include: [{
             model: Exam,
             as: 'exam',
-            where: { academicTermId: exam.academicTermId }
+            where: { 
+              academicTermId: exam.academicTermId,
+              examType: exam.examType 
+            }
           }]
         });
 
         if (existingStudentTicketInTerm && existingStudentTicketInTerm.seatNumber) {
-          // Keep consistent seat number across all exams in the term
+          // Keep consistent seat number across all exams in the same series
           seatNumber = existingStudentTicketInTerm.seatNumber;
         } else {
           const paddedNum = String(sequence).padStart(3, '0');
@@ -158,6 +192,95 @@ export const generateHallTickets = async (req, res) => {
 };
 
 /**
+ * Preview exams and candidate counts before generating hall tickets
+ */
+export const getPreviewExams = async (req, res) => {
+  const { 
+    academicTermId, 
+    departmentId, 
+    classId, 
+    examType 
+  } = req.query;
+
+  if (!classId && !academicTermId && !departmentId) {
+    return res.status(400).json({ error: 'Department, Class, or Academic Term is required for preview' });
+  }
+
+  try {
+    const examWhere = {};
+    if (academicTermId) examWhere.academicTermId = academicTermId;
+    if (classId) examWhere.classId = classId;
+    if (examType && examType !== 'ALL') examWhere.examType = examType;
+
+    const exams = await Exam.findAll({
+      where: examWhere,
+      include: [
+        { 
+          model: Subject, 
+          as: 'subject', 
+          attributes: ['id', 'name', 'code', 'credits', 'subjectType'] 
+        },
+        { 
+          model: Class, 
+          as: 'class', 
+          attributes: ['id', 'name', 'batchYear', 'semesterNumber'],
+          where: departmentId ? { departmentId } : undefined,
+          include: [{ model: Department, as: 'department', attributes: ['id', 'name', 'code'] }]
+        },
+        { 
+          model: AcademicTerm, 
+          as: 'academicTerm', 
+          attributes: ['id', 'name', 'isCurrent'] 
+        }
+      ],
+      order: [['examDate', 'ASC']]
+    });
+
+    // For each exam, compute enrollmentCount and ticketCount
+    const examsWithStats = await Promise.all(exams.map(async (exam) => {
+      const [enrollmentCount, ticketCount] = await Promise.all([
+        Enrollment.count({
+          where: {
+            subjectId: exam.subjectId,
+            academicTermId: exam.academicTermId,
+            status: 'ENROLLED'
+          }
+        }),
+        HallTicket.count({
+          where: { examId: exam.id }
+        })
+      ]);
+
+      const exJson = exam.toJSON();
+      exJson.enrollmentCount = enrollmentCount;
+      exJson.ticketCount = ticketCount;
+      return exJson;
+    }));
+
+    // Find student count for the selected class
+    let candidateStudentCount = 0;
+    if (classId) {
+      const divisions = await Division.findAll({ where: { classId }, attributes: ['id'] });
+      const divisionIds = divisions.map(d => d.id);
+      if (divisionIds.length > 0) {
+        candidateStudentCount = await Student.count({
+          where: { divisionId: { [Op.in]: divisionIds } }
+        });
+      }
+    }
+
+    res.json({
+      exams: examsWithStats,
+      totalExams: examsWithStats.length,
+      candidateStudentCount
+    });
+  } catch (error) {
+    console.error('Get Preview Exams error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
  * List Hall Tickets with filtering
  */
 export const getHallTickets = async (req, res) => {
@@ -166,6 +289,8 @@ export const getHallTickets = async (req, res) => {
     studentId, 
     academicTermId, 
     departmentId, 
+    classId,
+    examType,
     search 
   } = req.query;
 
@@ -176,6 +301,8 @@ export const getHallTickets = async (req, res) => {
 
     const examWhere = {};
     if (academicTermId) examWhere.academicTermId = academicTermId;
+    if (classId) examWhere.classId = classId;
+    if (examType && examType !== 'ALL') examWhere.examType = examType;
 
     const studentWhere = {};
     if (departmentId) studentWhere.departmentId = departmentId;
@@ -240,11 +367,16 @@ export const getHallTickets = async (req, res) => {
 };
 
 /**
- * Get unified Student Admit Card with ALL scheduled exams in a term
+ * Get unified Student Admit Card with strictly isolated exams for a term & exam series
  */
 export const getStudentAdmitCard = async (req, res) => {
-  const { studentId } = req.params;
-  const { academicTermId } = req.query;
+  const studentId = (req.params.studentId === 'me' || !req.params.studentId) ? req.user?.id : req.params.studentId;
+  const { academicTermId, examType } = req.query;
+
+  // Security check: Student can only view their own admit card
+  if (req.user?.role === 'STUDENT' && req.user.id !== studentId) {
+    return res.status(403).json({ error: 'Unauthorized to view hall ticket for another student' });
+  }
 
   try {
     const student = await Student.findByPk(studentId, {
@@ -261,6 +393,7 @@ export const getStudentAdmitCard = async (req, res) => {
 
     const examWhere = {};
     if (academicTermId) examWhere.academicTermId = academicTermId;
+    if (examType && examType !== 'ALL') examWhere.examType = examType;
 
     const tickets = await HallTicket.findAll({
       where: { studentId },
@@ -297,11 +430,21 @@ export const getStudentAdmitCard = async (req, res) => {
     });
 
     if (tickets.length === 0) {
-      return res.status(404).json({ error: 'No hall tickets found for this candidate' });
+      return res.status(404).json({ 
+        error: `No hall tickets found for ${examType ? `'${examType}' ` : ''}examinations in the selected academic term` 
+      });
     }
 
-    const primary = tickets[0];
-    const allExams = tickets.map(t => ({
+    // Determine target examType (if not explicitly passed, pick the first ticket's examType so we NEVER mix series)
+    const targetType = (examType && examType !== 'ALL') ? examType : tickets[0].exam?.examType;
+    const filteredTickets = tickets.filter(t => t.exam?.examType === targetType);
+
+    if (filteredTickets.length === 0) {
+      return res.status(404).json({ error: `No hall tickets found for '${targetType}' examinations` });
+    }
+
+    const primary = filteredTickets[0];
+    const allExams = filteredTickets.map(t => ({
       ticketId: t.id,
       seatNumber: t.seatNumber,
       examCenter: t.examCenter,
@@ -321,6 +464,7 @@ export const getStudentAdmitCard = async (req, res) => {
       seatNumber: primary.seatNumber,
       examCenter: primary.examCenter,
       generatedAt: primary.generatedAt,
+      examType: targetType,
       student,
       academicTerm: primary.exam?.academicTerm,
       enrollment: primary.enrollment,
@@ -334,7 +478,7 @@ export const getStudentAdmitCard = async (req, res) => {
 };
 
 /**
- * Get single Hall Ticket by ID with full printable metadata + all student exams in same term
+ * Get single Hall Ticket by ID with full printable metadata + all student exams in same series
  */
 export const getHallTicketById = async (req, res) => {
   const { id } = req.params;
@@ -382,15 +526,19 @@ export const getHallTicketById = async (req, res) => {
       return res.status(404).json({ error: 'Hall ticket not found' });
     }
 
-    // Also fetch ALL other hall tickets / exams for this student in the same academic term
+    // Fetch ONLY other hall tickets / exams for this student in the same term AND SAME EXAM TYPE (never mix)
     const termId = ticket.exam?.academicTermId;
+    const currentExamType = ticket.exam?.examType;
     const allStudentTickets = await HallTicket.findAll({
       where: { studentId: ticket.studentId },
       include: [
         {
           model: Exam,
           as: 'exam',
-          where: termId ? { academicTermId: termId } : undefined,
+          where: {
+            ...(termId ? { academicTermId: termId } : {}),
+            ...(currentExamType ? { examType: currentExamType } : {})
+          },
           include: [
             { model: Subject, as: 'subject', attributes: ['id', 'name', 'code', 'subjectType', 'credits'] }
           ]
@@ -407,6 +555,7 @@ export const getHallTicketById = async (req, res) => {
     });
 
     const ticketData = ticket.toJSON();
+    ticketData.examType = currentExamType;
     ticketData.allExams = allStudentTickets.map(st => ({
       ticketId: st.id,
       seatNumber: st.seatNumber,
