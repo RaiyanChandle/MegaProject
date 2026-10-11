@@ -21,6 +21,14 @@ router.get(
   libraryController.getResources
 );
 
+// Admin updates library resource (Title or File)
+router.put(
+  '/:id',
+  requireRole('SUPER_ADMIN', 'DEPARTMENT_ADMIN'),
+  uploadLibraryMiddleware,
+  libraryController.updateResource
+);
+
 // Admin deletes library resource
 router.delete(
   '/:id',
