@@ -210,3 +210,123 @@ export const getStudentEnrollments = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getMyEnrolledSubjects = async (req, res) => {
+  const { Op } = await import('sequelize');
+  const targetStudentId = (req.user.role === 'STUDENT') ? req.user.id : (req.query.studentId || null);
+  const { academicTermId } = req.query;
+
+  if (!targetStudentId) {
+    return res.status(400).json({ error: 'targetStudentId is required' });
+  }
+
+  const { 
+    Enrollment, 
+    Subject, 
+    AcademicTerm, 
+    Student, 
+    Class, 
+    Division,
+    SubjectAllocation, 
+    Teacher, 
+    AssessmentComponent 
+  } = await import('../models/index.js');
+
+  try {
+    const student = await Student.findByPk(targetStudentId, {
+      include: [
+        { model: Division, as: 'division', attributes: ['id', 'name'] }
+      ]
+    });
+
+    if (!student) {
+      return res.status(404).json({ error: 'Student profile not found' });
+    }
+
+    let term = null;
+    if (academicTermId) {
+      term = await AcademicTerm.findByPk(academicTermId);
+    } else {
+      term = await AcademicTerm.findOne({ where: { isCurrent: true } });
+    }
+
+    if (!term) {
+      return res.status(400).json({ error: 'No active academic term found' });
+    }
+
+    const enrollments = await Enrollment.findAll({
+      where: {
+        studentId: targetStudentId,
+        academicTermId: term.id
+      },
+      include: [
+        {
+          model: Subject,
+          as: 'subject',
+          include: [
+            {
+              model: AssessmentComponent,
+              as: 'assessmentComponents'
+            }
+          ]
+        },
+        {
+          model: Class,
+          as: 'class',
+          attributes: ['id', 'name', 'batchYear', 'semesterNumber']
+        },
+        {
+          model: AcademicTerm,
+          as: 'academicTerm',
+          attributes: ['id', 'name', 'isCurrent']
+        }
+      ],
+      order: [
+        [{ model: Subject, as: 'subject' }, 'code', 'ASC']
+      ]
+    });
+
+    const enriched = await Promise.all(enrollments.map(async (enr) => {
+      const enrJson = enr.toJSON();
+
+      const allocation = await SubjectAllocation.findOne({
+        where: {
+          subjectId: enr.subjectId,
+          classId: enr.classId,
+          ...(student.divisionId ? {
+            [Op.or]: [
+              { divisionId: student.divisionId },
+              { divisionId: null }
+            ]
+          } : {})
+        },
+        include: [
+          {
+            model: Teacher,
+            as: 'teacher',
+            attributes: ['id', 'name', 'email', 'instituteId']
+          }
+        ]
+      });
+
+      enrJson.teacher = allocation?.teacher || null;
+      return enrJson;
+    }));
+
+    res.json({
+      term,
+      student: {
+        id: student.id,
+        name: student.name,
+        instituteId: student.instituteId,
+        rollNumber: student.rollNumber,
+        batchYear: student.batchYear,
+        division: student.division?.name || null
+      },
+      enrollments: enriched
+    });
+  } catch (error) {
+    console.error('Get my enrolled subjects error:', error);
+    res.status(500).json({ error: 'Internal server error while fetching enrolled subjects' });
+  }
+};

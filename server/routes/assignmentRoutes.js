@@ -22,10 +22,10 @@ router.get(
   assignmentController.getAssignments
 );
 
-// Student list assignments for enrolled subjects (T8.4)
+// Student & Parent list assignments for enrolled subjects (T8.4)
 router.get(
   '/my-assignments',
-  requireRole('STUDENT'),
+  requireRole('STUDENT', 'PARENT'),
   assignmentController.getStudentAssignments
 );
 
