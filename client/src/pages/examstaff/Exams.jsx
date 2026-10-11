@@ -243,7 +243,7 @@ export default function Exams() {
     }
 
     if (pass > max) {
-      toast.error('Passing marks cannot exceed maximum marks');
+      toast.error('Passing marks cannot be greater than maximum marks (total marks)');
       return;
     }
 
@@ -310,7 +310,7 @@ export default function Exams() {
     }
 
     if (pass > max) {
-      toast.error('Passing marks cannot exceed maximum marks');
+      toast.error('Passing marks cannot be greater than maximum marks (total marks)');
       return;
     }
 
@@ -840,9 +840,18 @@ export default function Exams() {
                 step="0.5"
                 value={formData.passingMarks}
                 onChange={(e) => setFormData(prev => ({ ...prev, passingMarks: e.target.value }))}
-                className="w-full rounded-md border border-border px-3 py-2 text-sm bg-surface-0 text-text-900 focus:border-brass-500 focus:ring-1 focus:ring-brass-500"
+                className={`w-full rounded-md border px-3 py-2 text-sm bg-surface-0 text-text-900 focus:ring-1 ${
+                  Number(formData.passingMarks || 0) > Number(formData.maxMarks || 0)
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : 'border-border focus:border-brass-500 focus:ring-brass-500'
+                }`}
                 required
               />
+              {Number(formData.passingMarks || 0) > Number(formData.maxMarks || 0) && (
+                <p className="text-xs text-red-500 font-semibold mt-1 flex items-center gap-1">
+                  <span>⚠️ Passing marks cannot be greater than max marks ({formData.maxMarks || 0})</span>
+                </p>
+              )}
             </Field>
           </div>
 
@@ -857,8 +866,8 @@ export default function Exams() {
             <Button
               type="submit"
               variant="primary"
-              disabled={submitting}
-              className="bg-brass-500 hover:bg-brass-600 text-ink-950 font-semibold"
+              disabled={submitting || Number(formData.passingMarks || 0) > Number(formData.maxMarks || 0)}
+              className="bg-brass-500 hover:bg-brass-600 text-ink-950 font-semibold disabled:opacity-50"
             >
               {submitting ? 'Scheduling...' : 'Schedule Exam'}
             </Button>
@@ -934,9 +943,18 @@ export default function Exams() {
                 step="0.5"
                 value={editFormData.passingMarks}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, passingMarks: e.target.value }))}
-                className="w-full rounded-md border border-border px-3 py-2 text-sm bg-surface-0 text-text-900 focus:border-brass-500 focus:ring-1 focus:ring-brass-500"
+                className={`w-full rounded-md border px-3 py-2 text-sm bg-surface-0 text-text-900 focus:ring-1 ${
+                  Number(editFormData.passingMarks || 0) > Number(editFormData.maxMarks || 0)
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : 'border-border focus:border-brass-500 focus:ring-brass-500'
+                }`}
                 required
               />
+              {Number(editFormData.passingMarks || 0) > Number(editFormData.maxMarks || 0) && (
+                <p className="text-xs text-red-500 font-semibold mt-1 flex items-center gap-1">
+                  <span>⚠️ Passing marks cannot be greater than max marks ({editFormData.maxMarks || 0})</span>
+                </p>
+              )}
             </Field>
           </div>
 
@@ -951,8 +969,8 @@ export default function Exams() {
             <Button
               type="submit"
               variant="primary"
-              disabled={submitting}
-              className="bg-brass-500 hover:bg-brass-600 text-ink-950 font-semibold"
+              disabled={submitting || Number(editFormData.passingMarks || 0) > Number(editFormData.maxMarks || 0)}
+              className="bg-brass-500 hover:bg-brass-600 text-ink-950 font-semibold disabled:opacity-50"
             >
               {submitting ? 'Saving...' : 'Save Changes'}
             </Button>

@@ -42,6 +42,8 @@ import ExamStaffExams from './pages/examstaff/Exams';
 import ExamStaffQuestionPapers from './pages/examstaff/QuestionPapers';
 import ExamStaffHallTickets from './pages/examstaff/HallTickets';
 import ExamStaffResults from './pages/examstaff/ExamResults';
+import ResultProcessing from './pages/examstaff/ResultProcessing';
+import StudentResultCard from './pages/student/StudentResultCard';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -114,6 +116,7 @@ function App() {
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<StudentMarks />} />
               <Route path="hall-ticket" element={<StudentHallTicket />} />
+              <Route path="result-card" element={<StudentResultCard />} />
             </Route>
 
             {/* Protected Routes: Parent */}
@@ -137,6 +140,7 @@ function App() {
               <Route path="question-papers" element={<ExamStaffQuestionPapers />} />
               <Route path="halltickets" element={<ExamStaffHallTickets />} />
               <Route path="results" element={<ExamStaffResults />} />
+              <Route path="result-processing" element={<ResultProcessing />} />
             </Route>
 
             {/* Catch-all */}

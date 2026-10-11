@@ -149,7 +149,7 @@ export const computeSubjectResult = async (enrollmentId, transaction = null) => 
     enrollmentId,
     totalMarksObtained,
     totalMaxMarks,
-    percentage: totalMaxMarks > 0 ? Number(((totalMarksObtained / totalMaxMarks) * 100).toFixed(2)) : 0,
+    percentage: totalMaxMarks > 0 ? Number(Math.min(100, Math.max(0, (totalMarksObtained / totalMaxMarks) * 100)).toFixed(2)) : 0,
     isPass,
     allComponentsGraded,
     passedAllExternalComponents

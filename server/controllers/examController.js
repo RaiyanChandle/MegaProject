@@ -46,7 +46,7 @@ export const createExam = async (req, res) => {
   const numPassingMarks = Number(passingMarks);
 
   if (numPassingMarks > numMaxMarks) {
-    return res.status(400).json({ error: 'Passing marks cannot exceed maximum marks' });
+    return res.status(400).json({ error: 'Passing marks cannot be greater than maximum marks (total marks)' });
   }
 
   if (!EXAM_TYPES.includes(examType)) {
@@ -343,7 +343,7 @@ export const updateExam = async (req, res) => {
     const currentPass = updates.passingMarks !== undefined ? updates.passingMarks : exam.passingMarks;
 
     if (currentPass > currentMax) {
-      return res.status(400).json({ error: 'Passing marks cannot exceed maximum marks' });
+      return res.status(400).json({ error: 'Passing marks cannot be greater than maximum marks (total marks)' });
     }
 
     if (componentId !== undefined) {
@@ -621,6 +621,14 @@ export const enterExamResults = async (req, res) => {
         // Derive isPass from Exam.passingMarks (rules 27)
         let isPass = null;
         if (marksObtained !== null) {
+          if (isNaN(marksObtained) || marksObtained < 0) {
+            return res.status(400).json({ error: 'Marks obtained cannot be negative or invalid' });
+          }
+          if (marksObtained > Number(exam.maxMarks)) {
+            return res.status(400).json({ 
+              error: `Marks obtained (${marksObtained}) cannot be greater than maximum marks (${exam.maxMarks}) for this exam` 
+            });
+          }
           isPass = marksObtained >= Number(exam.passingMarks);
           if (isPass) passCount++;
           else failCount++;

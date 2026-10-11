@@ -6,6 +6,7 @@ export default (sequelize) => {
   ...uuidPk,
   studentId: { type: DataTypes.UUID, allowNull: false },
   academicTermId: { type: DataTypes.UUID, allowNull: false },
+  examType: { type: DataTypes.STRING, allowNull: false, defaultValue: 'FINAL' }, // 'MIDTERM', 'FINAL', 'INTERNAL'
   totalMarks: { type: DataTypes.FLOAT, allowNull: true },
   percentage: { type: DataTypes.FLOAT, allowNull: true },
   sgpa: { type: DataTypes.FLOAT, allowNull: true },
@@ -14,7 +15,7 @@ export default (sequelize) => {
 }, {
   tableName: 'result_cards',
   timestamps: true,
-  indexes: [{ unique: true, fields: ['studentId', 'academicTermId'] }],
+  indexes: [{ unique: true, fields: ['studentId', 'academicTermId', 'examType'] }],
 });
   return ResultCard;
 };

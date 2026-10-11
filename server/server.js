@@ -38,6 +38,7 @@ import marksRoutes from './routes/marksRoutes.js';
 import examRoutes from './routes/examRoutes.js';
 import questionPaperRoutes from './routes/questionPaperRoutes.js';
 import hallTicketRoutes from './routes/hallTicketRoutes.js';
+import resultRoutes from './routes/resultRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -63,6 +64,7 @@ app.use('/api/marks', marksRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/question-papers', questionPaperRoutes);
 app.use('/api/hall-tickets', hallTicketRoutes);
+app.use('/api/results', resultRoutes);
 
 app.get("/api/health", async (req, res) => {
   try {

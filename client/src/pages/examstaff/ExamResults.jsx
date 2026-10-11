@@ -21,6 +21,7 @@ import {
   Link2,
   RefreshCw
 } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { useSearch } from '../../context/SearchContext';
 
 export default function ExamResults() {
@@ -232,6 +233,125 @@ export default function ExamResults() {
     });
     setMarksState(updated);
     toast.info('Filled empty marks with passing threshold');
+  };
+
+  // Export official Marks Sheet with College Header
+  const handleExportMarksSheet = () => {
+    if (!examData || students.length === 0) {
+      toast.error('No exam marks data to export');
+      return;
+    }
+    const maxMarks = Number(examData.maxMarks || 100);
+    const passMarks = Number(examData.passingMarks || 40);
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Marks_Sheet_${examData.subject?.code}_${examData.examType}.html</title>
+    <style>
+      @page { size: A4 portrait; margin: 8mm; }
+      * { box-sizing: border-box; }
+      body { font-family: "IBM Plex Serif", Georgia, serif; font-size: 11px; color: #000; background: #fff; margin: 0; padding: 15px; }
+      .header-box { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
+      .inst-sub { font-size: 9px; font-weight: bold; text-transform: uppercase; color: #475569; }
+      .inst-title { font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 3px 0; }
+      .inst-meta { font-size: 9px; color: #334155; }
+      .exam-office { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-top: 4px; }
+      .doc-badge { display: inline-block; padding: 2px 12px; border: 1px solid #000; font-family: monospace; font-size: 11px; font-weight: bold; background: #f1f5f9; margin-top: 4px; }
+      .info-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; border: 1px solid #000; padding: 6px 10px; background: #f8fafc; font-size: 11px; margin-bottom: 12px; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10px; }
+      th, td { border: 1px solid #000; padding: 5px 6px; text-align: center; }
+      th { background: #f1f5f9; font-weight: bold; }
+      td.left { text-align: left; }
+      .pass { color: #15803d; font-weight: bold; }
+      .fail { color: #b91c1c; font-weight: bold; }
+      .pending { color: #b45309; font-weight: bold; }
+      .stats-box { border: 1px solid #000; padding: 8px; background: #f8fafc; display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 11px; }
+      .sig-row { display: flex; justify-content: space-between; margin-top: 35px; text-align: center; }
+      .sig-item { min-width: 140px; border-top: 1px solid #000; padding-top: 4px; font-size: 10px; font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <div class="header-box">
+      <div class="inst-sub">Autonomous Institute • Affiliated to Shivaji University, Kolhapur</div>
+      <div class="inst-title">KOLHAPUR INSTITUTE OF TECHNOLOGY'S COLLEGE OF ENGINEERING (AUTONOMOUS)</div>
+      <div class="inst-meta">Approved by AICTE New Delhi • Recognized by Govt. of Maharashtra • Accredited by NAAC with 'A+' Grade</div>
+      <div class="inst-meta">Gokul Shirgaon, Kolhapur - 416234, Maharashtra | Web: www.kitcoek.in</div>
+      <div class="exam-office">OFFICE OF THE CONTROLLER OF EXAMINATIONS</div>
+      <div class="doc-badge">${examData.examType} EXAMINATION MARKS ENTRY SHEET</div>
+    </div>
+
+    <div class="info-bar">
+      <div><strong>Course:</strong> ${examData.subject?.code} - ${examData.subject?.name}</div>
+      <div><strong>Examination:</strong> ${examData.examType} Exam (${examData.class?.name || 'Class'})</div>
+      <div><strong>Max Marks:</strong> ${maxMarks} | <strong>Passing Threshold:</strong> ${passMarks}</div>
+      <div><strong>Date of Export:</strong> ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 30px;">#</th>
+          <th style="width: 70px;">Seat No</th>
+          <th style="width: 80px;">Roll No</th>
+          <th style="width: 100px;">PRN</th>
+          <th>Candidate Name</th>
+          <th style="width: 80px;">Marks (${maxMarks})</th>
+          <th style="width: 80px;">Percentage</th>
+          <th style="width: 70px;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${students.map((s, idx) => {
+          const val = marksState[s.enrollmentId];
+          const hasMark = val !== '' && val !== null && val !== undefined;
+          const markNum = hasMark ? Math.min(Number(val), maxMarks) : null;
+          const rawPct = hasMark && maxMarks > 0 ? (markNum / maxMarks) * 100 : null;
+          const pct = rawPct != null ? Math.min(100, Math.max(0, rawPct)).toFixed(1) : null;
+          const isPass = hasMark ? markNum >= passMarks : null;
+          return `
+            <tr>
+              <td>${idx + 1}</td>
+              <td style="font-family: monospace; font-weight: bold;">${s.seatNumber || '—'}</td>
+              <td style="font-family: monospace;">${s.student?.rollNumber || '—'}</td>
+              <td style="font-family: monospace;">${s.student?.instituteId || '—'}</td>
+              <td class="left"><strong>${s.student?.name || '—'}</strong></td>
+              <td style="font-weight: bold;">${hasMark ? markNum : '—'}</td>
+              <td style="font-family: monospace;">${pct != null ? `${pct}%` : '—'}</td>
+              <td class="${isPass === true ? 'pass' : isPass === false ? 'fail' : 'pending'}">
+                ${hasMark ? (isPass ? 'PASS' : 'FAIL') : 'PENDING'}
+              </td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+
+    <div class="stats-box">
+      <div>Total Candidates: <strong>${students.length}</strong></div>
+      <div>Marks Entered: <strong>${liveStats.entered} / ${liveStats.total}</strong></div>
+      <div>Passed: <strong>${liveStats.passed}</strong></div>
+      <div>Failed: <strong>${liveStats.failed}</strong></div>
+      <div>Pass Rate: <strong>${liveStats.passRate}%</strong></div>
+    </div>
+
+    <div class="sig-row">
+      <div class="sig-item">Examiner / Evaluator</div>
+      <div class="sig-item">Scrutiny Officer</div>
+      <div class="sig-item">Controller of Examinations<br><span style="font-weight: normal; font-size: 9px;">KITCoEK Autonomous</span></div>
+    </div>
+  </body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Exam_Marks_${examData.subject?.code}_${examData.examType}.html`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Official Exam Marks Sheet exported');
   };
 
   const columns = [
@@ -558,20 +678,31 @@ export default function ExamResults() {
       </div>
 
       {/* Bottom Save Bar */}
-      <div className="flex items-center justify-between p-4 bg-surface-0 border border-border rounded-xl shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-surface-0 border border-border rounded-xl shadow-xs">
         <div className="text-xs text-text-500 flex items-center gap-2">
           <Info size={14} className="text-brass-600" />
           <span>Clicking <strong>Save & Sync Results</strong> updates official result records and syncs component assessments.</span>
         </div>
-        <Button
-          variant="primary"
-          onClick={handleSaveResults}
-          disabled={saving || loadingSheet || !examData}
-          className="flex items-center gap-2 text-xs font-semibold"
-        >
-          <Save size={15} />
-          {saving ? 'Saving...' : 'Save & Sync Results'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportMarksSheet}
+            disabled={loadingSheet || !examData || students.length === 0}
+            className="flex items-center gap-2 text-xs font-semibold"
+          >
+            <Download size={14} />
+            Export Marks Sheet
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSaveResults}
+            disabled={saving || loadingSheet || !examData}
+            className="flex items-center gap-2 text-xs font-semibold"
+          >
+            <Save size={15} />
+            {saving ? 'Saving...' : 'Save & Sync Results'}
+          </Button>
+        </div>
       </div>
     </div>
   );
