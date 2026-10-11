@@ -467,7 +467,21 @@ export const getStudentResultCard = async (req, res) => {
   const normExamType = (examType || 'FINAL').toUpperCase();
 
   // Normalize studentId
-  if (studentId === 'me') studentId = user.id;
+  if (studentId === 'me') {
+    if (user.role === 'PARENT') {
+      if (req.query.studentId) {
+        studentId = req.query.studentId;
+      } else {
+        const firstLink = await ParentStudent.findOne({ where: { parentId: user.id } });
+        if (!firstLink) {
+          return res.status(404).json({ error: 'No linked student found for this parent' });
+        }
+        studentId = firstLink.studentId;
+      }
+    } else {
+      studentId = user.id;
+    }
+  }
 
   // Authorization
   if (user.role === 'STUDENT' && studentId !== user.id) {

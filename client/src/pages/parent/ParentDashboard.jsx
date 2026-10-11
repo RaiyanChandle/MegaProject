@@ -10,7 +10,8 @@ import {
   BookOpen, 
   GraduationCap, 
   RefreshCw,
-  FileCheck
+  FileCheck,
+  Layers
 } from 'lucide-react';
 import { apiClient } from '../../api/client';
 import { Link } from 'react-router-dom';
@@ -168,10 +169,17 @@ export default function ParentDashboard() {
             <span>{t('attendance')}</span>
           </Link>
           <Link
+            to="/parent/results"
+            className="px-3 py-1.5 rounded-lg border border-brass-500/30 bg-brass-500/10 hover:bg-brass-500/20 text-brass-800 text-xs font-semibold transition-colors inline-flex items-center gap-1.5 shadow-xs"
+          >
+            <Award size={13} className="text-brass-700" />
+            <span>Result Card</span>
+          </Link>
+          <Link
             to="/parent/marks"
             className="px-3 py-1.5 rounded-lg border border-border bg-surface-50 hover:bg-surface-100 text-text-900 text-xs font-semibold transition-colors inline-flex items-center gap-1.5 shadow-xs"
           >
-            <Award size={13} className="text-ink-900" />
+            <Layers size={13} className="text-ink-900" />
             <span>{t('marks')}</span>
           </Link>
           <Link
@@ -265,17 +273,17 @@ export default function ParentDashboard() {
             </p>
           </Link>
 
-          {/* Card 2: Marks */}
+          {/* Card 2: Marks & Result Card */}
           <Link
-            to="/parent/marks"
-            className="bg-surface-0 border border-border hover:border-ink-700 rounded-xl p-4 sm:p-5 shadow-xs transition-all flex flex-col justify-between group"
+            to="/parent/results"
+            className="bg-surface-0 border border-border hover:border-brass-600 rounded-xl p-4 sm:p-5 shadow-xs transition-all flex flex-col justify-between group"
           >
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-text-500 uppercase tracking-wider">
-                  {t('examResults')}
+                  Result Card & Grades
                 </span>
-                <Award size={16} className="text-ink-900" />
+                <Award size={16} className="text-brass-600" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-extrabold font-mono text-emerald-700 tracking-tight">

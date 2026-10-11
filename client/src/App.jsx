@@ -44,6 +44,7 @@ import ExamStaffHallTickets from './pages/examstaff/HallTickets';
 import ExamStaffResults from './pages/examstaff/ExamResults';
 import ResultProcessing from './pages/examstaff/ResultProcessing';
 import StudentResultCard from './pages/student/StudentResultCard';
+import ParentResultCard from './pages/parent/ParentResultCard';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -127,6 +128,7 @@ function App() {
               <Route index element={<ParentDashboard />} />
               <Route path="attendance" element={<ParentAttendance />} />
               <Route path="marks" element={<ParentMarks />} />
+              <Route path="results" element={<ParentResultCard />} />
               <Route path="assignments" element={<ParentAssignments />} />
             </Route>
 

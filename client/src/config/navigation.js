@@ -43,7 +43,8 @@ export const navigationConfig = {
   PARENT: [
     { name: 'Dashboard', href: '/parent', icon: LayoutDashboard },
     { name: 'Attendance', href: '/parent/attendance', icon: Clock },
-    { name: 'Marks & Results', href: '/parent/marks', icon: FileCheck },
+    { name: 'Marks Breakdown', href: '/parent/marks', icon: FileCheck },
+    { name: 'Result Card', href: '/parent/results', icon: Award },
     { name: 'Assignments', href: '/parent/assignments', icon: FileText },
     { name: 'Children', href: '/parent/children', icon: Users },
     { name: 'Fees', href: '/parent/fees', icon: DollarSign },
