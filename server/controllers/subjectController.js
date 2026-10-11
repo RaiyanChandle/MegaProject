@@ -45,24 +45,33 @@ export const getSubjects = async (req, res) => {
     let whereClause = {};
 
     if (classId) {
-      const targetClass = await Class.findOne({ where: { id: classId, departmentId } });
-      if (!targetClass) {
-        return res.status(404).json({ error: 'Class not found' });
+      if (departmentId) {
+        const targetClass = await Class.findOne({ where: { id: classId, departmentId } });
+        if (!targetClass) {
+          return res.status(404).json({ error: 'Class not found' });
+        }
+      } else {
+        const targetClass = await Class.findByPk(classId);
+        if (!targetClass) {
+          return res.status(404).json({ error: 'Class not found' });
+        }
       }
       whereClause.classId = classId;
     } else {
-      // Need to find all classes in the department to filter subjects
-      const departmentClasses = await Class.findAll({
-        where: { departmentId },
-        attributes: ['id']
-      });
-      const classIds = departmentClasses.map(c => c.id);
-      whereClause.classId = classIds;
+      if (departmentId) {
+        // Need to find all classes in the department to filter subjects
+        const departmentClasses = await Class.findAll({
+          where: { departmentId },
+          attributes: ['id']
+        });
+        const classIds = departmentClasses.map(c => c.id);
+        whereClause.classId = classIds;
+      }
     }
 
     const subjects = await Subject.findAll({
       where: whereClause,
-      include: [{ model: Class, as: 'class', attributes: ['name', 'batchYear', 'semesterNumber'] }],
+      include: [{ model: Class, as: 'class', attributes: ['name', 'batchYear', 'semesterNumber', 'departmentId'] }],
       order: [['code', 'ASC']]
     });
     
@@ -149,7 +158,11 @@ export const getSubjectById = async (req, res) => {
       include: [{ model: Class, as: 'class', attributes: ['name', 'batchYear', 'semesterNumber', 'departmentId'] }]
     });
 
-    if (!targetSubject || targetSubject.class.departmentId !== departmentId) {
+    if (!targetSubject) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
+
+    if (departmentId && targetSubject.class.departmentId !== departmentId) {
       return res.status(404).json({ error: 'Subject not found in your department' });
     }
 

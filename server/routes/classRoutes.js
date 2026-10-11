@@ -5,13 +5,12 @@ import { requireAuth, requireRole } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 router.use(requireAuth);
-router.use(requireRole('DEPARTMENT_ADMIN'));
 
-router.post('/', createClass);
-router.get('/', getClasses);
-router.get('/:id', getClassById);
-router.put('/:id', updateClass);
-router.delete('/:id', deleteClass);
-router.post('/:id/clone', cloneClass);
+router.post('/', requireRole('DEPARTMENT_ADMIN'), createClass);
+router.get('/', requireRole('DEPARTMENT_ADMIN', 'EXAM_STAFF', 'SUPER_ADMIN'), getClasses);
+router.get('/:id', requireRole('DEPARTMENT_ADMIN', 'EXAM_STAFF', 'SUPER_ADMIN'), getClassById);
+router.put('/:id', requireRole('DEPARTMENT_ADMIN'), updateClass);
+router.delete('/:id', requireRole('DEPARTMENT_ADMIN'), deleteClass);
+router.post('/:id/clone', requireRole('DEPARTMENT_ADMIN'), cloneClass);
 
 export default router;

@@ -45,7 +45,11 @@ export const getComponents = async (req, res) => {
       include: [{ model: Class, as: 'class', attributes: ['departmentId'] }]
     });
 
-    if (!subject || subject.class.departmentId !== departmentId) {
+    if (!subject) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
+
+    if (departmentId && subject.class?.departmentId !== departmentId) {
       return res.status(404).json({ error: 'Subject not found in your department' });
     }
 
