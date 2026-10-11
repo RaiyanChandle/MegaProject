@@ -143,13 +143,13 @@ widening to more modules.
 
 ## Phase 11 — Examinations · flows 11
 
-- [ ] **T11.1** Resolve PRD decisions 3 and 5 (exam → component mapping, who enters End Sem).
-- [ ] **T11.2** Exam scheduling by Exam Staff.
-- [ ] **T11.3** Question paper upload with draft → submitted → approved workflow.
-- [ ] **T11.4** Hall tickets per enrollment + printable PDF (Plex Serif, grayscale-safe) (rules 26).
-- [ ] **T11.5** Exam result entry (bulk); `isPass` from `Exam.passingMarks` (rules 27); sync into the mapped `ComponentMark`.
-- [ ] **T11.6** Result processing: `ResultCard` from `SubjectResult`s, SGPA per PRD decision 2 (rules 28).
-- [ ] **T11.7** Student/parent result view + printable marksheet.
+- [x] **T11.1** Resolve PRD decisions 3 and 5 (exam → component mapping, who enters End Sem).--done
+- [x] **T11.2** Exam scheduling by Exam Staff.--done
+- [x] **T11.3** Question paper upload with draft → submitted → approved workflow.--done
+- [x] **T11.4** Hall tickets per enrollment + printable PDF (Plex Serif, grayscale-safe) (rules 26).--done
+- [x] **T11.5** Exam result entry (bulk); `isPass` from `Exam.passingMarks` (rules 27); sync into the mapped `ComponentMark`.--done
+- [x] **T11.6** Result processing: `ResultCard` from `SubjectResult`s, SGPA per PRD decision 2 (rules 28).--done
+- [x] **T11.7** Student/parent result view + printable marksheet.--done
 
 ---
 

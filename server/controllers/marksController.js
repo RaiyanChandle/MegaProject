@@ -10,7 +10,9 @@ import {
   ComponentMark, 
   SubjectResult, 
   AcademicTerm,
-  ParentStudent
+  ParentStudent,
+  Exam,
+  ExamResult
 } from '../models/index.js';
 import { computeSubjectResult } from '../services/subjectResultService.js';
 import { Op } from 'sequelize';
@@ -336,6 +338,97 @@ export const getStudentMarks = async (req, res) => {
 
     const currentTerm = await AcademicTerm.findOne({ where: { isCurrent: true } });
 
+    // Step 1: Self-healing synchronization for any ExamResults with entered marks
+    const initialEnrollments = await Enrollment.findAll({
+      where: {
+        studentId,
+        ...(currentTerm ? { academicTermId: currentTerm.id } : {})
+      },
+      include: [
+        {
+          model: ExamResult,
+          as: 'examResults',
+          attributes: ['id', 'examId', 'marksObtained', 'isPass', 'enteredAt'],
+          include: [
+            {
+              model: Exam,
+              as: 'exam',
+              attributes: ['id', 'examType', 'maxMarks', 'passingMarks', 'componentId', 'subjectId']
+            }
+          ]
+        }
+      ]
+    });
+
+    for (const enr of initialEnrollments) {
+      if (enr.examResults && enr.examResults.length > 0) {
+        let hasNewSync = false;
+        for (const er of enr.examResults) {
+          if (er.marksObtained !== null && er.marksObtained !== undefined) {
+            const examObj = er.exam;
+            if (examObj) {
+              let compId = examObj.componentId;
+              if (!compId) {
+                const compName = examObj.examType === 'MIDTERM' 
+                  ? 'Mid Sem Exam' 
+                  : examObj.examType === 'FINAL' 
+                    ? 'End Sem Exam' 
+                    : `${examObj.examType.charAt(0) + examObj.examType.slice(1).toLowerCase()} Exam`;
+
+                let comp = await AssessmentComponent.findOne({
+                  where: { subjectId: enr.subjectId, name: compName }
+                });
+                if (!comp) {
+                  comp = await AssessmentComponent.findOne({ where: { subjectId: enr.subjectId } });
+                }
+                if (!comp) {
+                  comp = await AssessmentComponent.create({
+                    subjectId: enr.subjectId,
+                    name: compName,
+                    maxMarks: examObj.maxMarks,
+                    category: (examObj.examType === 'INTERNAL' || examObj.examType === 'PRACTICAL') ? 'INTERNAL' : 'EXTERNAL',
+                    entryMethod: 'FORMAL_EXAM',
+                    sequenceOrder: 1
+                  });
+                }
+                compId = comp.id;
+                await examObj.update({ componentId: compId });
+              }
+
+              if (compId) {
+                const [cm, cmCreated] = await ComponentMark.findOrCreate({
+                  where: { componentId: compId, enrollmentId: enr.id },
+                  defaults: {
+                    marksObtained: er.marksObtained,
+                    enteredAt: er.enteredAt || new Date(),
+                    sourceExamId: examObj.id
+                  }
+                });
+                if (!cmCreated && cm.marksObtained !== er.marksObtained) {
+                  await cm.update({
+                    marksObtained: er.marksObtained,
+                    enteredAt: er.enteredAt || new Date(),
+                    sourceExamId: examObj.id
+                  });
+                  hasNewSync = true;
+                } else if (cmCreated) {
+                  hasNewSync = true;
+                }
+              }
+            }
+          }
+        }
+        if (hasNewSync) {
+          try {
+            await computeSubjectResult(enr.id);
+          } catch (e) {
+            console.error(`Error computing SubjectResult for ${enr.id}:`, e);
+          }
+        }
+      }
+    }
+
+    // Step 2: Fetch fully-loaded enrollments with subjects, components, marks, and subjectResult
     const enrollments = await Enrollment.findAll({
       where: {
         studentId,
@@ -374,6 +467,20 @@ export const getStudentMarks = async (req, res) => {
         [{ model: Subject, as: 'subject' }, { model: AssessmentComponent, as: 'assessmentComponents' }, 'sequenceOrder', 'ASC']
       ]
     });
+
+    // Check if any enrollment has components with marks but missing SubjectResult
+    for (const enr of enrollments) {
+      if (!enr.subjectResult && enr.componentMarks && enr.componentMarks.length > 0) {
+        try {
+          const resObj = await computeSubjectResult(enr.id);
+          if (resObj) {
+            enr.subjectResult = resObj;
+          }
+        } catch (e) {
+          console.error(`Error computing missing SubjectResult for ${enr.id}:`, e);
+        }
+      }
+    }
 
     const subjectsData = enrollments.map(enr => {
       const markMap = new Map();

@@ -22,6 +22,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import Button from '../../components/ui/Button';
+import { Link } from 'react-router-dom';
 
 export default function ParentMarks() {
   const { searchQuery } = useSearch();
@@ -167,6 +168,30 @@ export default function ParentMarks() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Official Result Card Quick Action Banner */}
+      <div className="bg-gradient-to-r from-brass-500/10 via-surface-0 to-surface-0 border border-brass-500/30 rounded-xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="p-2.5 rounded-lg bg-brass-500 text-white shadow-xs shrink-0">
+            <Award size={20} />
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-text-950">
+              Official Examination Result Card
+            </h3>
+            <p className="text-xs text-text-600">
+              View published Midterm & Final semester statement of grades, SGPA, and download official marksheet.
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/parent/results"
+          className="self-start sm:self-auto px-4 py-2 rounded-lg bg-ink-900 hover:bg-ink-800 text-white text-xs font-bold transition-all shadow-xs inline-flex items-center gap-1.5 shrink-0"
+        >
+          <span>Open Result Card</span>
+          <ChevronRight size={14} />
+        </Link>
       </div>
 
       {/* Ward Switcher */}

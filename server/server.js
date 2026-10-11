@@ -35,6 +35,10 @@ import noteRoutes from './routes/noteRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import assignmentRoutes from './routes/assignmentRoutes.js';
 import marksRoutes from './routes/marksRoutes.js';
+import examRoutes from './routes/examRoutes.js';
+import questionPaperRoutes from './routes/questionPaperRoutes.js';
+import hallTicketRoutes from './routes/hallTicketRoutes.js';
+import resultRoutes from './routes/resultRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -57,6 +61,10 @@ app.use('/api/notes', noteRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/marks', marksRoutes);
+app.use('/api/exams', examRoutes);
+app.use('/api/question-papers', questionPaperRoutes);
+app.use('/api/hall-tickets', hallTicketRoutes);
+app.use('/api/results', resultRoutes);
 
 app.get("/api/health", async (req, res) => {
   try {
@@ -87,15 +95,23 @@ app.get("/api/health", async (req, res) => {
 import { initElectiveLockJob } from './jobs/electiveLockJob.js';
 
 app.listen(PORT, async () => {
-  try {
-    await sequelize.authenticate();
+  console.log(`${APP_NAME} running on port ${PORT}`);
 
-    console.log("Database connected successfully");
-    console.log(`${APP_NAME} running on port ${PORT}`);
-
-    // Initialize elective lock background job (runs every 5 minutes)
-    initElectiveLockJob(5);
-  } catch (error) {
-    console.error("Unable to connect to database:", error);
+  let retries = 5;
+  while (retries > 0) {
+    try {
+      await sequelize.authenticate();
+      console.log("Database connected successfully");
+      initElectiveLockJob(5);
+      break;
+    } catch (error) {
+      retries--;
+      console.warn(`Database connection attempt failed (${error.message}). Retries remaining: ${retries}`);
+      if (retries === 0) {
+        console.error("Unable to connect to database after maximum retries:", error);
+      } else {
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
   }
-});
+});

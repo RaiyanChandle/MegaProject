@@ -267,6 +267,11 @@ Exam.belongsTo(AcademicTerm, { foreignKey: 'academicTermId', as: 'academicTerm' 
 ExamStaff.hasMany(Exam, { foreignKey: 'scheduledById', as: 'examSchedules' });
 Exam.belongsTo(ExamStaff, { foreignKey: 'scheduledById', as: 'scheduledBy' });
 
+// T11.1: Exam → AssessmentComponent mapping (PRD Decision 3)
+AssessmentComponent.hasMany(Exam, { foreignKey: 'componentId', as: 'exams' });
+Exam.belongsTo(AssessmentComponent, { foreignKey: 'componentId', as: 'assessmentComponent' });
+
+
 Exam.hasMany(ExamResult, { foreignKey: 'examId', as: 'results' });
 ExamResult.belongsTo(Exam, { foreignKey: 'examId', as: 'exam' });
 Enrollment.hasMany(ExamResult, { foreignKey: 'enrollmentId', as: 'examResults' });

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers, Award } from 'lucide-react';
 
 export const navigationConfig = {
   SUPER_ADMIN: [
@@ -36,12 +36,15 @@ export const navigationConfig = {
     { name: 'Assignments', href: '/student/assignments', icon: FileCheck },
     { name: 'Digital Library', href: '/student/library', icon: BookOpen },
     { name: 'Marks', href: '/student/marks', icon: FileCheck },
+    { name: 'Result Card', href: '/student/result-card', icon: Award },
+    { name: 'Hall Ticket', href: '/student/hall-ticket', icon: BookOpen },
     { name: 'Fees', href: '/student/fees', icon: DollarSign },
   ],
   PARENT: [
     { name: 'Dashboard', href: '/parent', icon: LayoutDashboard },
     { name: 'Attendance', href: '/parent/attendance', icon: Clock },
-    { name: 'Marks & Results', href: '/parent/marks', icon: FileCheck },
+    { name: 'Marks Breakdown', href: '/parent/marks', icon: FileCheck },
+    { name: 'Result Card', href: '/parent/results', icon: Award },
     { name: 'Assignments', href: '/parent/assignments', icon: FileText },
     { name: 'Children', href: '/parent/children', icon: Users },
     { name: 'Fees', href: '/parent/fees', icon: DollarSign },
@@ -49,7 +52,9 @@ export const navigationConfig = {
   EXAM_STAFF: [
     { name: 'Dashboard', href: '/examstaff', icon: LayoutDashboard },
     { name: 'Exams', href: '/examstaff/exams', icon: Calendar },
-    { name: 'Hall Tickets', href: '/examstaff/halltickets', icon: FileText },
+    { name: 'Question Papers', href: '/examstaff/question-papers', icon: FileText },
+    { name: 'Hall Tickets', href: '/examstaff/halltickets', icon: BookOpen },
     { name: 'Results', href: '/examstaff/results', icon: FileCheck },
+    { name: 'Result Processing', href: '/examstaff/result-processing', icon: Award },
   ],
 };

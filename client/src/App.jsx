@@ -34,8 +34,17 @@ import SuperAdminLibrary from './pages/superadmin/Library';
 import DigitalLibrary from './pages/common/Library';
 import TeacherMarks from './pages/teacher/TeacherMarks';
 import StudentMarks from './pages/student/StudentMarks';
+import StudentHallTicket from './pages/student/StudentHallTicket';
 import ParentMarks from './pages/parent/ParentMarks';
 import ParentAssignments from './pages/parent/ParentAssignments';
+import ExamStaffDashboard from './pages/examstaff/ExamStaffDashboard';
+import ExamStaffExams from './pages/examstaff/Exams';
+import ExamStaffQuestionPapers from './pages/examstaff/QuestionPapers';
+import ExamStaffHallTickets from './pages/examstaff/HallTickets';
+import ExamStaffResults from './pages/examstaff/ExamResults';
+import ResultProcessing from './pages/examstaff/ResultProcessing';
+import StudentResultCard from './pages/student/StudentResultCard';
+import ParentResultCard from './pages/parent/ParentResultCard';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -107,6 +116,8 @@ function App() {
               <Route path="assignments" element={<StudentAssignments />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<StudentMarks />} />
+              <Route path="hall-ticket" element={<StudentHallTicket />} />
+              <Route path="result-card" element={<StudentResultCard />} />
             </Route>
 
             {/* Protected Routes: Parent */}
@@ -117,7 +128,21 @@ function App() {
               <Route index element={<ParentDashboard />} />
               <Route path="attendance" element={<ParentAttendance />} />
               <Route path="marks" element={<ParentMarks />} />
+              <Route path="results" element={<ParentResultCard />} />
               <Route path="assignments" element={<ParentAssignments />} />
+            </Route>
+
+            {/* Protected Routes: Exam Staff */}
+            <Route
+              path="/examstaff"
+              element={<ProtectedRoute allowedRoles={['EXAM_STAFF']} title="Examinations Controller" />}
+            >
+              <Route index element={<ExamStaffDashboard />} />
+              <Route path="exams" element={<ExamStaffExams />} />
+              <Route path="question-papers" element={<ExamStaffQuestionPapers />} />
+              <Route path="halltickets" element={<ExamStaffHallTickets />} />
+              <Route path="results" element={<ExamStaffResults />} />
+              <Route path="result-processing" element={<ResultProcessing />} />
             </Route>
 
             {/* Catch-all */}

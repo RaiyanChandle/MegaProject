@@ -1,4 +1,4 @@
-import { Class } from '../models/index.js';
+import { Class, Department } from '../models/index.js';
 
 export const createClass = async (req, res) => {
   const { name, batchYear, semesterNumber } = req.body;
@@ -36,11 +36,14 @@ export const createClass = async (req, res) => {
 };
 
 export const getClasses = async (req, res) => {
-  const departmentId = req.user.departmentId;
+  const { departmentId: queryDeptId } = req.query;
+  const departmentId = req.user.departmentId || queryDeptId;
+  const where = departmentId ? { departmentId } : {};
 
   try {
     const classes = await Class.findAll({
-      where: { departmentId },
+      where,
+      include: [{ model: Department, as: 'department', attributes: ['id', 'name', 'code'] }],
       order: [['batchYear', 'DESC'], ['semesterNumber', 'ASC']]
     });
     res.json(classes);
@@ -55,7 +58,11 @@ export const getClassById = async (req, res) => {
   const departmentId = req.user.departmentId;
 
   try {
-    const targetClass = await Class.findOne({ where: { id, departmentId } });
+    const where = departmentId ? { id, departmentId } : { id };
+    const targetClass = await Class.findOne({ 
+      where,
+      include: [{ model: Department, as: 'department', attributes: ['id', 'name', 'code'] }]
+    });
     if (!targetClass) {
       return res.status(404).json({ error: 'Class not found' });
     }
