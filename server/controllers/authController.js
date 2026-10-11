@@ -100,11 +100,12 @@ export const login = async (req, res) => {
 };
 
 export const changePassword = async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
+  const oldPassword = req.body.oldPassword || req.body.currentPassword;
+  const newPassword = req.body.newPassword;
   const { id, role } = req.user;
 
   if (!oldPassword || !newPassword) {
-    return res.status(400).json({ error: 'oldPassword and newPassword are required' });
+    return res.status(400).json({ error: 'Current password and new password are required' });
   }
 
   try {

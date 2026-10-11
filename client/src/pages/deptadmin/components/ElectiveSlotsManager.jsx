@@ -451,7 +451,7 @@ export default function ElectiveSlotsManager({ classId }) {
               <span><strong>Credits:</strong> {selectedSlot?.credits}</span>
               <span><strong>Total Enrolled/Chosen:</strong> {slotChoicesData.choices?.length || 0}</span>
             </div>
-            <span className="text-text-500 italic">Rule 13: Admin swap updates choice and adjusts enrollment</span>
+            <span className="text-text-500 italic">Admin swap updates choice and synchronizes enrollment</span>
           </div>
 
           <div className="max-h-[55vh] overflow-y-auto">

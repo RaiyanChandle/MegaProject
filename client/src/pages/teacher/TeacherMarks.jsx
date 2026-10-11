@@ -321,7 +321,7 @@ export default function TeacherMarks() {
           <Sparkles size={14} className="text-ink-600" />
           <span><strong>Keyboard Friendly:</strong> Use <kbd className="px-1.5 py-0.5 bg-surface-0 border border-border rounded text-2xs font-mono">Arrow Keys</kbd> or <kbd className="px-1.5 py-0.5 bg-surface-0 border border-border rounded text-2xs font-mono">Enter</kbd> to jump between cells effortlessly.</span>
         </div>
-        <span className="text-text-500 hidden sm:inline">Rule 20: Total marks derived from components</span>
+        <span className="text-text-500 hidden sm:inline">Total marks automatically computed</span>
       </div>
 
       {/* MARKS GRID TABLE */}

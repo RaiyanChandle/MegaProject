@@ -52,3 +52,69 @@ export const getExamStaff = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getExamStaffById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const staff = await ExamStaff.findByPk(id, {
+      attributes: { exclude: ['password'] }
+    });
+    if (!staff) {
+      return res.status(404).json({ error: 'Exam staff not found' });
+    }
+    res.json(staff);
+  } catch (error) {
+    console.error('Get ExamStaff by id error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateExamStaff = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, password } = req.body;
+
+  try {
+    const staff = await ExamStaff.findByPk(id);
+    if (!staff) {
+      return res.status(404).json({ error: 'Exam staff not found' });
+    }
+
+    if (email && email !== staff.email) {
+      const existing = await ExamStaff.findOne({ where: { email } });
+      if (existing) {
+        return res.status(400).json({ error: 'Email already in use by another staff member' });
+      }
+      staff.email = email;
+    }
+
+    if (name) staff.name = name;
+    if (password && password.trim()) {
+      staff.password = await bcrypt.hash(password.trim(), 10);
+    }
+
+    await staff.save();
+
+    const { password: _, ...staffData } = staff.toJSON();
+    res.json(staffData);
+  } catch (error) {
+    console.error('Update ExamStaff error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteExamStaff = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const staff = await ExamStaff.findByPk(id);
+    if (!staff) {
+      return res.status(404).json({ error: 'Exam staff not found' });
+    }
+
+    await staff.destroy();
+    res.json({ message: 'Exam staff deleted successfully' });
+  } catch (error) {
+    console.error('Delete ExamStaff error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
