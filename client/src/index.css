@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink-900: #16213E;
+  --color-ink-700: #2B3A5C;
+  
+  --color-brass-500: #C98A3E;
+  --color-brass-600: #AD7430;
+  
+  --color-surface-0: #FFFFFF;
+  --color-surface-50: #F6F7F9;
+  
+  --color-border: #E2E4E9;
+  
+  --color-text-900: #1A1D29;
+  --color-text-500: #5B6072;
+  
+  --color-success: #2F6B4F;
+  --color-danger: #A6342A;
+  --color-warning: #B7791F;
+  --color-info: #3E6E9E;
+  --color-neutral: #6B7280;
+  
+  --color-role-superadmin: #5B3A73;
+  --color-role-deptadmin: #1F6F6F;
+  --color-role-teacher: #C98A3E;
+  --color-role-student: #2B4C7E;
+  --color-role-parent: #5B6B8C;
+  --color-role-examdept: #8C4A3A;
+
+  --font-sans: "IBM Plex Sans", sans-serif;
+  --font-serif: "IBM Plex Serif", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
+body {
+  @apply bg-surface-50 text-text-900 font-sans antialiased;
+}
+
+/* Persistent, always-visible scrollbars */
+.always-visible-scrollbar {
+  overflow-x: scroll !important;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #2B3A5C #E2E4E9;
+}
+
+.always-visible-scrollbar::-webkit-scrollbar {
+  height: 10px !important;
+  width: 10px !important;
+  display: block !important;
+}
+
+.always-visible-scrollbar::-webkit-scrollbar-track {
+  background: #F6F7F9 !important;
+  border-radius: 6px;
+  border: 1px solid #E2E4E9;
+}
+
+.always-visible-scrollbar::-webkit-scrollbar-thumb {
+  background: #2B3A5C !important;
+  border-radius: 6px;
+  border: 2px solid #F6F7F9;
+}
+
+.always-visible-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #C98A3E !important;
+}
+
+/* Print utilities for official institutional documents (Hall Tickets, Marksheets) */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  html, body {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    overflow: visible !important;
+  }
+
+  /* Hide app navigation and non-printable elements */
+  aside, nav, header, footer, .no-print {
+    display: none !important;
+  }
+
+  /* Reset all modal backdrops/overlays during print */
+  .print-modal-overlay {
+    position: static !important;
+    inset: auto !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  .print-modal-wrapper {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+
+  .printable-document {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #FFFFFF !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
