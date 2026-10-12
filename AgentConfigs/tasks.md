@@ -157,7 +157,7 @@ widening to more modules.
 
 - [x] **T12.1** After processing, set `Enrollment.status` to `PASSED`/`FAILED` (rules 9).--done
 - [x] **T12.2** Create re-attempt enrollments for the next term (`attemptNumber + 1`, original class/subject).--done
-- [ ] **T12.3** Allocation check: warn when a re-attempt subject has no teacher allocated in the new term.
+- [x] **T12.3** Allocation check: warn when a re-attempt subject has no teacher allocated in the new term.--done
 - [ ] **T12.4** Makeup exams and hall tickets for re-attempts.
 - [ ] **T12.5** Student dashboard shows current and backlog subjects together.
 

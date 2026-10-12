@@ -300,6 +300,23 @@ export const createReattemptEnrollments = async (req, res) => {
       });
     }
 
+    // T12.3: Allocation check for newly created re-attempts
+    const allocationWarnings = [];
+    const createdSubjectIds = [...new Set(createdEnrollments.map(c => c.subjectId))];
+    for (const subjId of createdSubjectIds) {
+      const allocCount = await SubjectAllocation.count({ where: { subjectId: subjId }, transaction: t });
+      if (allocCount === 0) {
+        const matchingEnrs = createdEnrollments.filter(c => c.subjectId === subjId);
+        allocationWarnings.push({
+          subjectId: subjId,
+          subjectCode: matchingEnrs[0]?.subjectCode,
+          subjectName: matchingEnrs[0]?.subjectName,
+          affectedStudentsCount: matchingEnrs.length,
+          warning: `Subject '${matchingEnrs[0]?.subjectCode} - ${matchingEnrs[0]?.subjectName}' has no teacher allocated in '${targetTerm.name}'. Please allocate a teacher in Subject Allocations.`
+        });
+      }
+    }
+
     await t.commit();
 
     res.status(201).json({
@@ -307,6 +324,8 @@ export const createReattemptEnrollments = async (req, res) => {
       targetTerm: { id: targetTerm.id, name: targetTerm.name },
       createdCount: createdEnrollments.length,
       skippedCount: skippedEnrollments.length,
+      allocationWarnings,
+      hasAllocationWarnings: allocationWarnings.length > 0,
       createdEnrollments,
       skippedEnrollments
     });
@@ -405,5 +424,158 @@ export const getStudentBacklogs = async (req, res) => {
   } catch (error) {
     console.error('Get student backlogs error:', error);
     res.status(500).json({ error: 'Internal server error while fetching student backlogs' });
+  }
+};
+
+/**
+ * GET /api/backlogs/allocation-check
+ * Query: ?academicTermId=&departmentId=
+ * T12.3: Allocation check: warn when a re-attempt subject has no teacher allocated in the new term.
+ */
+export const checkBacklogAllocations = async (req, res) => {
+  const { academicTermId, departmentId } = req.query;
+
+  try {
+    // 1. Resolve academic term
+    let termId = academicTermId;
+    let term = null;
+    if (termId) {
+      term = await AcademicTerm.findByPk(termId);
+    } else {
+      term = await AcademicTerm.findOne({ where: { isCurrent: true } });
+      if (term) termId = term.id;
+    }
+
+    if (!termId || !term) {
+      return res.status(400).json({ error: 'Valid academicTermId or active current term is required' });
+    }
+
+    // 2. Find all active re-attempt enrollments in this term (attemptNumber > 1, status = 'ENROLLED')
+    const reattemptEnrollments = await Enrollment.findAll({
+      where: {
+        academicTermId: termId,
+        attemptNumber: { [Op.gt]: 1 },
+        status: 'ENROLLED'
+      },
+      include: [
+        {
+          model: Subject,
+          as: 'subject',
+          attributes: ['id', 'name', 'code', 'credits', 'subjectType', 'departmentId'],
+          include: [{ model: Department, as: 'department', attributes: ['id', 'name', 'code'] }]
+        },
+        {
+          model: Class,
+          as: 'class',
+          attributes: ['id', 'name', 'batchYear', 'semesterNumber', 'departmentId']
+        },
+        {
+          model: Student,
+          as: 'student',
+          attributes: ['id', 'name', 'instituteId', 'rollNumber', 'batchYear', 'departmentId'],
+          include: [{ model: Division, as: 'division', attributes: ['id', 'name'] }]
+        }
+      ]
+    });
+
+    // 3. Group by subjectId to evaluate allocations
+    const subjectMap = new Map();
+    for (const enr of reattemptEnrollments) {
+      const subj = enr.subject;
+      if (!subj) continue;
+
+      if (departmentId && subj.departmentId !== departmentId) {
+        continue;
+      }
+
+      if (!subjectMap.has(subj.id)) {
+        subjectMap.set(subj.id, {
+          subjectId: subj.id,
+          subjectName: subj.name,
+          subjectCode: subj.code,
+          credits: subj.credits,
+          subjectType: subj.subjectType,
+          department: subj.department,
+          originalClass: enr.class,
+          students: []
+        });
+      }
+
+      subjectMap.get(subj.id).students.push({
+        enrollmentId: enr.id,
+        studentId: enr.student?.id,
+        studentName: enr.student?.name,
+        instituteId: enr.student?.instituteId,
+        rollNumber: enr.student?.rollNumber,
+        divisionName: enr.student?.division?.name || '—',
+        attemptNumber: enr.attemptNumber
+      });
+    }
+
+    const unallocatedWarnings = [];
+    const allocatedSubjects = [];
+
+    for (const [subjId, data] of subjectMap.entries()) {
+      // Find all allocations for this subject
+      const allocations = await SubjectAllocation.findAll({
+        where: { subjectId: subjId },
+        include: [
+          { model: Teacher, as: 'teacher', attributes: ['id', 'name', 'instituteId', 'email'] },
+          { model: Class, as: 'class', attributes: ['id', 'name', 'batchYear', 'semesterNumber'] },
+          { model: Division, as: 'division', attributes: ['id', 'name'] }
+        ]
+      });
+
+      if (allocations.length === 0) {
+        // T12.3: Re-attempt subject has NO teacher allocated in this term!
+        unallocatedWarnings.push({
+          subjectId: data.subjectId,
+          subjectName: data.subjectName,
+          subjectCode: data.subjectCode,
+          credits: data.credits,
+          subjectType: data.subjectType,
+          department: data.department,
+          originalClass: data.originalClass,
+          studentCount: data.students.length,
+          students: data.students,
+          warningMessage: `Subject '${data.subjectCode} - ${data.subjectName}' has ${data.students.length} re-attempt candidate(s) enrolled in ${term.name}, but NO faculty member is allocated to teach it. Please assign faculty in Subject Allocations.`
+        });
+      } else {
+        allocatedSubjects.push({
+          subjectId: data.subjectId,
+          subjectName: data.subjectName,
+          subjectCode: data.subjectCode,
+          credits: data.credits,
+          subjectType: data.subjectType,
+          department: data.department,
+          originalClass: data.originalClass,
+          studentCount: data.students.length,
+          students: data.students,
+          teachers: allocations.map(a => ({
+            id: a.teacher?.id,
+            name: a.teacher?.name,
+            instituteId: a.teacher?.instituteId,
+            email: a.teacher?.email,
+            class: a.class?.name,
+            division: a.division?.name || 'All Divisions'
+          }))
+        });
+      }
+    }
+
+    res.json({
+      term: { id: term.id, name: term.name, isCurrent: term.isCurrent },
+      totalBacklogEnrollments: reattemptEnrollments.length,
+      totalBacklogSubjects: subjectMap.size,
+      unallocatedCount: unallocatedWarnings.length,
+      allocatedCount: allocatedSubjects.length,
+      hasWarnings: unallocatedWarnings.length > 0,
+      unallocatedWarnings,
+      allocatedSubjects
+    });
+
+  } catch (error) {
+    console.error('Check backlog allocations error:', error);
+    res.status(500).json({ error: 'Internal server error while checking backlog allocations' });
   }
 };

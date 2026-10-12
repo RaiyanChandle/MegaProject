@@ -18,7 +18,9 @@ import {
   AlertCircle,
   Clock,
   ChevronRight,
-  Check
+  Check,
+  X,
+  Info
 } from 'lucide-react';
 import { useSearch } from '../../context/SearchContext';
 
@@ -35,6 +37,14 @@ export default function Backlogs() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Filter for unallocated only
+  const [unallocatedOnly, setUnallocatedOnly] = useState(false);
+
+  // T12.3: Allocation check warnings state & modal
+  const [allocationCheck, setAllocationCheck] = useState(null);
+  const [allocationModalOpen, setAllocationModalOpen] = useState(false);
+  const [loadingAllocCheck, setLoadingAllocCheck] = useState(false);
+
   // Selected items for bulk re-attempt creation
   const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -47,6 +57,12 @@ export default function Backlogs() {
       fetchCandidates();
     }
   }, [sourceTermId, targetTermId, selectedDeptId]);
+
+  useEffect(() => {
+    if (targetTermId) {
+      fetchAllocationCheck();
+    }
+  }, [targetTermId, selectedDeptId]);
 
   const fetchInitialData = async () => {
     try {
@@ -62,12 +78,11 @@ export default function Backlogs() {
       const current = termList.find(t => t.isCurrent);
       if (current) {
         setTargetTermId(current.id);
-        // Find previous term if available for source
         const previous = termList.find(t => t.id !== current.id);
         if (previous) {
           setSourceTermId(previous.id);
         } else {
-          setSourceTermId(''); // all terms
+          setSourceTermId('');
         }
       } else if (termList.length > 0) {
         setTargetTermId(termList[0].id);
@@ -90,7 +105,7 @@ export default function Backlogs() {
       const list = res.failedEnrollments || [];
       setCandidates(list);
 
-      // Auto-select eligible candidates (not already enrolled in target term and not passed later)
+      // Auto-select eligible candidates
       const eligible = list
         .filter(c => !c.alreadyEnrolledInTargetTerm && !c.hasPassedLater)
         .map(c => c.id);
@@ -100,6 +115,23 @@ export default function Backlogs() {
       toast.error('Failed to fetch backlog candidates');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // T12.3: Allocation check for target term
+  const fetchAllocationCheck = async () => {
+    if (!targetTermId) return;
+    try {
+      setLoadingAllocCheck(true);
+      const params = new URLSearchParams({ academicTermId: targetTermId });
+      if (selectedDeptId) params.append('departmentId', selectedDeptId);
+
+      const res = await apiClient.get(`/backlogs/allocation-check?${params.toString()}`);
+      setAllocationCheck(res);
+    } catch (err) {
+      console.error('Failed to check allocations:', err);
+    } finally {
+      setLoadingAllocCheck(false);
     }
   };
 
@@ -143,11 +175,18 @@ export default function Backlogs() {
 
       toast.success(res.message || `Successfully created ${res.createdCount} re-attempt enrollments`);
 
+      // T12.3: Warn if any created enrollments have unallocated teachers
+      if (res.hasAllocationWarnings && res.allocationWarnings?.length > 0) {
+        toast.warning(
+          `Allocation Warning: ${res.allocationWarnings.length} subject(s) have no faculty allocated in the new term!`
+        );
+      }
+
       if (res.skippedCount > 0) {
         toast.warning(`Skipped ${res.skippedCount} candidate(s) (already enrolled or cleared)`);
       }
 
-      await fetchCandidates();
+      await Promise.all([fetchCandidates(), fetchAllocationCheck()]);
     } catch (err) {
       console.error('Re-attempt creation error:', err);
       toast.error(err.response?.data?.error || 'Failed to create re-attempt enrollments');
@@ -157,18 +196,23 @@ export default function Backlogs() {
   };
 
   const filteredCandidates = useMemo(() => {
-    if (!searchQuery.trim()) return candidates;
+    let list = candidates;
+
+    if (unallocatedOnly) {
+      list = list.filter(c => !c.teacherAllocatedInNewTerm);
+    }
+
+    if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase();
-    return candidates.filter(c =>
+    return list.filter(c =>
       c.studentName?.toLowerCase().includes(q) ||
       c.instituteId?.toLowerCase().includes(q) ||
       c.rollNumber?.toLowerCase().includes(q) ||
       c.subjectName?.toLowerCase().includes(q) ||
       c.subjectCode?.toLowerCase().includes(q)
     );
-  }, [candidates, searchQuery]);
+  }, [candidates, searchQuery, unallocatedOnly]);
 
-  // Eligibility
   const eligibleCandidates = useMemo(() => {
     return filteredCandidates.filter(c => !c.alreadyEnrolledInTargetTerm && !c.hasPassedLater);
   }, [filteredCandidates]);
@@ -178,9 +222,12 @@ export default function Backlogs() {
     const enrolledInTarget = candidates.filter(c => c.alreadyEnrolledInTargetTerm).length;
     const cleared = candidates.filter(c => c.hasPassedLater).length;
     const pendingEnrollment = candidates.filter(c => !c.alreadyEnrolledInTargetTerm && !c.hasPassedLater).length;
+    const unallocatedCount = candidates.filter(c => !c.teacherAllocatedInNewTerm).length;
     const uniqueStudents = new Set(candidates.map(c => c.studentId)).size;
-    return { total, enrolledInTarget, cleared, pendingEnrollment, uniqueStudents };
+    return { total, enrolledInTarget, cleared, pendingEnrollment, unallocatedCount, uniqueStudents };
   }, [candidates]);
+
+  const targetTermObj = terms.find(t => t.id === targetTermId);
 
   return (
     <div className="space-y-6">
@@ -193,7 +240,7 @@ export default function Backlogs() {
           <div>
             <h1 className="text-xl font-semibold text-text-900">Backlog & Re-attempt Enrollments</h1>
             <p className="text-xs text-text-500">
-              Manage failed subjects, increment attempt counters, and create re-attempt enrollments for target terms (Rules 6–9)
+              Manage failed subjects, increment attempt counters, and check faculty allocations (Rules 6–9)
             </p>
           </div>
         </div>
@@ -203,7 +250,7 @@ export default function Backlogs() {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchCandidates}
+            onClick={() => { fetchCandidates(); fetchAllocationCheck(); }}
             disabled={loading}
             className="flex items-center gap-1.5 text-xs"
           >
@@ -223,6 +270,29 @@ export default function Backlogs() {
           </Button>
         </div>
       </div>
+
+      {/* T12.3: Allocation Warning Banner */}
+      {allocationCheck?.hasWarnings && (
+        <div className="bg-amber-50 border border-amber-300 rounded-md p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="text-amber-700 shrink-0 mt-0.5" size={20} />
+            <div>
+              <p className="text-sm font-bold text-amber-900">
+                Faculty Allocation Warning ({allocationCheck.unallocatedCount} Subject{allocationCheck.unallocatedCount > 1 ? 's' : ''} in {targetTermObj?.name || 'New Term'})
+              </p>
+              <p className="text-xs text-amber-800 mt-0.5">
+                {allocationCheck.unallocatedCount} re-attempt course(s) currently have no faculty allocated. Students cannot be marked for attendance or assessments until allocated by Department Admin.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setAllocationModalOpen(true)}
+            className="px-3 py-1.5 rounded-md bg-amber-200 hover:bg-amber-300 text-amber-900 text-xs font-semibold shrink-0 transition-colors"
+          >
+            View Unallocated Courses ({allocationCheck.unallocatedCount})
+          </button>
+        </div>
+      )}
 
       {/* Filter & Term Selectors */}
       <div className="bg-surface-0 border border-border rounded-md p-4 space-y-3">
@@ -277,10 +347,30 @@ export default function Backlogs() {
             </select>
           </div>
         </div>
+
+        {/* Filter Toggle: Unallocated Only */}
+        <div className="pt-2 border-t border-border flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-text-700">
+            <input
+              type="checkbox"
+              checked={unallocatedOnly}
+              onChange={e => setUnallocatedOnly(e.target.checked)}
+              className="rounded border-border text-ink-900 focus:ring-ink-700 cursor-pointer"
+            />
+            <span>Filter: Show Only Unallocated Courses</span>
+          </label>
+
+          {allocationCheck?.hasWarnings && (
+            <span className="text-[11px] font-mono text-warning font-semibold flex items-center gap-1">
+              <AlertTriangle size={12} />
+              {allocationCheck.unallocatedCount} subject(s) lack faculty
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="bg-surface-0 border border-border rounded-md p-3">
           <p className="text-xs text-text-500 font-medium">Failed Subjects</p>
           <p className="text-xl font-bold font-mono text-danger mt-1">{stats.total}</p>
@@ -303,6 +393,14 @@ export default function Backlogs() {
           <p className="text-xs text-text-500 font-medium">Cleared Later</p>
           <p className="text-xl font-bold font-mono text-success mt-1">{stats.cleared}</p>
           <p className="text-[11px] text-text-500 mt-0.5">Passed on re-attempt</p>
+        </div>
+
+        <div className={`bg-surface-0 border ${stats.unallocatedCount > 0 ? 'border-amber-300 bg-amber-50/30' : 'border-border'} rounded-md p-3`}>
+          <p className="text-xs text-text-500 font-medium">No Faculty Allocated</p>
+          <p className={`text-xl font-bold font-mono ${stats.unallocatedCount > 0 ? 'text-amber-800' : 'text-text-700'} mt-1`}>
+            {stats.unallocatedCount}
+          </p>
+          <p className="text-[11px] text-text-500 mt-0.5">T12.3 Allocation Alert</p>
         </div>
       </div>
 
@@ -346,7 +444,8 @@ export default function Backlogs() {
                   <th className="p-3">Original Class</th>
                   <th className="p-3">Failed Term</th>
                   <th className="p-3 text-center">Attempt</th>
-                  <th className="p-3">Next Term Status</th>
+                  <th className="p-3">Faculty Allocation (T12.3)</th>
+                  <th className="p-3">Target Term Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -403,6 +502,29 @@ export default function Backlogs() {
                         </span>
                       </td>
 
+                      {/* T12.3: Faculty Allocation Warning Column */}
+                      <td className="p-3">
+                        {c.teacherAllocatedInNewTerm ? (
+                          <div className="space-y-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-success/10 text-success">
+                              <CheckCircle2 size={11} />
+                              Allocated
+                            </span>
+                            <p className="text-[10px] text-text-700 font-mono font-medium truncate max-w-[140px]">
+                              {c.allocatedTeacherName}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                              <AlertTriangle size={11} />
+                              No Faculty
+                            </span>
+                            <p className="text-[10px] text-amber-800 font-semibold">Action needed</p>
+                          </div>
+                        )}
+                      </td>
+
                       <td className="p-3">
                         {c.hasPassedLater ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-success/10 text-success">
@@ -410,18 +532,9 @@ export default function Backlogs() {
                             Cleared
                           </span>
                         ) : c.alreadyEnrolledInTargetTerm ? (
-                          <div className="space-y-0.5">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-info/10 text-info">
-                              Enrolled (Attempt {c.nextAttemptNumber})
-                            </span>
-                            {c.teacherAllocatedInNewTerm ? (
-                              <p className="text-[10px] text-text-500 font-mono">Faculty: {c.allocatedTeacherName}</p>
-                            ) : (
-                              <p className="text-[10px] text-warning flex items-center gap-0.5">
-                                <AlertTriangle size={10} /> No faculty allocated
-                              </p>
-                            )}
-                          </div>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-info/10 text-info">
+                            Enrolled (Att {c.nextAttemptNumber})
+                          </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-warning/10 text-warning">
                             <Clock size={11} />
@@ -437,6 +550,87 @@ export default function Backlogs() {
           </div>
         )}
       </div>
+
+      {/* T12.3: Allocation Warnings Details Modal */}
+      {allocationModalOpen && allocationCheck && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-surface-0 rounded-xl border border-border shadow-lg max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-amber-50/50">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="text-amber-800" size={18} />
+                <div>
+                  <h3 className="font-semibold text-text-900 text-sm">
+                    Backlog Faculty Allocation Audit
+                  </h3>
+                  <p className="text-xs text-text-500">
+                    Term: {allocationCheck.term?.name} • {allocationCheck.unallocatedCount} unallocated course(s)
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAllocationModalOpen(false)}
+                className="p-1 rounded-md text-text-400 hover:text-text-700 hover:bg-surface-100 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4">
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 leading-relaxed">
+                <strong>Why this matters (Rule 9):</strong> Backlog students must attend lectures or have attendance/component marks entered by a responsible teacher in the new term. For each subject listed below, the Department Admin must assign a faculty member in <em>Department Admin &gt; Subject Allocation</em>.
+              </div>
+
+              <div className="space-y-3">
+                {allocationCheck.unallocatedWarnings.map((u, i) => (
+                  <div key={i} className="border border-border rounded-md p-3.5 space-y-2 hover:border-amber-400 transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-bold text-text-900 text-xs">
+                          {u.subjectCode} — {u.subjectName}
+                        </p>
+                        <p className="text-[11px] text-text-500 font-mono">
+                          Department: {u.department?.name} • Class: {u.originalClass?.name} ({u.originalClass?.batchYear})
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-danger/10 text-danger font-bold border border-danger/20 shrink-0">
+                        {u.studentCount} Student{u.studentCount > 1 ? 's' : ''} Affected
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-amber-900 bg-amber-50/70 p-2 rounded border border-amber-200">
+                      {u.warningMessage}
+                    </p>
+
+                    <div className="pt-1">
+                      <p className="text-[10px] font-semibold text-text-700 uppercase tracking-wider mb-1">
+                        Affected Candidates:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {u.students.map((s, idx) => (
+                          <span key={idx} className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-50 border border-border text-text-800">
+                            {s.studentName} ({s.instituteId})
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="px-5 py-3 border-t border-border bg-surface-50 flex items-center justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAllocationModalOpen(false)}
+                className="text-xs"
+              >
+                Close Audit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
