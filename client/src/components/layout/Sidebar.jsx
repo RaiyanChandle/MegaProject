@@ -34,6 +34,7 @@ export default function Sidebar({ role = 'SUPER_ADMIN', isMobileOpen = false, on
     if (role !== 'PARENT') return name;
     switch (name) {
       case 'Dashboard': return t('portal');
+      case 'Announcements': return t('announcements');
       case 'Attendance': return t('attendance');
       case 'Marks & Results': return t('marks');
       case 'Assignments': return t('assignments');

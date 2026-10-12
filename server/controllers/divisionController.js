@@ -42,16 +42,20 @@ export const getDivisions = async (req, res) => {
   }
 
   try {
-    const classWhere = { id: classId };
-    if (req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'EXAM_STAFF') {
-      if (req.user.departmentId) {
-        classWhere.departmentId = req.user.departmentId;
-      }
-    }
-
-    const targetClass = await Class.findOne({ where: classWhere });
+    const targetClass = await Class.findByPk(classId);
     if (!targetClass) {
       return res.status(404).json({ error: 'Class not found' });
+    }
+
+    let userDeptId = req.user.departmentId;
+    if (req.user.role === 'DEPARTMENT_ADMIN') {
+      if (!userDeptId) {
+        const da = await DepartmentAdmin.findByPk(req.user.id);
+        if (da) userDeptId = da.departmentId;
+      }
+      if (userDeptId && targetClass.departmentId !== userDeptId) {
+        return res.status(403).json({ error: 'Class does not belong to your department' });
+      }
     }
 
     const divisions = await Division.findAll({

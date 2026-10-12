@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Maps exact schema statuses to the 5 semantic colors in design.md
 const statusMap = {
@@ -59,15 +60,30 @@ const statusMap = {
   PARENT: 'bg-[#5B6B8C]/15 text-[#5B6B8C]',
 };
 
+const ANNOUNCEMENT_TRANSLATION_KEYS = {
+  GLOBAL: 'collegeWide',
+  DEPARTMENT: 'department',
+  CLASS: 'class',
+  DIVISION: 'division',
+  TEACHER: 'faculty',
+  PARENT: 'forParents',
+};
+
 export default function StatusBadge({ status, className = '' }) {
+  const { t } = useLanguage();
   const normalizedStatus = typeof status === 'string' ? status.toUpperCase() : 'UNKNOWN';
   const colorClass = statusMap[normalizedStatus] || 'bg-neutral/10 text-neutral';
   
-  // Format nicely for display (e.g., LATE_SUBMISSION -> Late Submission)
-  const displayLabel = normalizedStatus.replace(/_/g, ' ').replace(
-    /\w\S*/g, 
-    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-  );
+  // Format nicely for display, utilizing language context for announcement scopes if available
+  let displayLabel;
+  if (ANNOUNCEMENT_TRANSLATION_KEYS[normalizedStatus]) {
+    displayLabel = t(ANNOUNCEMENT_TRANSLATION_KEYS[normalizedStatus]);
+  } else {
+    displayLabel = normalizedStatus.replace(/_/g, ' ').replace(
+      /\w\S*/g, 
+      (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    );
+  }
 
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorClass} ${className}`}>

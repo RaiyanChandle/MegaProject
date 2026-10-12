@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import StatusBadge from '../ui/StatusBadge';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { 
   Globe, 
   Building2, 
@@ -15,6 +16,7 @@ import {
 
 export default function AnnouncementCard({ announcement, onDelete }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -27,17 +29,17 @@ export default function AnnouncementCard({ announcement, onDelete }) {
   if (announcement.createdBySuperAdmin) {
     creatorName = announcement.createdBySuperAdmin.name;
     creatorId = announcement.createdBySuperAdmin.instituteId;
-    creatorRole = 'Super Admin';
+    creatorRole = t('superAdmin');
     roleColor = '#5B3A73'; // Plum
   } else if (announcement.createdByDeptAdmin) {
     creatorName = announcement.createdByDeptAdmin.name;
     creatorId = announcement.createdByDeptAdmin.instituteId;
-    creatorRole = 'Dept Admin';
+    creatorRole = t('deptAdmin');
     roleColor = '#1F6F6F'; // Teal
   } else if (announcement.createdByTeacher) {
     creatorName = announcement.createdByTeacher.name;
     creatorId = announcement.createdByTeacher.instituteId;
-    creatorRole = 'Faculty';
+    creatorRole = t('faculty');
     roleColor = '#C98A3E'; // Brass
   }
 
@@ -46,7 +48,8 @@ export default function AnnouncementCard({ announcement, onDelete }) {
     user?.role === 'SUPER_ADMIN' ||
     (user?.role === 'DEPARTMENT_ADMIN' && (
       announcement.createdByDeptAdminId === user?.id || 
-      announcement.targetDepartmentId === user?.departmentId
+      (user?.departmentId && announcement.targetDepartmentId === user?.departmentId) ||
+      !announcement.createdBySuperAdminId // Dept Admin can delete departmental notices
     )) ||
     (user?.role === 'TEACHER' && announcement.createdByTeacherId === user?.id);
 
@@ -54,9 +57,11 @@ export default function AnnouncementCard({ announcement, onDelete }) {
     setIsDeleting(true);
     try {
       if (onDelete) await onDelete(announcement.id);
+      setShowConfirmDelete(false);
+    } catch (err) {
+      console.error('Failed to delete announcement:', err);
     } finally {
       setIsDeleting(false);
-      setShowConfirmDelete(false);
     }
   };
 
@@ -66,7 +71,7 @@ export default function AnnouncementCard({ announcement, onDelete }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#5B3A73]/10 text-[#5B3A73]">
           <Globe size={12} />
-          College-Wide (All)
+          {t('collegeWideAll')}
         </span>
       );
     }
@@ -75,7 +80,7 @@ export default function AnnouncementCard({ announcement, onDelete }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#1F6F6F]/10 text-[#1F6F6F]">
           <Building2 size={12} />
-          Dept: {announcement.targetDepartment.code || announcement.targetDepartment.name} (All Classes)
+          {t('deptPrefix')} {announcement.targetDepartment.code || announcement.targetDepartment.name}
         </span>
       );
     }
@@ -84,7 +89,7 @@ export default function AnnouncementCard({ announcement, onDelete }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-info/10 text-info">
           <Users size={12} />
-          Class: {announcement.targetClass.name} (All Divisions)
+          {t('classPrefix')} {announcement.targetClass.name}
         </span>
       );
     }
@@ -93,14 +98,14 @@ export default function AnnouncementCard({ announcement, onDelete }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-brass-500/15 text-brass-600">
           <Users size={12} />
-          Division: {announcement.targetDivision.name} ({announcement.targetClass?.name})
+          {t('divisionPrefix')} {announcement.targetDivision.name} ({announcement.targetClass?.name})
         </span>
       );
     }
 
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral/10 text-neutral">
-        Targeted Notice
+        {t('targetedNotice')}
       </span>
     );
   };
@@ -179,12 +184,14 @@ export default function AnnouncementCard({ announcement, onDelete }) {
 
       <ConfirmDialog
         isOpen={showConfirmDelete}
-        title="Delete Announcement"
-        message="Are you sure you want to permanently delete this announcement? This action cannot be undone."
-        confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
+        title={t('deleteAnnouncement')}
+        message={t('deleteConfirmMsg')}
+        confirmText={t('deleteBtn')}
+        cancelText={t('cancelBtn')}
         isDestructive={true}
+        loading={isDeleting}
         onConfirm={handleDelete}
-        onCancel={() => setShowConfirmDelete(false)}
+        onClose={() => setShowConfirmDelete(false)}
       />
     </>
   );

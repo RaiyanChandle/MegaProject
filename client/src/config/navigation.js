@@ -46,6 +46,7 @@ export const navigationConfig = {
   ],
   PARENT: [
     { name: 'Dashboard', href: '/parent', icon: LayoutDashboard },
+    { name: 'Announcements', href: '/parent/announcements', icon: Megaphone },
     { name: 'Attendance', href: '/parent/attendance', icon: Clock },
     { name: 'Marks & Results', href: '/parent/marks', icon: FileCheck },
     { name: 'Assignments', href: '/parent/assignments', icon: FileText },

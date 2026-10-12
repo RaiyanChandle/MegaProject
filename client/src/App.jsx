@@ -37,6 +37,7 @@ import TeacherMarks from './pages/teacher/TeacherMarks';
 import StudentMarks from './pages/student/StudentMarks';
 import ParentMarks from './pages/parent/ParentMarks';
 import ParentAssignments from './pages/parent/ParentAssignments';
+import ParentAnnouncements from './pages/parent/ParentAnnouncements';
 import ExamStaffDashboard from './pages/examstaff/ExamStaffDashboard';
 import ExamManagement from './pages/examstaff/ExamManagement';
 import HallTicketManagement from './pages/examstaff/HallTicketManagement';
@@ -135,6 +136,7 @@ function App() {
               <Route path="attendance" element={<ParentAttendance />} />
               <Route path="marks" element={<ParentMarks />} />
               <Route path="assignments" element={<ParentAssignments />} />
+              <Route path="announcements" element={<ParentAnnouncements />} />
             </Route>
 
             {/* Protected Routes: Exam Staff */}

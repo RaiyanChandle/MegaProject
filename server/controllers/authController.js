@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { Op } from 'sequelize';
 import { SuperAdmin, DepartmentAdmin, Teacher, Student, ExamStaff, Parent } from '../models/index.js';
 
 export const login = async (req, res) => {
@@ -14,20 +15,41 @@ export const login = async (req, res) => {
     let role = null;
     let userId = null;
 
-    // Check if identifier is an email
-    if (identifier.includes('@')) {
-      user = await Parent.findOne({ where: { email: identifier } });
+    const cleanIdentifier = String(identifier).trim();
+
+    // 1. Check if identifier is an email
+    if (cleanIdentifier.includes('@')) {
+      user = await Parent.findOne({ where: { email: { [Op.iLike]: cleanIdentifier } } });
       if (user) role = 'PARENT';
     } 
-    // Check if identifier is a phone number (all digits)
-    else if (/^\d+$/.test(identifier)) {
-      user = await Parent.findOne({ where: { phoneNumber: identifier } });
-      if (user) role = 'PARENT';
-    } 
-    else {
-      // It's an instituteId, resolve by prefix
-      const prefix = identifier.substring(0, 5).toUpperCase();
-      const whereClause = { instituteId: identifier };
+
+    // 2. Check if identifier is a phone number (strip spaces, dashes, +91, leading 0)
+    if (!user) {
+      const digitsOnly = cleanIdentifier.replace(/[\s\-\(\)\+]/g, '');
+      if (/^\d+$/.test(digitsOnly)) {
+        const phoneVariations = [digitsOnly];
+        if (digitsOnly.length === 12 && digitsOnly.startsWith('91')) {
+          phoneVariations.push(digitsOnly.substring(2));
+        } else if (digitsOnly.length === 11 && digitsOnly.startsWith('0')) {
+          phoneVariations.push(digitsOnly.substring(1));
+        } else if (digitsOnly.length === 10) {
+          phoneVariations.push('91' + digitsOnly);
+          phoneVariations.push('+91' + digitsOnly);
+        }
+
+        user = await Parent.findOne({
+          where: {
+            phoneNumber: { [Op.in]: phoneVariations }
+          }
+        });
+        if (user) role = 'PARENT';
+      }
+    }
+
+    // 3. Check if it's an instituteId by prefix (STKIT, FCKIT, DAKIT, SAKIT, EXKIT)
+    if (!user) {
+      const prefix = cleanIdentifier.substring(0, 5).toUpperCase();
+      const whereClause = { instituteId: { [Op.iLike]: cleanIdentifier } };
 
       switch (prefix) {
         case 'STKIT':
@@ -50,10 +72,17 @@ export const login = async (req, res) => {
           user = await ExamStaff.findOne({ where: whereClause });
           if (user) role = 'EXAM_STAFF';
           break;
-        default:
-          // Unknown prefix
-          return res.status(401).json({ error: 'Invalid credentials' });
       }
+    }
+
+    // 4. Check Parent by Name or username if still not found
+    if (!user) {
+      user = await Parent.findOne({
+        where: {
+          name: { [Op.iLike]: cleanIdentifier }
+        }
+      });
+      if (user) role = 'PARENT';
     }
 
     if (!user) {
@@ -137,6 +166,37 @@ export const changePassword = async (req, res) => {
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
     console.error('Change password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getMe = async (req, res) => {
+  const { id, role } = req.user;
+
+  try {
+    let userModel;
+    switch (role) {
+      case 'STUDENT': userModel = Student; break;
+      case 'TEACHER': userModel = Teacher; break;
+      case 'DEPARTMENT_ADMIN': userModel = DepartmentAdmin; break;
+      case 'SUPER_ADMIN': userModel = SuperAdmin; break;
+      case 'EXAM_STAFF': userModel = ExamStaff; break;
+      case 'PARENT': userModel = Parent; break;
+      default: return res.status(401).json({ error: 'Invalid user role' });
+    }
+
+    const user = await userModel.findByPk(id, {
+      attributes: { exclude: ['password'] }
+    });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = user.toJSON();
+    userData.role = role;
+    res.json(userData);
+  } catch (error) {
+    console.error('getMe error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

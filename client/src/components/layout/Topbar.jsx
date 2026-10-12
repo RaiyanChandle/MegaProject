@@ -17,7 +17,7 @@ const ROLE_ACCENTS = {
 export default function Topbar({ title = 'Dashboard', onToggleMobileMenu }) {
   const { user, logout } = useAuth();
   const { searchQuery, setSearchQuery } = useSearch();
-  const { currentLanguage, changeLanguage, languages } = useLanguage();
+  const { currentLanguage, changeLanguage, languages, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -27,6 +27,7 @@ export default function Topbar({ title = 'Dashboard', onToggleMobileMenu }) {
   const langRef = useRef(null);
   const mobileInputRef = useRef(null);
 
+  const displayTitle = (user?.role === 'PARENT' && title === 'Parent Dashboard') ? t('portal') : title;
   const roleAccent = ROLE_ACCENTS[user?.role] || '#16213E';
 
   useEffect(() => {
@@ -117,7 +118,7 @@ export default function Topbar({ title = 'Dashboard', onToggleMobileMenu }) {
                 <Menu size={20} />
               </button>
             )}
-            <h2 className="text-base sm:text-xl font-semibold text-text-900 tracking-tight truncate">{title}</h2>
+            <h2 className="text-base sm:text-xl font-semibold text-text-900 tracking-tight truncate">{displayTitle}</h2>
           </div>
 
           {/* Right Controls Cluster */}

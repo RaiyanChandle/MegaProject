@@ -8,7 +8,8 @@ import {
   Division,
   SubjectAllocation,
   Student,
-  Enrollment
+  Enrollment,
+  ParentStudent
 } from '../models/index.js';
 import { ANNOUNCEMENT_TYPES } from '../models/constants.js';
 import { Op } from 'sequelize';
@@ -72,6 +73,22 @@ export const createAnnouncement = async (req, res) => {
         finalTargetDeptId = null;
         finalTargetClassId = null;
         finalTargetDivId = null;
+      } else {
+        if (finalTargetClassId && !finalTargetDeptId) {
+          const cls = await Class.findByPk(finalTargetClassId);
+          if (cls) finalTargetDeptId = cls.departmentId;
+        }
+        if (finalTargetDivId) {
+          if (!finalTargetClassId) {
+            return res.status(400).json({ error: 'Target class must be specified when specifying a division.' });
+          }
+          const div = await Division.findOne({
+            where: { id: finalTargetDivId, classId: finalTargetClassId }
+          });
+          if (!div) {
+            return res.status(400).json({ error: 'Target division does not belong to the selected class.' });
+          }
+        }
       }
     } else if (user.role === 'DEPARTMENT_ADMIN') {
       createdByDeptAdminId = user.id;
@@ -84,11 +101,17 @@ export const createAnnouncement = async (req, res) => {
       }
 
       finalTargetDeptId = user.departmentId;
+      if (!finalTargetDeptId) {
+        const adminRec = await DepartmentAdmin.findByPk(user.id);
+        if (adminRec?.departmentId) {
+          finalTargetDeptId = adminRec.departmentId;
+        }
+      }
 
       // Validate class if provided
       if (finalTargetClassId) {
         const cls = await Class.findOne({
-          where: { id: finalTargetClassId, departmentId: user.departmentId }
+          where: { id: finalTargetClassId, departmentId: finalTargetDeptId }
         });
         if (!cls) {
           return res.status(400).json({ error: 'Target class does not belong to your department.' });
@@ -118,12 +141,17 @@ export const createAnnouncement = async (req, res) => {
       }
 
       finalTargetDeptId = user.departmentId;
+      if (!finalTargetDeptId) {
+        const teacherRec = await Teacher.findByPk(user.id);
+        if (teacherRec?.departmentId) {
+          finalTargetDeptId = teacherRec.departmentId;
+        }
+      }
 
       // Validate class
       if (finalTargetClassId) {
-        // Verify class belongs to teacher's dept or teacher is allocated to it
         const cls = await Class.findByPk(finalTargetClassId);
-        if (!cls || cls.departmentId !== user.departmentId) {
+        if (!cls || cls.departmentId !== finalTargetDeptId) {
           return res.status(403).json({ error: 'Target class not found or not in your department.' });
         }
       }
@@ -178,52 +206,115 @@ export const createAnnouncement = async (req, res) => {
 
 /**
  * Get announcements (Management / Desk list)
- * Supports role-based filtering and query params.
+ * Supports role-based filtering, audience role isolation, and wildcard query handling.
  */
 export const getAnnouncements = async (req, res) => {
   try {
-    const { type, search, targetDepartmentId, targetClassId } = req.query;
+    const { type, search, targetDepartmentId, targetClassId, targetDivisionId } = req.query;
     const user = req.user;
 
-    const whereConditions = {};
+    const andConditions = [];
 
-    // Filter by announcement type if requested
+    // Filter by announcement type if explicitly requested
     if (type && ANNOUNCEMENT_TYPES.includes(type)) {
-      whereConditions.type = type;
+      andConditions.push({ type });
     }
 
     // Text search on title or message
     if (search && search.trim()) {
-      whereConditions[Op.or] = [
-        { title: { [Op.iLike]: `%${search.trim()}%` } },
-        { message: { [Op.iLike]: `%${search.trim()}%` } },
-      ];
+      andConditions.push({
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${search.trim()}%` } },
+          { message: { [Op.iLike]: `%${search.trim()}%` } },
+        ]
+      });
     }
 
-    // Role-based visibility scoping
-    if (user.role === 'SUPER_ADMIN' || user.role === 'EXAM_STAFF') {
-      if (targetDepartmentId) {
-        whereConditions.targetDepartmentId = targetDepartmentId;
-      }
+    // Strict Role-based audience isolation and scope filtering
+    if (user.role === 'SUPER_ADMIN') {
+      // Super Admin sees all announcements, can filter via query params
+      if (targetDepartmentId) andConditions.push({ targetDepartmentId });
+      if (targetClassId) andConditions.push({ targetClassId });
+      if (targetDivisionId) andConditions.push({ targetDivisionId });
+
     } else if (user.role === 'DEPARTMENT_ADMIN') {
-      // Dept Admin sees college-wide announcements (null) OR their department announcements
-      whereConditions[Op.or] = [
-        { targetDepartmentId: null },
-        { targetDepartmentId: user.departmentId },
-        { createdByDeptAdminId: user.id }
-      ];
-      if (targetClassId) {
-        whereConditions.targetClassId = targetClassId;
+      // Dept Admin: ONLY sees college-wide (null) OR their department's announcements OR created by them
+      let deptId = user.departmentId;
+      if (!deptId) {
+        const da = await DepartmentAdmin.findByPk(user.id);
+        if (da) deptId = da.departmentId;
       }
+
+      andConditions.push({
+        [Op.or]: [
+          { targetDepartmentId: null },
+          ...(deptId ? [{ targetDepartmentId: deptId }] : []),
+          { createdByDeptAdminId: user.id }
+        ]
+      });
+
+      if (targetClassId) andConditions.push({ targetClassId });
+      if (targetDivisionId) andConditions.push({ targetDivisionId });
+
     } else if (user.role === 'TEACHER') {
-      // Teacher sees college-wide announcements OR their department announcements OR created by them
-      whereConditions[Op.or] = [
-        { targetDepartmentId: null },
-        { targetDepartmentId: user.departmentId },
-        { createdByTeacherId: user.id }
-      ];
+      // Teacher:
+      // 1. MUST NOT see PARENT notices unless created by this teacher
+      // 2. ONLY sees notices for their department (or college-wide null) or created by them
+      // 3. Class/Division notices must match allocations or be created by teacher
+      let teacherDeptId = user.departmentId;
+      if (!teacherDeptId) {
+        const t = await Teacher.findByPk(user.id);
+        if (t) teacherDeptId = t.departmentId;
+      }
+
+      const allocations = await SubjectAllocation.findAll({
+        where: { teacherId: user.id },
+        attributes: ['classId', 'divisionId']
+      });
+      const taughtClassIds = [...new Set(allocations.map(a => a.classId).filter(Boolean))];
+      const taughtDivisionIds = [...new Set(allocations.map(a => a.divisionId).filter(Boolean))];
+
+      // Exclude PARENT notices not created by this teacher
+      andConditions.push({
+        [Op.or]: [
+          { type: { [Op.ne]: 'PARENT' } },
+          { createdByTeacherId: user.id }
+        ]
+      });
+
+      // Scope match
+      andConditions.push({
+        [Op.or]: [
+          { createdByTeacherId: user.id },
+          // College-wide notice
+          { targetDepartmentId: null, targetClassId: null, targetDivisionId: null },
+          // Department notices in teacher's department:
+          {
+            targetDepartmentId: teacherDeptId,
+            [Op.and]: [
+              {
+                [Op.or]: [
+                  { targetClassId: null },
+                  ...(taughtClassIds.length > 0 ? [{ targetClassId: { [Op.in]: taughtClassIds } }] : [])
+                ]
+              },
+              {
+                [Op.or]: [
+                  { targetDivisionId: null },
+                  ...(taughtDivisionIds.length > 0 ? [{ targetDivisionId: { [Op.in]: taughtDivisionIds } }] : [])
+                ]
+              }
+            ]
+          }
+        ]
+      });
+
     } else if (user.role === 'STUDENT') {
-      // Student notice feed: matches wildcard rules (Rules 28/29, Flow 13.3)
+      // Student notice feed:
+      // 1. STRICTLY EXCLUDE TEACHER and PARENT notices
+      // 2. Must match student's department (or college-wide null)
+      // 3. Must match student's class (or class wildcard null)
+      // 4. Must match student's division (or division wildcard null)
       const student = await Student.findByPk(user.id, {
         include: [{ model: Division, as: 'division', attributes: ['id', 'classId'] }]
       });
@@ -232,7 +323,6 @@ export const getAnnouncements = async (req, res) => {
         return res.status(404).json({ error: 'Student profile not found.' });
       }
 
-      // Enrolled classes
       const enrollments = await Enrollment.findAll({
         where: { studentId: user.id },
         attributes: ['classId']
@@ -243,35 +333,116 @@ export const getAnnouncements = async (req, res) => {
         ...enrollments.map(e => e.classId).filter(Boolean)
       ])];
 
-      // Exclude staff-only announcements
-      whereConditions.type = { [Op.ne]: 'TEACHER' };
+      // Exclude staff-only and parent-only announcements
+      andConditions.push({
+        type: { [Op.notIn]: ['TEACHER', 'PARENT'] }
+      });
 
-      const studentScopeClauses = [
-        // 1. Department match: college-wide wildcard (null) or student's department
-        {
+      // 1. Department match: college-wide wildcard (null) or student's department
+      andConditions.push({
+        [Op.or]: [
+          { targetDepartmentId: null },
+          ...(student.departmentId ? [{ targetDepartmentId: student.departmentId }] : [])
+        ]
+      });
+
+      // 2. Class match: all-classes wildcard (null) or student's enrolled classes
+      andConditions.push({
+        [Op.or]: [
+          { targetClassId: null },
+          ...(enrolledClassIds.length > 0 ? [{ targetClassId: { [Op.in]: enrolledClassIds } }] : [])
+        ]
+      });
+
+      // 3. Division match: all-divisions wildcard (null) or student's division
+      andConditions.push({
+        [Op.or]: [
+          { targetDivisionId: null },
+          ...(student.divisionId ? [{ targetDivisionId: student.divisionId }] : [])
+        ]
+      });
+
+    } else if (user.role === 'PARENT') {
+      // Parent notice feed:
+      // 1. Exclude TEACHER memos
+      // 2. Scoped to linked children (supports ?studentId=... filter)
+      const { studentId: queryStudentId } = req.query;
+
+      const linkages = await ParentStudent.findAll({
+        where: { parentId: user.id },
+        attributes: ['studentId']
+      });
+      let studentIds = linkages.map(l => l.studentId);
+
+      if (queryStudentId && queryStudentId !== 'ALL') {
+        if (!studentIds.includes(queryStudentId)) {
+          return res.status(403).json({ error: 'Selected student is not linked to your parent account.' });
+        }
+        studentIds = [queryStudentId];
+      }
+
+      if (studentIds.length === 0) {
+        andConditions.push({
+          type: { [Op.ne]: 'TEACHER' },
+          targetDepartmentId: null
+        });
+      } else {
+        const linkedStudents = await Student.findAll({
+          where: { id: studentIds },
+          include: [{ model: Division, as: 'division', attributes: ['id', 'classId'] }]
+        });
+
+        const linkedEnrollments = await Enrollment.findAll({
+          where: { studentId: studentIds },
+          attributes: ['classId']
+        });
+
+        const parentDeptIds = [...new Set(linkedStudents.map(s => s.departmentId).filter(Boolean))];
+        const parentClassIds = [...new Set([
+          ...linkedStudents.map(s => s.division?.classId).filter(Boolean),
+          ...linkedEnrollments.map(e => e.classId).filter(Boolean)
+        ])];
+        const parentDivIds = [...new Set(linkedStudents.map(s => s.divisionId).filter(Boolean))];
+
+        // Exclude staff-internal notices
+        andConditions.push({
+          type: { [Op.ne]: 'TEACHER' }
+        });
+
+        andConditions.push({
           [Op.or]: [
             { targetDepartmentId: null },
-            { targetDepartmentId: student.departmentId }
+            ...(parentDeptIds.length > 0 ? [{
+              targetDepartmentId: { [Op.in]: parentDeptIds },
+              [Op.and]: [
+                {
+                  [Op.or]: [
+                    { targetClassId: null },
+                    ...(parentClassIds.length > 0 ? [{ targetClassId: { [Op.in]: parentClassIds } }] : [])
+                  ]
+                },
+                {
+                  [Op.or]: [
+                    { targetDivisionId: null },
+                    ...(parentDivIds.length > 0 ? [{ targetDivisionId: { [Op.in]: parentDivIds } }] : [])
+                  ]
+                }
+              ]
+            }] : [])
           ]
-        },
-        // 2. Class match: all-classes wildcard (null) or student's enrolled classes
-        {
-          [Op.or]: [
-            { targetClassId: null },
-            ...(enrolledClassIds.length > 0 ? [{ targetClassId: { [Op.in]: enrolledClassIds } }] : [])
-          ]
-        },
-        // 3. Division match: all-divisions wildcard (null) or student's division
-        {
-          [Op.or]: [
-            { targetDivisionId: null },
-            ...(student.divisionId ? [{ targetDivisionId: student.divisionId }] : [])
-          ]
-        }
-      ];
+        });
+      }
 
-      whereConditions[Op.and] = studentScopeClauses;
+    } else if (user.role === 'EXAM_STAFF') {
+      // Exam staff sees institutional and departmental notices, excluding teacher/parent internal memos and division chats
+      andConditions.push({
+        type: { [Op.in]: ['GLOBAL', 'DEPARTMENT', 'CLASS'] }
+      });
+      if (targetDepartmentId) andConditions.push({ targetDepartmentId });
+      if (targetClassId) andConditions.push({ targetClassId });
     }
+
+    const whereConditions = andConditions.length > 0 ? { [Op.and]: andConditions } : {};
 
     const announcements = await Announcement.findAll({
       where: whereConditions,
@@ -342,8 +513,13 @@ export const deleteAnnouncement = async (req, res) => {
     if (user.role === 'SUPER_ADMIN') {
       // Super Admin can delete any
     } else if (user.role === 'DEPARTMENT_ADMIN') {
+      let userDeptId = user.departmentId;
+      if (!userDeptId) {
+        const da = await DepartmentAdmin.findByPk(user.id);
+        if (da) userDeptId = da.departmentId;
+      }
       const isOwner = announcement.createdByDeptAdminId === user.id;
-      const isSameDept = announcement.targetDepartmentId === user.departmentId;
+      const isSameDept = Boolean(userDeptId && announcement.targetDepartmentId === userDeptId);
       if (!isOwner && !isSameDept) {
         return res.status(403).json({ error: 'You do not have permission to delete this announcement.' });
       }

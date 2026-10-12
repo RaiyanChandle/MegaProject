@@ -55,6 +55,18 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
     }
   }, [user, isOpen]);
 
+  // Sync fresh profile if dept admin/teacher is missing departmentId
+  useEffect(() => {
+    if (!isOpen) return;
+    if ((user?.role === 'DEPARTMENT_ADMIN' || user?.role === 'TEACHER') && (!user?.departmentId && !targetDepartmentId)) {
+      apiClient.get('/auth/me').then((fresh) => {
+        if (fresh?.departmentId) {
+          setTargetDepartmentId(fresh.departmentId);
+        }
+      }).catch(() => {});
+    }
+  }, [isOpen, user, targetDepartmentId]);
+
   // Fetch departments on modal open (for all roles so we can display department name accurately)
   useEffect(() => {
     if (!isOpen) return;
@@ -88,13 +100,18 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
       try {
         setFetchingClasses(true);
         let endpoint = '/classes';
-        if (user?.role === 'SUPER_ADMIN' && targetDepartmentId) {
-          endpoint = `/classes?departmentId=${targetDepartmentId}`;
-        } else if (targetDepartmentId || user?.departmentId) {
-          endpoint = `/classes?departmentId=${targetDepartmentId || user?.departmentId}`;
+        const activeDept = targetDepartmentId || user?.departmentId;
+        if (activeDept) {
+          endpoint = `/classes?departmentId=${activeDept}`;
         }
         const data = await apiClient.get(endpoint);
-        setClasses(data || []);
+        const classList = data || [];
+        setClasses(classList);
+
+        // Auto-select first class if none selected and in class or division scope
+        if (classList.length > 0 && !targetClassId && (scopeLevel === 'CLASS' || scopeLevel === 'DIVISION')) {
+          setTargetClassId(classList[0].id);
+        }
       } catch (err) {
         console.error('Failed to load classes', err);
       } finally {
@@ -103,12 +120,13 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
     };
 
     fetchClasses();
-  }, [isOpen, targetDepartmentId, user]);
+  }, [isOpen, targetDepartmentId, user, scopeLevel]);
 
   // Fetch divisions when class changes
   useEffect(() => {
     if (!targetClassId) {
       setDivisions([]);
+      setTargetDivisionId('');
       return;
     }
 
@@ -116,7 +134,13 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
       try {
         setFetchingDivisions(true);
         const data = await apiClient.get(`/divisions?classId=${targetClassId}`);
-        setDivisions(data || []);
+        const divList = data || [];
+        setDivisions(divList);
+
+        // Auto-select first division if none selected and in division scope
+        if (divList.length > 0 && !targetDivisionId && scopeLevel === 'DIVISION') {
+          setTargetDivisionId(divList[0].id);
+        }
       } catch (err) {
         console.error('Failed to load divisions', err);
       } finally {
@@ -125,7 +149,80 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
     };
 
     fetchDivisions();
-  }, [targetClassId]);
+  }, [targetClassId, scopeLevel]);
+
+  // Handlers for switching Classification and Scope seamlessly
+  const handleTypeSelect = (selectedType) => {
+    setType(selectedType);
+    if (selectedType === 'GLOBAL') {
+      setScopeLevel('COLLEGE');
+      setTargetDepartmentId('');
+      setTargetClassId('');
+      setTargetDivisionId('');
+    } else if (selectedType === 'DEPARTMENT') {
+      setScopeLevel('DEPARTMENT');
+      if (user?.role !== 'SUPER_ADMIN') {
+        setTargetDepartmentId(user?.departmentId || targetDepartmentId || '');
+      }
+      setTargetClassId('');
+      setTargetDivisionId('');
+    } else if (selectedType === 'CLASS') {
+      setScopeLevel('CLASS');
+      if (user?.role !== 'SUPER_ADMIN') {
+        setTargetDepartmentId(user?.departmentId || targetDepartmentId || '');
+      }
+      setTargetDivisionId('');
+    } else if (selectedType === 'DIVISION') {
+      setScopeLevel('DIVISION');
+      if (user?.role !== 'SUPER_ADMIN') {
+        setTargetDepartmentId(user?.departmentId || targetDepartmentId || '');
+      }
+    } else if (selectedType === 'PARENT') {
+      if (user?.role === 'DEPARTMENT_ADMIN') {
+        if (scopeLevel === 'COLLEGE') setScopeLevel('DEPARTMENT');
+        setTargetDepartmentId(user?.departmentId || targetDepartmentId || '');
+      } else if (user?.role === 'TEACHER') {
+        if (scopeLevel === 'COLLEGE' || scopeLevel === 'DEPARTMENT') setScopeLevel('CLASS');
+        setTargetDepartmentId(user?.departmentId || targetDepartmentId || '');
+      }
+    }
+  };
+
+  const handleScopeSelect = (selectedScope) => {
+    setScopeLevel(selectedScope);
+    if (selectedScope === 'COLLEGE') {
+      if (['DEPARTMENT', 'CLASS', 'DIVISION'].includes(type)) {
+        setType('GLOBAL');
+      }
+      setTargetDepartmentId('');
+      setTargetClassId('');
+      setTargetDivisionId('');
+    } else if (selectedScope === 'DEPARTMENT') {
+      if (['GLOBAL', 'CLASS', 'DIVISION'].includes(type)) {
+        setType('DEPARTMENT');
+      }
+      if (user?.role !== 'SUPER_ADMIN') {
+        setTargetDepartmentId(user?.departmentId || targetDepartmentId || '');
+      }
+      setTargetClassId('');
+      setTargetDivisionId('');
+    } else if (selectedScope === 'CLASS') {
+      if (['GLOBAL', 'DEPARTMENT', 'DIVISION'].includes(type)) {
+        setType('CLASS');
+      }
+      if (user?.role !== 'SUPER_ADMIN') {
+        setTargetDepartmentId(user?.departmentId || targetDepartmentId || '');
+      }
+      setTargetDivisionId('');
+    } else if (selectedScope === 'DIVISION') {
+      if (['GLOBAL', 'DEPARTMENT', 'CLASS'].includes(type)) {
+        setType('DIVISION');
+      }
+      if (user?.role !== 'SUPER_ADMIN') {
+        setTargetDepartmentId(user?.departmentId || targetDepartmentId || '');
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -150,7 +247,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
       finalClassId = null;
       finalDivId = null;
     } else if (scopeLevel === 'DEPARTMENT') {
-      finalDeptId = user?.role === 'SUPER_ADMIN' ? targetDepartmentId : user?.departmentId;
+      finalDeptId = user?.role === 'SUPER_ADMIN' ? targetDepartmentId : (targetDepartmentId || user?.departmentId);
       if (!finalDeptId) {
         setError('Please select a target department.');
         return;
@@ -158,7 +255,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
       finalClassId = null;
       finalDivId = null;
     } else if (scopeLevel === 'CLASS') {
-      finalDeptId = user?.role === 'SUPER_ADMIN' ? targetDepartmentId : user?.departmentId;
+      finalDeptId = user?.role === 'SUPER_ADMIN' ? targetDepartmentId : (targetDepartmentId || user?.departmentId);
       if (!targetClassId) {
         setError('Please select a target class.');
         return;
@@ -166,13 +263,13 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
       finalClassId = targetClassId;
       finalDivId = null;
     } else if (scopeLevel === 'DIVISION') {
-      finalDeptId = user?.role === 'SUPER_ADMIN' ? targetDepartmentId : user?.departmentId;
+      finalDeptId = user?.role === 'SUPER_ADMIN' ? targetDepartmentId : (targetDepartmentId || user?.departmentId);
       if (!targetClassId) {
-        setError('Please select a target class.');
+        setError('Please select a class first.');
         return;
       }
       if (!targetDivisionId) {
-        setError('Please select a target division.');
+        setError('Please select a division / section.');
         return;
       }
       finalClassId = targetClassId;
@@ -285,7 +382,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
                 <button
                   type="button"
                   key={item.value}
-                  onClick={() => setType(item.value)}
+                  onClick={() => handleTypeSelect(item.value)}
                   className={`p-2.5 rounded-md border text-left transition-all ${
                     selected
                       ? 'border-ink-900 bg-ink-900/5 text-ink-900 ring-1 ring-ink-900'
@@ -320,12 +417,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
             {user?.role === 'SUPER_ADMIN' && (
               <button
                 type="button"
-                onClick={() => {
-                  setScopeLevel('COLLEGE');
-                  setTargetDepartmentId('');
-                  setTargetClassId('');
-                  setTargetDivisionId('');
-                }}
+                onClick={() => handleScopeSelect('COLLEGE')}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 border transition-colors ${
                   scopeLevel === 'COLLEGE'
                     ? 'bg-ink-900 text-white border-ink-900'
@@ -339,11 +431,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
 
             <button
               type="button"
-              onClick={() => {
-                setScopeLevel('DEPARTMENT');
-                setTargetClassId('');
-                setTargetDivisionId('');
-              }}
+              onClick={() => handleScopeSelect('DEPARTMENT')}
               className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 border transition-colors ${
                 scopeLevel === 'DEPARTMENT'
                   ? 'bg-ink-900 text-white border-ink-900'
@@ -356,10 +444,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
 
             <button
               type="button"
-              onClick={() => {
-                setScopeLevel('CLASS');
-                setTargetDivisionId('');
-              }}
+              onClick={() => handleScopeSelect('CLASS')}
               className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 border transition-colors ${
                 scopeLevel === 'CLASS'
                   ? 'bg-ink-900 text-white border-ink-900'
@@ -372,7 +457,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
 
             <button
               type="button"
-              onClick={() => setScopeLevel('DIVISION')}
+              onClick={() => handleScopeSelect('DIVISION')}
               className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 border transition-colors ${
                 scopeLevel === 'DIVISION'
                   ? 'bg-ink-900 text-white border-ink-900'
@@ -411,11 +496,33 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
               </div>
             )}
 
+            {/* Department display for Department Admin / Teacher */}
+            {user?.role !== 'SUPER_ADMIN' && (
+              <div className="sm:col-span-2 p-3 rounded-md bg-surface-0 border border-border flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-[#1F6F6F]/10 flex items-center justify-center text-[#1F6F6F]">
+                    <Building2 size={16} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-text-900">
+                      Target Department: {departments.find(d => d.id === (targetDepartmentId || user?.departmentId))?.name || 'Your Department'} ({departments.find(d => d.id === (targetDepartmentId || user?.departmentId))?.code || 'DEP'})
+                    </div>
+                    <div className="text-[11px] text-text-500">
+                      Announcements from your department strictly reach students and users of this department only.
+                    </div>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded text-[10px] font-semibold bg-[#1F6F6F]/10 text-[#1F6F6F] border border-[#1F6F6F]/20">
+                  Department Scope Locked
+                </span>
+              </div>
+            )}
+
             {/* Class Selector (Visible for CLASS or DIVISION) */}
             {(scopeLevel === 'CLASS' || scopeLevel === 'DIVISION') && (
               <div className={scopeLevel === 'CLASS' ? 'sm:col-span-2' : ''}>
                 <label className="block text-xs font-medium text-text-500 mb-1 flex items-center justify-between">
-                  <span>Class / Curriculum</span>
+                  <span>{scopeLevel === 'DIVISION' ? 'Step 1: Select Class' : 'Class / Curriculum'}</span>
                   {fetchingClasses && <span className="text-[10px] text-brass-600 animate-pulse font-normal">Loading classes...</span>}
                 </label>
                 <select
@@ -443,14 +550,14 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
             {scopeLevel === 'DIVISION' && (
               <div>
                 <label className="block text-xs font-medium text-text-500 mb-1 flex items-center justify-between">
-                  <span>Division / Section</span>
+                  <span>Step 2: Select Division</span>
                   {fetchingDivisions && <span className="text-[10px] text-brass-600 animate-pulse font-normal">Loading divisions...</span>}
                 </label>
                 <select
                   value={targetDivisionId}
                   onChange={(e) => setTargetDivisionId(e.target.value)}
-                  disabled={!targetClassId}
-                  className="w-full rounded-md border border-border px-3 py-2 text-xs text-text-900 bg-surface-0 focus:border-ink-700 outline-none disabled:bg-surface-50 disabled:text-text-500"
+                  disabled={!targetClassId || fetchingDivisions}
+                  className="w-full rounded-md border border-border px-3 py-2 text-xs text-text-900 bg-surface-0 focus:border-ink-700 outline-none disabled:bg-surface-50 disabled:text-text-400"
                 >
                   <option value="">Select Division...</option>
                   {divisions.map((div) => (
@@ -458,10 +565,12 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
                       Division {div.name}
                     </option>
                   ))}
-                  {targetClassId && divisions.length === 0 && !fetchingDivisions && (
-                    <option value="" disabled>No divisions in this class</option>
-                  )}
                 </select>
+                {!targetClassId ? (
+                  <p className="text-[10px] text-text-400 mt-1">Please pick a class first to load its divisions</p>
+                ) : divisions.length === 0 && !fetchingDivisions ? (
+                  <p className="text-[10px] text-danger mt-1">No divisions found for this class</p>
+                ) : null}
               </div>
             )}
           </div>

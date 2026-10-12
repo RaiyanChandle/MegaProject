@@ -44,21 +44,24 @@ export default function LoginPage() {
           )}
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-text-900">Institute ID, Email, or Phone Number</label>
-            <input 
-              type="text" 
+            <label className="block text-sm font-medium text-text-900">Institute ID, Email, Phone Number, or Parent Name</label>
+            <input
+              type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-ink-700 focus:ring-1 focus:ring-ink-700"
               placeholder="e.g. SAKIT0001"
               required
             />
+            <p className="text-[11px] text-text-500">
+              Parents can sign in using their registered mobile number (e.g. 8080787789) or parent name.
+            </p>
           </div>
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-text-900">Password</label>
             <div className="relative">
-              <input 
+              <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -75,8 +78,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isLoading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ink-900 hover:bg-ink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink-700 disabled:opacity-50 mt-6 transition-colors"
           >

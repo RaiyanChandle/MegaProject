@@ -103,10 +103,45 @@ const TRANSLATIONS = {
     submittedBadge: 'Submitted',
     pastDeadlineBadge: 'Past Deadline',
 
-    // Children Directory & Empty
     myChildren: 'My Children',
     noChildrenLinked: 'No students currently linked to this guardian account.',
-    noSubjectsFound: 'No subject records found.'
+    noSubjectsFound: 'No subject records found.',
+
+    // Announcements & Circulars
+    announcements: 'Announcements',
+    announcementsTitle: 'Parent Announcements & Circulars',
+    announcementsSubtitle: 'Official institutional circulars, department memos, and classroom notices for your linked wards.',
+    viewingNoticesFor: 'Viewing Notices For:',
+    allLinkedChildren: 'All Linked Children',
+    totalCirculars: 'Total Circulars',
+    parentNotices: 'Parent Notices',
+    departmentNotices: 'Department',
+    classDivisionNotices: 'Class & Section',
+    searchCircularsPlaceholder: 'Search circulars by subject, keyword, or instruction...',
+    filterLabel: 'Filter:',
+    filterDropdownLabel: 'Filter Announcements',
+    allNotices: 'All Notices',
+    forParents: 'For Parents',
+    department: 'Department',
+    class: 'Class',
+    division: 'Division',
+    collegeWide: 'College-Wide',
+    noAnnouncementsTitle: 'No announcements found',
+    noAnnouncementsDesc: 'There are currently no circulars or notices posted for your ward.',
+    filterAdjustNotice: 'Try adjusting your search query, child selection, or category filters.',
+    loadingAnnouncements: 'Fetching announcements and official circulars for your ward...',
+    collegeWideAll: 'College-Wide (All)',
+    deptPrefix: 'Dept:',
+    classPrefix: 'Class:',
+    divisionPrefix: 'Division:',
+    targetedNotice: 'Targeted Notice',
+    superAdmin: 'Super Admin',
+    deptAdmin: 'Dept Admin',
+    deleteAnnouncement: 'Delete Announcement',
+    deleteConfirmMsg: 'Are you sure you want to permanently delete this announcement? This action cannot be undone.',
+    deleteBtn: 'Delete',
+    cancelBtn: 'Cancel',
+    liveAcademicFeed: 'Live Academic Feed'
   },
   hi: {
     portal: 'अभिभावक पोर्टल',
@@ -197,7 +232,43 @@ const TRANSLATIONS = {
 
     myChildren: 'मेरे बच्चे',
     noChildrenLinked: 'इस खाते से कोई विद्यार्थी लिंक नहीं है।',
-    noSubjectsFound: 'कोई विषय विवरण नहीं मिला।'
+    noSubjectsFound: 'कोई विषय विवरण नहीं मिला।',
+
+    // Announcements & Circulars
+    announcements: 'सूचनाएं',
+    announcementsTitle: 'अभिभावक सूचनाएं एवं परिपत्र',
+    announcementsSubtitle: 'अपने जुड़े बच्चों के लिए आधिकारिक संस्थागत परिपत्र, विभागीय मेमो और कक्षा सूचनाएं।',
+    viewingNoticesFor: 'सूचनाएं देखें:',
+    allLinkedChildren: 'सभी जुड़े बच्चे',
+    totalCirculars: 'कुल परिपत्र',
+    parentNotices: 'अभिभावक सूचनाएं',
+    departmentNotices: 'विभाग',
+    classDivisionNotices: 'कक्षा एवं प्रभाग',
+    searchCircularsPlaceholder: 'विषय, कीवर्ड या निर्देश द्वारा परिपत्र खोजें...',
+    filterLabel: 'फ़िल्टर:',
+    filterDropdownLabel: 'सूचनाएं फ़िल्टर करें',
+    allNotices: 'सभी सूचनाएं',
+    forParents: 'अभिभावकों के लिए',
+    department: 'विभाग',
+    class: 'कक्षा',
+    division: 'प्रभाग',
+    collegeWide: 'कॉलेज स्तर (सभी)',
+    noAnnouncementsTitle: 'कोई सूचना नहीं मिली',
+    noAnnouncementsDesc: 'वर्तमान में आपके बच्चे के लिए कोई परिपत्र या सूचना पोस्ट नहीं की गई है।',
+    filterAdjustNotice: 'अपनी खोज या फ़िल्टर विकल्प बदलकर पुनः प्रयास करें।',
+    loadingAnnouncements: 'आपके बच्चे के लिए सूचनाएं एवं आधिकारिक परिपत्र लोड हो रहे हैं...',
+    collegeWideAll: 'पूरे कॉलेज हेतु (सभी)',
+    deptPrefix: 'विभाग:',
+    classPrefix: 'कक्षा:',
+    divisionPrefix: 'प्रभाग:',
+    targetedNotice: 'लक्षित सूचना',
+    superAdmin: 'सुपर एडमिन',
+    deptAdmin: 'विभाग एडमिन',
+    deleteAnnouncement: 'सूचना हटाएं',
+    deleteConfirmMsg: 'क्या आप इस सूचना को हटाना चाहते हैं? यह क्रिया वापस नहीं ली जा सकती।',
+    deleteBtn: 'हटाएं',
+    cancelBtn: 'रद्द करें',
+    liveAcademicFeed: 'लाइव शैक्षणिक सूचनाएं'
   },
   mr: {
     portal: 'पालक पोर्टल',
@@ -288,7 +359,43 @@ const TRANSLATIONS = {
 
     myChildren: 'माझी मुले',
     noChildrenLinked: 'या खात्याशी कोणताही विद्यार्थी जोडलेला नाही.',
-    noSubjectsFound: 'कोणतीही नोंद आढळली नाही.'
+    noSubjectsFound: 'कोणतीही नोंद आढळली नाही.',
+
+    // Announcements & Circulars
+    announcements: 'सूचना',
+    announcementsTitle: 'पालक सूचना आणि परिपत्रके',
+    announcementsSubtitle: 'आपल्या पाल्यांसाठी अधिकृत संस्थात्मक परिपत्रके, विभाग मेमो आणि वर्ग सूचना.',
+    viewingNoticesFor: 'यांच्यासाठी सूचना:',
+    allLinkedChildren: 'सर्व जोडलेले पाल्य',
+    totalCirculars: 'एकूण परिपत्रके',
+    parentNotices: 'पालक सूचना',
+    departmentNotices: 'विभाग',
+    classDivisionNotices: 'वर्ग आणि तुकडी',
+    searchCircularsPlaceholder: 'विषय किंवा कीवर्डनुसार परिपत्रके शोधा...',
+    filterLabel: 'फिल्टर:',
+    filterDropdownLabel: 'सूचना फिल्टर करा',
+    allNotices: 'सर्व सूचना',
+    forParents: 'पालकांसाठी',
+    department: 'विभाग',
+    class: 'वर्ग',
+    division: 'तुकडी',
+    collegeWide: 'महाविद्यालयीन (सर्व)',
+    noAnnouncementsTitle: 'कोणतीही सूचना आढळली नाही',
+    noAnnouncementsDesc: 'सध्या आपल्या पाल्यासाठी कोणतीही सूचना प्रसिद्ध केलेली नाही.',
+    filterAdjustNotice: 'आपला शोध किंवा फिल्टर पर्याय बदलून पुन्हा प्रयत्न करा.',
+    loadingAnnouncements: 'आपल्या पाल्यासाठी सूचना व परिपत्रके आणली जात आहेत...',
+    collegeWideAll: 'महाविद्यालयीन (सर्व)',
+    deptPrefix: 'विभाग:',
+    classPrefix: 'वर्ग:',
+    divisionPrefix: 'तुकडी:',
+    targetedNotice: 'लक्षित सूचना',
+    superAdmin: 'सुपर ॲडमिन',
+    deptAdmin: 'विभाग ॲडमिन',
+    deleteAnnouncement: 'सूचना हटवा',
+    deleteConfirmMsg: 'आपण ही सूचना कायमची हटवू इच्छिता? ही क्रिया पूर्ववत केली जाऊ शकत नाही.',
+    deleteBtn: 'हटवा',
+    cancelBtn: 'रद्द करा',
+    liveAcademicFeed: 'थेट शैक्षणिक सूचना'
   },
   gu: {
     portal: 'વાલી પોર્ટલ',
@@ -379,7 +486,43 @@ const TRANSLATIONS = {
 
     myChildren: 'મારા બાળકો',
     noChildrenLinked: 'કોઈ વિદ્યાર્થી આ ખાતા સાથે જોડાયેલ નથી.',
-    noSubjectsFound: 'કોઈ વિગત મળી નથી.'
+    noSubjectsFound: 'કોઈ વિગત મળી નથી.',
+
+    // Announcements & Circulars
+    announcements: 'સૂચનાઓ',
+    announcementsTitle: 'વાલીઓની સૂચનાઓ અને પરિપત્રો',
+    announcementsSubtitle: 'તમારા સંતાનો માટે સંસ્થાકીય પરિપત્રો, વિભાગીય મેમો અને વર્ગખંડની સૂચનાઓ.',
+    viewingNoticesFor: 'આમના માટે સૂચનાઓ:',
+    allLinkedChildren: 'બધા જોડાયેલા બાળકો',
+    totalCirculars: 'કુલ પરિપત્રો',
+    parentNotices: 'વાલી સૂચનાઓ',
+    departmentNotices: 'વિભાગ',
+    classDivisionNotices: 'વર્ગ અને વિભાગ',
+    searchCircularsPlaceholder: 'વિષય અથવા કીવર્ડ દ્વારા પરિપત્રો શોધો...',
+    filterLabel: 'ફિલ્ટર:',
+    filterDropdownLabel: 'સૂચનાઓ ફિલ્ટર કરો',
+    allNotices: 'બધી સૂચનાઓ',
+    forParents: 'વાલીઓ માટે',
+    department: 'વિભાગ',
+    class: 'વર્ગ',
+    division: 'વિભાગ',
+    collegeWide: 'કોલેજ સ્તરે (બધા)',
+    noAnnouncementsTitle: 'કોઈ સૂચના મળી નથી',
+    noAnnouncementsDesc: 'હાલમાં તમારા બાળક માટે કોઈ પરિપત્ર કે સૂચના નથી.',
+    filterAdjustNotice: 'તમારી શોધ અથવા ફિલ્ટર વિકલ્પ બદલીને ફરી પ્રયાસ કરો.',
+    loadingAnnouncements: 'તમારા બાળક માટે સૂચનાઓ અને પરિપત્રો લાવવામાં આવી રહ્યા છે...',
+    collegeWideAll: 'કોલેજ સ્તરે (બધા)',
+    deptPrefix: 'વિભાગ:',
+    classPrefix: 'વર્ગ:',
+    divisionPrefix: 'વિભાગ:',
+    targetedNotice: 'લક્ષિત સૂચના',
+    superAdmin: 'સુપર એડમિન',
+    deptAdmin: 'વિભાગ એડમિન',
+    deleteAnnouncement: 'સૂચના કાઢી નાખો',
+    deleteConfirmMsg: 'શું તમે આ સૂચના કાયમ માટે કાઢી નાખવા માંગો છો?',
+    deleteBtn: 'કાઢી નાખો',
+    cancelBtn: 'રદ કરો',
+    liveAcademicFeed: 'લાઈવ શૈક્ષણિક સૂચનાઓ'
   },
   bn: {
     portal: 'অভিভাবক পোর্টাল',
@@ -470,7 +613,43 @@ const TRANSLATIONS = {
 
     myChildren: 'আমার সন্তানরা',
     noChildrenLinked: 'কোনো শিক্ষার্থী সংযুক্ত নেই।',
-    noSubjectsFound: 'কোনো তথ্য পাওয়া যায়নি।'
+    noSubjectsFound: 'কোনো তথ্য পাওয়া যায়নি।',
+
+    // Announcements & Circulars
+    announcements: 'বিজ্ঞপ্তি',
+    announcementsTitle: 'অভিভাবক বিজ্ঞপ্তি ও পরিপত্র',
+    announcementsSubtitle: 'আপনার সংযুক্ত শিক্ষার্থীদের জন্য প্রাতিষ্ঠানিক পরিপত্র, বিভাগীয় মেমো এবং শ্রেণীকক্ষ বিজ্ঞপ্তি।',
+    viewingNoticesFor: 'বিজ্ঞপ্তি দেখা হচ্ছে:',
+    allLinkedChildren: 'সমস্ত সংযুক্ত শিক্ষার্থী',
+    totalCirculars: 'মোট পরিপত্র',
+    parentNotices: 'অভিভাবক বিজ্ঞপ্তি',
+    departmentNotices: 'বিভাগ',
+    classDivisionNotices: 'ক্লাস ও সেকশন',
+    searchCircularsPlaceholder: 'বিষয় বা কীওয়ার্ড দিয়ে পরিপত্র অনুসন্ধান করুন...',
+    filterLabel: 'ফিল্টার:',
+    filterDropdownLabel: 'বিজ্ঞপ্তি ফিল্টার করুন',
+    allNotices: 'সমস্ত বিজ্ঞপ্তি',
+    forParents: 'অভিভাবকদের জন্য',
+    department: 'বিভাগ',
+    class: 'ক্লাস',
+    division: 'সেকশন',
+    collegeWide: 'কলেজব্যাপী (সকল)',
+    noAnnouncementsTitle: 'কোনো বিজ্ঞপ্তি পাওয়া যায়নি',
+    noAnnouncementsDesc: 'বর্তমানে আপনার শিক্ষার্থীর জন্য কোনো বিজ্ঞপ্তি নেই।',
+    filterAdjustNotice: 'আপনার অনুসন্ধান বা ফিল্টার পরিবর্তন করে চেষ্টা করুন।',
+    loadingAnnouncements: 'বিজ্ঞপ্তি এবং সরকারি পরিপত্র লোড হচ্ছে...',
+    collegeWideAll: 'কলেজব্যাপী (সকল)',
+    deptPrefix: 'বিভাগ:',
+    classPrefix: 'ক্লাস:',
+    divisionPrefix: 'সেকশন:',
+    targetedNotice: 'নির্দিষ্ট বিজ্ঞপ্তি',
+    superAdmin: 'সুপার অ্যাডমিন',
+    deptAdmin: 'বিভাগীয় অ্যাডমিন',
+    deleteAnnouncement: 'বিজ্ঞপ্তি মুছুন',
+    deleteConfirmMsg: 'আপনি কি নিশ্চিত যে আপনি এই বিজ্ঞপ্তিটি স্থায়ীভাবে মুছে ফেলতে চান?',
+    deleteBtn: 'মুছুন',
+    cancelBtn: 'বাতিল',
+    liveAcademicFeed: 'সরাসরি একাডেমিক নোটিশ'
   },
   ta: {
     portal: 'பெற்றோர் போர்டல்',
@@ -561,7 +740,43 @@ const TRANSLATIONS = {
 
     myChildren: 'என் பிள்ளைகள்',
     noChildrenLinked: 'மாணவர்கள் இணைக்கப்படவில்லை.',
-    noSubjectsFound: 'விவரங்கள் இல்லை.'
+    noSubjectsFound: 'விவரங்கள் இல்லை.',
+
+    // Announcements & Circulars
+    announcements: 'அறிவிப்புகள்',
+    announcementsTitle: 'பெற்றோர் அறிவிப்புகள் & சுற்றறிக்கைகள்',
+    announcementsSubtitle: 'உங்கள் பிள்ளைகளுக்கான அதிகாரப்பூர்வ நிறுவன சுற்றறிக்கைகள், துறை குறிப்புகள் மற்றும் வகுப்பு அறிவிப்புகள்.',
+    viewingNoticesFor: 'அறிவிப்புகளைப் பார்ப்பது:',
+    allLinkedChildren: 'அனைத்து இணைக்கப்பட்ட பிள்ளைகள்',
+    totalCirculars: 'மொத்த சுற்றறிக்கைகள்',
+    parentNotices: 'பெற்றோர் அறிவிப்புகள்',
+    departmentNotices: 'துறை',
+    classDivisionNotices: 'வகுப்பு & பிரிவு',
+    searchCircularsPlaceholder: 'பொருள் அல்லது முக்கிய சொல் மூலம் சுற்றறிக்கைகளைத் தேடுங்கள்...',
+    filterLabel: 'வடிகட்டி:',
+    filterDropdownLabel: 'அறிவிப்புகளை வடிகட்டுங்கள்',
+    allNotices: 'அனைத்து அறிவிப்புகள்',
+    forParents: 'பெற்றோருக்கு',
+    department: 'துறை',
+    class: 'வகுப்பு',
+    division: 'பிரிவு',
+    collegeWide: 'கல்லூரி அளவிலான',
+    noAnnouncementsTitle: 'அறிவிப்புகள் எதுவும் இல்லை',
+    noAnnouncementsDesc: 'தற்போது உங்கள் பிள்ளைக்கு எந்த சுற்றறிக்கைகளும் இல்லை.',
+    filterAdjustNotice: 'தேடல் அல்லது வடிகட்டலை மாற்றி மீண்டும் முயற்சிக்கவும்.',
+    loadingAnnouncements: 'சுற்றறிக்கைகள் மற்றும் அறிவிப்புகள் ஏற்றப்படுகின்றன...',
+    collegeWideAll: 'கல்லூரி அளவிலான (அனைத்தும்)',
+    deptPrefix: 'துறை:',
+    classPrefix: 'வகுப்பு:',
+    divisionPrefix: 'பிரிவு:',
+    targetedNotice: 'இலக்கு அறிவிப்பு',
+    superAdmin: 'சூப்பர் அட்மின்',
+    deptAdmin: 'துறை அட்மின்',
+    deleteAnnouncement: 'அறிவிப்பை நீக்கு',
+    deleteConfirmMsg: 'இந்த அறிவிப்பை நிரந்தரமாக நீக்க விரும்புகிறீர்களா?',
+    deleteBtn: 'நீக்கு',
+    cancelBtn: 'ரத்து செய்',
+    liveAcademicFeed: 'நேரடி கல்வி அறிவிப்புகள்'
   },
   te: {
     portal: 'తల్లిదండ్రుల పోర్టల్',
@@ -652,7 +867,43 @@ const TRANSLATIONS = {
 
     myChildren: 'నా పిల్లలు',
     noChildrenLinked: 'విద్యార్థి లింక్ చేయబడలేదు.',
-    noSubjectsFound: 'సమాచారం లేదు.'
+    noSubjectsFound: 'సమాచారం లేదు.',
+
+    // Announcements & Circulars
+    announcements: 'ప్రకటనలు',
+    announcementsTitle: 'తల్లిదండ్రుల ప్రకటనలు & సర్క్యులర్లు',
+    announcementsSubtitle: 'మీ పిల్లల కోసం అధికారిక సంస్థాగత సర్క్యులర్లు, విభాగ మెమోలు మరియు తరగతి గది నోటీసులు.',
+    viewingNoticesFor: 'నోటీసులు చూస్తున్నారు:',
+    allLinkedChildren: 'అన్ని లింక్ చేయబడిన పిల్లలు',
+    totalCirculars: 'మొత్తం సర్క్యులర్లు',
+    parentNotices: 'తల్లిదండ్రుల నోటీసులు',
+    departmentNotices: 'విభాగం',
+    classDivisionNotices: 'తరగతి & సెక్షన్',
+    searchCircularsPlaceholder: 'విషయం లేదా కీవర్డ్ ద్వారా సర్క్యులర్లను శోధించండి...',
+    filterLabel: 'ఫిల్టర్:',
+    filterDropdownLabel: 'ప్రకటనలను ఫిల్టర్ చేయండి',
+    allNotices: 'అన్ని నోటీసులు',
+    forParents: 'తల్లిదండ్రుల కోసం',
+    department: 'విభాగం',
+    class: 'తరగతి',
+    division: 'విభాగం',
+    collegeWide: 'కళాశాల వ్యాప్తంగా',
+    noAnnouncementsTitle: 'ప్రకటనలు కనుగొనబడలేదు',
+    noAnnouncementsDesc: 'ప్రస్తుతం మీ పిల్లల కోసం ఎటువంటి సర్క్యులర్లు లేవు.',
+    filterAdjustNotice: 'మీ శోధన లేదా ఫిల్టర్ మార్చి ప్రయత్నించండి.',
+    loadingAnnouncements: 'నోటీసులు మరియు అధికారిక సర్క్యులర్లు లోడ్ అవుతున్నాయి...',
+    collegeWideAll: 'కళాశాల వ్యాప్తంగా (అన్ని)',
+    deptPrefix: 'విభాగం:',
+    classPrefix: 'తరగతి:',
+    divisionPrefix: 'సెక్షన్:',
+    targetedNotice: 'లక్ష్య ప్రకటన',
+    superAdmin: 'సూపర్ అడ్మిన్',
+    deptAdmin: 'డిపార్ట్‌మెంట్ అడ్మిన్',
+    deleteAnnouncement: 'ప్రకటనను తొలగించండి',
+    deleteConfirmMsg: 'మీరు ఈ ప్రకటనను శాశ్వతంగా తొలగించాలనుకుంటున్నారా?',
+    deleteBtn: 'తొలగించండి',
+    cancelBtn: 'రద్దు చేయండి',
+    liveAcademicFeed: 'లైవ్ విద్యా ప్రకటనలు'
   },
   kn: {
     portal: 'ಪೋಷಕರ ಪೋರ್ಟಲ್',
@@ -743,7 +994,43 @@ const TRANSLATIONS = {
 
     myChildren: 'ನನ್ನ ಮಕ್ಕಳು',
     noChildrenLinked: 'ಯಾವುದೇ ವಿದ್ಯಾರ್ಥಿ ಲಿಂಕ್ ಆಗಿಲ್ಲ.',
-    noSubjectsFound: 'ಯಾವುದೇ ವಿವರಗಳಿಲ್ಲ.'
+    noSubjectsFound: 'ಯಾವುದೇ ವಿವರಗಳಿಲ್ಲ.',
+
+    // Announcements & Circulars
+    announcements: 'ಪ್ರಕಟಣೆಗಳು',
+    announcementsTitle: 'ಪೋಷಕರ ಪ್ರಕಟಣೆಗಳು ಮತ್ತು ಸುತ್ತೋಲೆಗಳು',
+    announcementsSubtitle: 'ನಿಮ್ಮ ಮಕ್ಕಳಿಗಾಗಿ ಅಧಿಕೃತ ಸಾಂಸ್ಥಿಕ ಸುತ್ತೋಲೆಗಳು, ವಿಭಾಗದ ಮೆಮೊಗಳು ಮತ್ತು ತರಗತಿ ಸೂಚನೆಗಳು.',
+    viewingNoticesFor: 'ಇವರಿಗಾಗಿ ಸೂಚನೆಗಳು:',
+    allLinkedChildren: 'ಎಲ್ಲಾ ಲಿಂಕ್ ಮಾಡಲಾದ ಮಕ್ಕಳು',
+    totalCirculars: 'ಒಟ್ಟು ಸುತ್ತೋಲೆಗಳು',
+    parentNotices: 'ಪೋಷಕರ ಪ್ರಕಟಣೆಗಳು',
+    departmentNotices: 'ವಿಭಾಗ',
+    classDivisionNotices: 'ತರಗತಿ ಮತ್ತು ವಿಭಾಗ',
+    searchCircularsPlaceholder: 'ವಿಷಯ ಅಥವಾ ಕೀವರ್ಡ್ ಮೂಲಕ ಸುತ್ತೋಲೆ ಹುಡುಕಿ...',
+    filterLabel: 'ಫಿಲ್ಟರ್:',
+    filterDropdownLabel: 'ಸೂಚನೆಗಳನ್ನು ಫಿಲ್ಟರ್ ಮಾಡಿ',
+    allNotices: 'ಎಲ್ಲಾ ಸೂಚನೆಗಳು',
+    forParents: 'ಪೋಷಕರಿಗಾಗಿ',
+    department: 'ವಿಭಾಗ',
+    class: 'ತರಗತಿ',
+    division: 'ವಿಭಾಗ',
+    collegeWide: 'ಕಾಲೇಜು ಮಟ್ಟದ',
+    noAnnouncementsTitle: 'ಯಾವುದೇ ಪ್ರಕಟಣೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ',
+    noAnnouncementsDesc: 'ಪ್ರಸ್ತುತ ನಿಮ್ಮ ಮಗುವಿಗೆ ಯಾವುದೇ ಸುತ್ತೋಲೆಗಳಿಲ್ಲ.',
+    filterAdjustNotice: 'ನಿಮ್ಮ ಹುಡುಕಾಟ ಅಥವಾ ಫಿಲ್ಟರ್ ಬದಲಾಯಿಸಿ ಪ್ರಯತ್ನಿಸಿ.',
+    loadingAnnouncements: 'ಸೂಚನೆಗಳು ಮತ್ತು ಸುತ್ತೋಲೆಗಳನ್ನು ಪಡೆಯಲಾಗುತ್ತಿದೆ...',
+    collegeWideAll: 'ಕಾಲೇಜು ಮಟ್ಟದ (ಎಲ್ಲಾ)',
+    deptPrefix: 'ವಿಭಾಗ:',
+    classPrefix: 'ತರಗತಿ:',
+    divisionPrefix: 'ವಿಭಾಗ:',
+    targetedNotice: 'ಗುರಿಪಡಿಸಿದ ಸೂಚನೆ',
+    superAdmin: 'ಸೂಪರ್ ಅಡ್ಮಿನ್',
+    deptAdmin: 'ವಿಭಾಗ ಅಡ್ಮಿನ್',
+    deleteAnnouncement: 'ಪ್ರಕಟಣೆ ಅಳಿಸಿ',
+    deleteConfirmMsg: 'ನೀವು ಈ ಪ್ರಕಟಣೆಯನ್ನು ಖಚಿತವಾಗಿ ಅಳಿಸಲು ಬಯಸುವಿರಾ?',
+    deleteBtn: 'ಅಳಿಸಿ',
+    cancelBtn: 'ರದ್ದುಮಾಡಿ',
+    liveAcademicFeed: 'ಲೈವ್ ಶೈಕ್ಷಣಿಕ ಸೂಚನೆಗಳು'
   }
 };
 
@@ -760,6 +1047,18 @@ export function LanguageProvider({ children }) {
   };
 
   const t = (key) => {
+    // STRICT RULE: Only the PARENT role can see non-English translations!
+    // All other roles (SuperAdmin, DeptAdmin, Teacher, Student, ExamStaff) must be in English.
+    try {
+      const savedUser = sessionStorage.getItem('nexus_user');
+      if (savedUser) {
+        const userObj = JSON.parse(savedUser);
+        if (userObj?.role && userObj.role !== 'PARENT') {
+          return TRANSLATIONS.en[key] || key;
+        }
+      }
+    } catch (e) {}
+
     const langDict = TRANSLATIONS[currentLanguage] || TRANSLATIONS.en;
     return langDict[key] || TRANSLATIONS.en[key] || key;
   };
