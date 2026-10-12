@@ -39,6 +39,8 @@ import ParentMarks from './pages/parent/ParentMarks';
 import ParentAssignments from './pages/parent/ParentAssignments';
 import ExamStaffDashboard from './pages/examstaff/ExamStaffDashboard';
 import ExamManagement from './pages/examstaff/ExamManagement';
+import HallTicketManagement from './pages/examstaff/HallTicketManagement';
+import StudentHallTicket from './pages/student/StudentHallTicket';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -111,6 +113,7 @@ function App() {
               <Route path="assignments" element={<StudentAssignments />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<StudentMarks />} />
+              <Route path="halltickets" element={<StudentHallTicket />} />
             </Route>
 
             {/* Protected Routes: Parent */}
@@ -131,7 +134,7 @@ function App() {
             >
               <Route index element={<ExamStaffDashboard />} />
               <Route path="exams" element={<ExamManagement />} />
-              <Route path="halltickets" element={<div className="p-6 text-text-900">Hall Ticket Desk (Task 11.4)</div>} />
+              <Route path="halltickets" element={<HallTicketManagement />} />
               <Route path="results" element={<div className="p-6 text-text-900">Exam Results Verification (Task 11.5)</div>} />
             </Route>
 

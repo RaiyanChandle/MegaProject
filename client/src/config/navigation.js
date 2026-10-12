@@ -37,6 +37,7 @@ export const navigationConfig = {
     { name: 'Assignments', href: '/student/assignments', icon: FileCheck },
     { name: 'Digital Library', href: '/student/library', icon: BookOpen },
     { name: 'Marks', href: '/student/marks', icon: FileCheck },
+    { name: 'Hall Tickets', href: '/student/halltickets', icon: FileText },
     { name: 'Fees', href: '/student/fees', icon: DollarSign },
   ],
   PARENT: [
