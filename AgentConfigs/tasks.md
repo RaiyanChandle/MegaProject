@@ -155,8 +155,8 @@ widening to more modules.
 
 ## Phase 12 — Backlogs · flows 11a
 
-- [ ] **T12.1** After processing, set `Enrollment.status` to `PASSED`/`FAILED` (rules 9).
-- [ ] **T12.2** Create re-attempt enrollments for the next term (`attemptNumber + 1`, original class/subject).
+- [x] **T12.1** After processing, set `Enrollment.status` to `PASSED`/`FAILED` (rules 9).--done
+- [x] **T12.2** Create re-attempt enrollments for the next term (`attemptNumber + 1`, original class/subject).--done
 - [ ] **T12.3** Allocation check: warn when a re-attempt subject has no teacher allocated in the new term.
 - [ ] **T12.4** Makeup exams and hall tickets for re-attempts.
 - [ ] **T12.5** Student dashboard shows current and backlog subjects together.

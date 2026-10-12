@@ -638,7 +638,18 @@ export default function ResultProcessing() {
                             {s.resultCard ? (
                               <div className="text-right">
                                 <p className="text-xs font-bold text-text-900">SGPA: {s.resultCard.sgpa ?? '—'}</p>
-                                <p className="text-xs text-text-500">{studentPct != null ? `${studentPct}%` : '—'}</p>
+                                <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                                  <span className="text-[11px] text-text-500 font-mono">{studentPct != null ? `${studentPct}%` : '—'}</span>
+                                  {s.failedSubjectsCount > 0 ? (
+                                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-danger/10 text-danger border border-danger/20">
+                                      {s.failedSubjectsCount} Backlog
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20">
+                                      Passed
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             ) : isPending ? (
                               <span

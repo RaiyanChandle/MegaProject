@@ -200,6 +200,9 @@ const computeResultCardForStudent = async (studentId, academicTermId, examType =
     }
 
     subjectBreakdown.push({
+      enrollmentId: enr.id,
+      attemptNumber: enr.attemptNumber,
+      enrollmentStatus: enr.status,
       subjectId: subj?.id,
       subjectName: subj?.name,
       subjectCode: subj?.code,
@@ -323,7 +326,10 @@ export const getClassResults = async (req, res) => {
         division: s.division?.name || '—',
         resultCard: s.resultCards?.[0] || null,
         canGenerate: computed?.canGenerate || false,
-        pendingSubjects: computed?.pendingSubjects || []
+        pendingSubjects: computed?.pendingSubjects || [],
+        overallPass: computed?.overallPass ?? null,
+        passedSubjectsCount: computed?.subjectBreakdown?.filter(sub => sub.isPass === true).length || 0,
+        failedSubjectsCount: computed?.subjectBreakdown?.filter(sub => sub.isPass === false).length || 0
       });
     }
 
@@ -372,6 +378,8 @@ export const generateResultCards = async (req, res) => {
     const generated = [];
     const skippedPending = [];
     const errors = [];
+    let totalPassedEnrollments = 0;
+    let totalFailedEnrollments = 0;
 
     for (const [studentId, student] of studentMap.entries()) {
       try {
@@ -412,13 +420,40 @@ export const generateResultCards = async (req, res) => {
           });
         }
 
+        // T12.1: After processing, set Enrollment.status to PASSED/FAILED (rules 8 & 9)
+        // Applies to definitive evaluations (FINAL / MAKEUP)
+        let studentPassedEnrollments = 0;
+        let studentFailedEnrollments = 0;
+
+        if (normExamType === 'FINAL' || normExamType === 'MAKEUP') {
+          for (const item of computed.subjectBreakdown) {
+            if (item.enrollmentId && item.isPass !== null && item.isPass !== undefined && !item.isPending) {
+              const newStatus = item.isPass ? 'PASSED' : 'FAILED';
+              await Enrollment.update(
+                { status: newStatus },
+                { where: { id: item.enrollmentId } }
+              );
+              item.enrollmentStatus = newStatus;
+              if (item.isPass) {
+                studentPassedEnrollments++;
+                totalPassedEnrollments++;
+              } else {
+                studentFailedEnrollments++;
+                totalFailedEnrollments++;
+              }
+            }
+          }
+        }
+
         generated.push({
           studentId,
           examType: normExamType,
           sgpa: computed.sgpa,
           percentage: computed.percentage,
           overallPass: computed.overallPass,
-          subjectsCount: computed.subjectBreakdown.length
+          subjectsCount: computed.subjectBreakdown.length,
+          passedEnrollments: studentPassedEnrollments,
+          failedEnrollments: studentFailedEnrollments
         });
       } catch (err) {
         errors.push({ studentId, error: err.message });
@@ -445,6 +480,8 @@ export const generateResultCards = async (req, res) => {
       message: `Generated ${normExamType} result cards for ${generated.length} student(s).${skippedPending.length > 0 ? ` Skipped ${skippedPending.length} student(s) with pending subjects.` : ''}`,
       examType: normExamType,
       generated: generated.length,
+      passedEnrollmentsCount: totalPassedEnrollments,
+      failedEnrollmentsCount: totalFailedEnrollments,
       skippedCount: skippedPending.length,
       skippedStudents: skippedPending,
       results: generated

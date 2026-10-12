@@ -43,6 +43,7 @@ import ExamStaffQuestionPapers from './pages/examstaff/QuestionPapers';
 import ExamStaffHallTickets from './pages/examstaff/HallTickets';
 import ExamStaffResults from './pages/examstaff/ExamResults';
 import ResultProcessing from './pages/examstaff/ResultProcessing';
+import ExamStaffBacklogs from './pages/examstaff/Backlogs';
 import StudentResultCard from './pages/student/StudentResultCard';
 import ParentResultCard from './pages/parent/ParentResultCard';
 
@@ -143,6 +144,7 @@ function App() {
               <Route path="halltickets" element={<ExamStaffHallTickets />} />
               <Route path="results" element={<ExamStaffResults />} />
               <Route path="result-processing" element={<ResultProcessing />} />
+              <Route path="backlogs" element={<ExamStaffBacklogs />} />
             </Route>
 
             {/* Catch-all */}
