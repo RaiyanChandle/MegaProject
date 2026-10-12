@@ -35,6 +35,11 @@ import noteRoutes from './routes/noteRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import assignmentRoutes from './routes/assignmentRoutes.js';
 import marksRoutes from './routes/marksRoutes.js';
+import examRoutes from './routes/examRoutes.js';
+import questionPaperRoutes from './routes/questionPaperRoutes.js';
+import hallTicketRoutes from './routes/hallTicketRoutes.js';
+import examResultRoutes from './routes/examResultRoutes.js';
+import resultCardRoutes from './routes/resultCardRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -57,6 +62,11 @@ app.use('/api/notes', noteRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/marks', marksRoutes);
+app.use('/api/exams', examRoutes);
+app.use('/api/question-papers', questionPaperRoutes);
+app.use('/api/hall-tickets', hallTicketRoutes);
+app.use('/api/exam-results', examResultRoutes);
+app.use('/api/result-cards', resultCardRoutes);
 
 app.get("/api/health", async (req, res) => {
   try {

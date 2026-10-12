@@ -1,14 +1,26 @@
-import { Sequelize } from 'sequelize';
-const sequelize = new Sequelize(process.env.DATABASE_URL, { dialect: 'postgres' });
+import 'dotenv/config';
+import sequelize from './config/database.js';
 
-async function checkData() {
-  const [subjects] = await sequelize.query('SELECT id, name, code, "subjectType", credits, "classId" FROM subjects WHERE "subjectType" IN (\'PROGRAM_ELECTIVE\', \'OPEN_ELECTIVE\')');
-  console.log('Subjects:', subjects);
+async function checkComponentsAndExams() {
+  try {
+    const [components] = await sequelize.query(`
+      SELECT DISTINCT name, category, "maxMarks" 
+      FROM assessment_components 
+      LIMIT 10
+    `);
+    console.log('Sample AssessmentComponents:', components);
 
-  const [slots] = await sequelize.query('SELECT id, "slotName", "slotType", credits, "classId" FROM elective_slots');
-  console.log('Slots:', slots);
-  
-  process.exit(0);
+    const [exams] = await sequelize.query(`
+      SELECT DISTINCT "examType", name 
+      FROM exams 
+      LIMIT 10
+    `);
+    console.log('Sample Exams:', exams);
+  } catch (err) {
+    console.error('Error:', err);
+  } finally {
+    process.exit(0);
+  }
 }
 
-checkData();
+checkComponentsAndExams();

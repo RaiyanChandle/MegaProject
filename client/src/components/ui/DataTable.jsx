@@ -80,7 +80,7 @@ export default function DataTable({
                 </td>
               )}
               {columns.map((col, colIndex) => {
-                const colKey = col.key || col.accessor;
+                const colKey = col.key || col.accessor || col.accessorKey;
                 const value = colKey ? row[colKey] : undefined;
                 return (
                   <td 
@@ -89,7 +89,9 @@ export default function DataTable({
                   >
                     {col.render 
                       ? col.render(value, row)
-                      : (value !== undefined ? value : '')}
+                      : (col.cell 
+                          ? col.cell(value !== undefined ? value : row, row)
+                          : (value !== undefined ? value : ''))}
                   </td>
                 );
               })}

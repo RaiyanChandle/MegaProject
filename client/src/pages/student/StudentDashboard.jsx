@@ -16,7 +16,8 @@ import {
   Download,
   GraduationCap,
   Sparkles,
-  Award
+  Award,
+  Printer
 } from 'lucide-react';
 import { apiClient } from '../../api/client';
 import { Link } from 'react-router-dom';
@@ -120,6 +121,13 @@ export default function StudentDashboard() {
 
         {/* Quick Links */}
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+          <Link
+            to="/student/halltickets"
+            className="flex-1 sm:flex-initial text-center justify-center px-3 py-2 rounded-lg border border-border bg-surface-50 hover:bg-surface-100 text-text-900 text-xs font-semibold transition-colors inline-flex items-center gap-1.5 shadow-xs"
+          >
+            <Printer size={13} className="text-ink-900 shrink-0" />
+            <span>Hall Tickets</span>
+          </Link>
           <Link
             to="/student/attendance"
             className="flex-1 sm:flex-initial text-center justify-center px-3 py-2 rounded-lg border border-border bg-surface-50 hover:bg-surface-100 text-text-900 text-xs font-medium transition-colors inline-flex items-center gap-1.5 shadow-xs"

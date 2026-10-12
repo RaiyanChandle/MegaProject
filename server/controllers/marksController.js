@@ -214,14 +214,11 @@ export const saveMarks = async (req, res) => {
     return res.status(400).json({ error: 'subjectId and an array of marks entries are required' });
   }
 
-  // Verify authorization
+  // Verify authorization: Teachers cannot directly edit continuous assessment marks
   if (user.role === 'TEACHER') {
-    const allocation = await SubjectAllocation.findOne({
-      where: { teacherId: user.id, subjectId }
+    return res.status(403).json({ 
+      error: 'Direct editing of Continuous Assessment marks is prohibited. Teachers must evaluate marks through Official Examination Evaluation (MSE & ESE). Marks will be added to Continuous Assessment once verified by the Exam Cell.' 
     });
-    if (!allocation) {
-      return res.status(403).json({ error: 'You are not allocated to teach this subject' });
-    }
   }
 
   // Pre-load components for this subject to validate maxMarks

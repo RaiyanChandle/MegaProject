@@ -12,6 +12,7 @@ const statusMap = {
   ACTIVE: 'bg-success/10 text-success',
   PUBLISHED: 'bg-success/10 text-success',
   PAID: 'bg-success/10 text-success',
+  VERIFIED: 'bg-success/10 text-success',
 
   // danger
   ABSENT: 'bg-danger/10 text-danger',
@@ -26,6 +27,7 @@ const statusMap = {
   DRAFT: 'bg-warning/10 text-warning',
   LATE_SUBMISSION: 'bg-warning/10 text-warning',
   PARTIAL: 'bg-warning/10 text-warning',
+  MAKEUP: 'bg-warning/10 text-warning',
 
   // info
   SUBMITTED: 'bg-info/10 text-info',
@@ -33,6 +35,9 @@ const statusMap = {
   ENROLLED: 'bg-info/10 text-info',
   ONGOING: 'bg-info/10 text-info',
   IN_PROGRESS: 'bg-info/10 text-info',
+  MIDTERM: 'bg-info/10 text-info',
+  FINAL: 'bg-ink-700/10 text-ink-700',
+  INTERNAL: 'bg-brass-500/15 text-brass-600',
 
   // neutral
   UPLOADED: 'bg-neutral/10 text-neutral',
