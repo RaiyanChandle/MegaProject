@@ -349,3 +349,84 @@ export const resolveLeaveRequest = async (req, res) => {
     res.status(500).json({ error: 'Failed to resolve leave request.' });
   }
 };
+
+/**
+ * Get count of leave notifications for the user's role
+ * - Department Admin / Super Admin: pending leave requests awaiting approval
+ * - Student / Teacher: resolved (APPROVED / REJECTED) leave requests so they know decision was made
+ * GET /api/leaves/pending-count
+ */
+export const getPendingLeaveCount = async (req, res) => {
+  try {
+    const user = req.user;
+    let pendingCount = 0;
+    let resolvedIds = [];
+
+    if (user.role === 'DEPARTMENT_ADMIN') {
+      const deptStudents = await Student.findAll({
+        where: { departmentId: user.departmentId },
+        attributes: ['id']
+      });
+      const deptTeachers = await Teacher.findAll({
+        where: { departmentId: user.departmentId },
+        attributes: ['id']
+      });
+
+      const studentIds = deptStudents.map((s) => s.id);
+      const teacherIds = deptTeachers.map((t) => t.id);
+
+      const orConditions = [];
+      if (studentIds.length > 0) {
+        orConditions.push({ studentId: { [Op.in]: studentIds } });
+      }
+      if (teacherIds.length > 0) {
+        orConditions.push({ teacherId: { [Op.in]: teacherIds } });
+      }
+
+      if (orConditions.length > 0) {
+        pendingCount = await LeaveRequest.count({
+          where: {
+            status: 'PENDING',
+            [Op.or]: orConditions
+          }
+        });
+      }
+    } else if (user.role === 'SUPER_ADMIN') {
+      pendingCount = await LeaveRequest.count({
+        where: { status: 'PENDING' }
+      });
+    } else if (user.role === 'STUDENT') {
+      // Requesters don't get pending notifications; they get notified when request is APPROVED or REJECTED
+      const resolved = await LeaveRequest.findAll({
+        where: {
+          studentId: user.id,
+          status: { [Op.in]: ['APPROVED', 'REJECTED'] }
+        },
+        attributes: ['id', 'status', 'resolvedAt'],
+        order: [['resolvedAt', 'DESC']]
+      });
+      resolvedIds = resolved.map((r) => r.id);
+    } else if (user.role === 'TEACHER') {
+      // Requesters don't get pending notifications; they get notified when request is APPROVED or REJECTED
+      const resolved = await LeaveRequest.findAll({
+        where: {
+          teacherId: user.id,
+          status: { [Op.in]: ['APPROVED', 'REJECTED'] }
+        },
+        attributes: ['id', 'status', 'resolvedAt'],
+        order: [['resolvedAt', 'DESC']]
+      });
+      resolvedIds = resolved.map((r) => r.id);
+    }
+
+    res.json({
+      pendingCount,
+      resolvedIds,
+      count: user.role === 'DEPARTMENT_ADMIN' || user.role === 'SUPER_ADMIN' ? pendingCount : resolvedIds.length
+    });
+  } catch (error) {
+    console.error('Error fetching pending leave count:', error);
+    res.status(500).json({ error: 'Failed to fetch pending leave count.' });
+  }
+};
+

@@ -288,6 +288,16 @@ export default function CreateAnnouncementModal({ isOpen, onClose, onCreated }) 
       };
 
       const result = await apiClient.post('/announcements', payload);
+      
+      // Ensure creator never receives an unread badge for notices they authored
+      const createdId = result?.id || result?.announcement?.id;
+      if (createdId && user?.id) {
+        const storageKey = `nexus_read_announcements_${user.id}`;
+        const storedRead = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(new Set([...storedRead, createdId]))));
+      }
+
+      window.dispatchEvent(new CustomEvent('nexus:refresh-notifications'));
       if (onCreated) onCreated(result);
       onClose();
       // Reset form

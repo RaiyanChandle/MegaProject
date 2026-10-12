@@ -3,6 +3,7 @@ import { navigationConfig } from '../../config/navigation.js';
 import { LogOut, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useNotifications } from '../../context/NotificationContext';
 
 // Institutional role colors defined in design.md
 const ROLE_THEMES = {
@@ -29,6 +30,7 @@ export default function Sidebar({ role = 'SUPER_ADMIN', isMobileOpen = false, on
   const navItems = navigationConfig[role] || [];
   const { user, logout } = useAuth();
   const { t } = useLanguage();
+  const { unreadAnnouncementsCount, pendingLeavesCount, isLeaveResolvedNotification } = useNotifications();
 
   const getTranslatedName = (name) => {
     if (role !== 'PARENT') return name;
@@ -126,6 +128,20 @@ export default function Sidebar({ role = 'SUPER_ADMIN', isMobileOpen = false, on
               const active = isItemActive(item.href);
               const Icon = item.icon;
 
+              const isAnnouncement = item.name === 'Announcements';
+              const isLeave = item.name === 'Leave Requests' || item.name === 'Leave Approvals';
+
+              let badgeCount = 0;
+              let badgeType = null;
+
+              if (isAnnouncement) {
+                badgeCount = unreadAnnouncementsCount;
+                badgeType = 'announcement';
+              } else if (isLeave) {
+                badgeCount = pendingLeavesCount;
+                badgeType = 'leave';
+              }
+
               return (
                 <Link
                   key={item.name}
@@ -133,21 +149,51 @@ export default function Sidebar({ role = 'SUPER_ADMIN', isMobileOpen = false, on
                   onClick={() => {
                     if (onMobileClose) onMobileClose();
                   }}
-                  className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-medium transition-all duration-150 outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-brass-500/50 ${
+                  className={`group flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-md text-sm font-medium transition-all duration-150 outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-brass-500/50 ${
                     active
                       ? 'bg-ink-700 text-white font-semibold shadow-sm border-l-4 border-brass-500 pl-2.5'
                       : 'text-slate-300 hover:text-white hover:bg-ink-700/50 border-l-4 border-transparent pl-2.5'
                   }`}
                 >
-                  <Icon 
-                    size={18} 
-                    className={`transition-colors shrink-0 ${
-                      active 
-                        ? 'text-brass-500' 
-                        : 'text-slate-400 group-hover:text-slate-200'
-                    }`} 
-                  />
-                  <span className="truncate">{getTranslatedName(item.name)}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Icon 
+                      size={18} 
+                      className={`transition-colors shrink-0 ${
+                        active 
+                          ? 'text-brass-500' 
+                          : 'text-slate-400 group-hover:text-slate-200'
+                      }`} 
+                    />
+                    <span className="truncate">{getTranslatedName(item.name)}</span>
+                  </div>
+
+                  {badgeCount > 0 && (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-xs shrink-0 tracking-tight ${
+                        badgeType === 'leave'
+                          ? isLeaveResolvedNotification
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
+                          : 'bg-brass-500 text-white border border-brass-600'
+                      }`}
+                      title={
+                        badgeType === 'leave'
+                          ? isLeaveResolvedNotification
+                            ? `${badgeCount} leave decision update(s)`
+                            : `${badgeCount} pending leave requests to review`
+                          : `${badgeCount} new notices`
+                      }
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        badgeType === 'leave'
+                          ? isLeaveResolvedNotification
+                            ? 'bg-emerald-400 animate-pulse'
+                            : 'bg-amber-400 animate-pulse'
+                          : 'bg-white animate-pulse'
+                      }`} />
+                      <span>{badgeCount > 99 ? '99+' : badgeCount}</span>
+                    </span>
+                  )}
                 </Link>
               );
             })}

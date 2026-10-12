@@ -4,11 +4,19 @@ import {
   getMyLeaveRequests,
   cancelLeaveRequest,
   getDepartmentLeaveRequests,
-  resolveLeaveRequest
+  resolveLeaveRequest,
+  getPendingLeaveCount
 } from '../controllers/leaveController.js';
 import { requireAuth, requireRole } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+// Pending count for sidebar notification badge
+router.get(
+  '/pending-count',
+  requireAuth,
+  getPendingLeaveCount
+);
 
 // Requester endpoints (Student & Teacher)
 router.post(

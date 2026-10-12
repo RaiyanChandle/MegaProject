@@ -54,6 +54,7 @@ import StudentLeave from './pages/student/StudentLeave';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 function App() {
   return (
@@ -61,7 +62,8 @@ function App() {
       <AuthProvider>
         <SearchProvider>
           <LanguageProvider>
-            <Routes>
+            <NotificationProvider>
+              <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -160,6 +162,7 @@ function App() {
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+            </NotificationProvider>
           </LanguageProvider>
         </SearchProvider>
       </AuthProvider>

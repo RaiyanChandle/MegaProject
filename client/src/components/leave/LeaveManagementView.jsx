@@ -99,6 +99,8 @@ export default function LeaveManagementView({ role = 'STUDENT', title = 'Leave A
         reason: formData.reason.trim()
       });
 
+      window.dispatchEvent(new CustomEvent('nexus:refresh-notifications'));
+
       setToast({ type: 'success', message: 'Leave request submitted successfully!' });
       setIsApplyModalOpen(false);
       setFormData({ fromDate: '', toDate: '', reason: '' });
@@ -116,6 +118,7 @@ export default function LeaveManagementView({ role = 'STUDENT', title = 'Leave A
     if (!leaveToCancel) return;
     try {
       await apiClient.delete(`/leaves/${leaveToCancel.id}`);
+      window.dispatchEvent(new CustomEvent('nexus:refresh-notifications'));
       setToast({ type: 'success', message: 'Leave request cancelled successfully.' });
       setLeaveToCancel(null);
       await fetchLeaveRequests();

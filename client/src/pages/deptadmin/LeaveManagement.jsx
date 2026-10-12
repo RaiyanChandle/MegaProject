@@ -70,6 +70,8 @@ export default function LeaveManagement() {
         status: decisionAction
       });
 
+      window.dispatchEvent(new CustomEvent('nexus:refresh-notifications'));
+
       setToast({
         type: decisionAction === 'APPROVED' ? 'success' : 'danger',
         message: `Leave request for ${
