@@ -15,14 +15,16 @@ import {
   Calendar, 
   MapPin, 
   CheckCircle2, 
-  AlertCircle,
-  ShieldCheck,
-  Sparkles,
-  Layers,
-  GraduationCap,
-  Users,
-  Send,
-  RefreshCw
+  AlertCircle, 
+  ShieldCheck, 
+  Sparkles, 
+  Layers, 
+  GraduationCap, 
+  Users, 
+  Send, 
+  RefreshCw,
+  Clock,
+  RotateCw
 } from 'lucide-react';
 
 const EXAM_TYPE_OPTIONS = [
@@ -34,15 +36,17 @@ const EXAM_TYPE_OPTIONS = [
 
 export default function HallTicketManagement() {
   const [tickets, setTickets] = useState([]);
+  const [exams, setExams] = useState([]);
   const [formOptions, setFormOptions] = useState({ academicTerms: [], departments: [] });
   const [loading, setLoading] = useState(true);
 
   // Filters
   const [selectedTermFilter, setSelectedTermFilter] = useState('');
 
-  // Generation Modal State
+  // Generation Modal & Action State
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingType, setGeneratingType] = useState(null); // 'MIDTERM' | 'FINAL' | 'MAKEUP' | null
   const [generateForm, setGenerateForm] = useState({
     academicTermId: '',
     examType: 'MIDTERM',
@@ -63,13 +67,15 @@ export default function HallTicketManagement() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [optionsRes, ticketsRes] = await Promise.all([
+      const [optionsRes, ticketsRes, examsRes] = await Promise.all([
         apiClient.get('/exams/form-options'),
-        apiClient.get('/hall-tickets')
+        apiClient.get('/hall-tickets'),
+        apiClient.get('/exams')
       ]);
 
       setFormOptions(optionsRes);
       setTickets(ticketsRes);
+      setExams(examsRes);
 
       // Default to current academic term if available
       const currentTerm = optionsRes.academicTerms?.find(t => t.isCurrent);
@@ -126,6 +132,7 @@ export default function HallTicketManagement() {
     }
 
     setIsGenerating(true);
+    setGeneratingType(generateForm.examType);
     try {
       const res = await apiClient.post('/hall-tickets/generate', generateForm);
       toast.success(res.message || 'Hall tickets generated and published to students!');
@@ -135,6 +142,38 @@ export default function HallTicketManagement() {
       toast.error(error.message || 'Failed to generate hall tickets');
     } finally {
       setIsGenerating(false);
+      setGeneratingType(null);
+    }
+  };
+
+  // Quick Direct Generation Trigger from Card
+  const handleQuickGenerate = async (examType) => {
+    const currentTermId = selectedTermFilter || formOptions.academicTerms?.find(t => t.isCurrent)?.id;
+    if (!currentTermId) {
+      toast.error('Please select an Academic Term first');
+      return;
+    }
+
+    let prefix = 'MSE-';
+    if (examType === 'FINAL') prefix = 'ESE-';
+    else if (examType === 'MAKEUP') prefix = 'MK-';
+
+    setIsGenerating(true);
+    setGeneratingType(examType);
+    try {
+      const res = await apiClient.post('/hall-tickets/generate', {
+        academicTermId: currentTermId,
+        examType,
+        seatPrefix: prefix,
+        examCenter: 'Main Campus Examination Block'
+      });
+      toast.success(res.message || `${examType} hall tickets generated and published!`);
+      fetchData();
+    } catch (error) {
+      toast.error(error.message || 'Failed to generate hall tickets');
+    } finally {
+      setIsGenerating(false);
+      setGeneratingType(null);
     }
   };
 
@@ -165,6 +204,20 @@ export default function HallTicketManagement() {
     const makeupCount = tickets.filter(t => t.exam?.examType === 'MAKEUP').length;
     return { total, mseCount, eseCount, makeupCount };
   }, [tickets]);
+
+  // Scheduled exams in the selected term
+  const activeTermId = selectedTermFilter || formOptions.academicTerms?.find(t => t.isCurrent)?.id;
+  const termExams = useMemo(() => {
+    return exams.filter(e => !activeTermId || e.academicTermId === activeTermId);
+  }, [exams, activeTermId]);
+
+  const termExamCounts = useMemo(() => {
+    return {
+      mse: termExams.filter(e => e.examType === 'MIDTERM').length,
+      ese: termExams.filter(e => e.examType === 'FINAL').length,
+      makeup: termExams.filter(e => e.examType === 'MAKEUP').length
+    };
+  }, [termExams]);
 
   // Aggregate into published batches per (termId, examType)
   const publishedBatches = useMemo(() => {
@@ -231,6 +284,14 @@ export default function HallTicketManagement() {
     });
     return list;
   }, [formOptions.departments]);
+
+  // Check if session in modal is already generated
+  const isSelectedSessionAlreadyGenerated = useMemo(() => {
+    return tickets.some(t => 
+      t.exam?.academicTermId === generateForm.academicTermId && 
+      t.exam?.examType === generateForm.examType
+    );
+  }, [tickets, generateForm.academicTermId, generateForm.examType]);
 
   // Batch Table columns
   const batchColumns = [
@@ -329,9 +390,27 @@ export default function HallTicketManagement() {
     }
   ];
 
+  // Stateful Card Computation: MSE
+  const isMseGenerated = stats.mseCount > 0;
+  const mseExamsCount = termExamCounts.mse;
+  const isMseReady = mseExamsCount > 0 && !isMseGenerated;
+  const isMseEmpty = mseExamsCount === 0;
+
+  // Stateful Card Computation: ESE
+  const isEseGenerated = stats.eseCount > 0;
+  const eseExamsCount = termExamCounts.ese;
+  const isEseReady = eseExamsCount > 0 && !isEseGenerated;
+  const isEseEmpty = eseExamsCount === 0;
+
+  // Stateful Card Computation: Makeup
+  const isMakeupGenerated = stats.makeupCount > 0;
+  const makeupExamsCount = termExamCounts.makeup;
+  const isMakeupReady = makeupExamsCount > 0 && !isMakeupGenerated;
+  const isMakeupEmpty = makeupExamsCount === 0;
+
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header Bar */}
+      {/* Header Bar with Stateful Main Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
           <h1 className="text-3xl font-semibold text-text-900 tracking-tight">Hall Ticket Issuance Desk</h1>
@@ -341,12 +420,22 @@ export default function HallTicketManagement() {
         </div>
         <div className="flex items-center gap-3">
           <Button 
-            variant="accent" 
+            variant={stats.total > 0 ? "secondary" : "accent"} 
             onClick={() => handleOpenGenerateModal('MIDTERM')}
-            className="flex items-center gap-2 shadow-xs"
+            loading={isGenerating && !generatingType}
+            className="flex items-center gap-2 shadow-xs font-semibold"
           >
-            <Plus className="w-4 h-4" />
-            <span>Generate Hall Tickets</span>
+            {stats.total > 0 ? (
+              <>
+                <RefreshCw className="w-4 h-4 text-ink-700" />
+                <span>Re-issue / Generate Tickets</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                <span>Generate Hall Tickets</span>
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -364,84 +453,241 @@ export default function HallTicketManagement() {
         </div>
       </div>
 
-      {/* Session Quick-Generation Cards */}
+      {/* Stateful Session Quick-Generation Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* MSE Card */}
         <div className="bg-surface-0 border border-border rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-info/10 text-info border border-info/20">
                 MIDTERM
               </span>
-              <span className="text-xs font-mono font-bold text-text-900">
-                {stats.mseCount} Tickets Issued
-              </span>
+              
+              {/* Dynamic State Badge */}
+              {isMseGenerated ? (
+                <span className="text-[11px] font-bold text-success bg-success/10 border border-success/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                  <span>{stats.mseCount} Active</span>
+                </span>
+              ) : isMseReady ? (
+                <span className="text-[11px] font-bold text-warning bg-warning/10 border border-warning/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-warning" />
+                  <span>Ready ({mseExamsCount} Exams)</span>
+                </span>
+              ) : (
+                <span className="text-[11px] font-medium text-text-400 bg-surface-100 border border-border px-2 py-0.5 rounded-full">
+                  0 Exams Scheduled
+                </span>
+              )}
             </div>
+
             <h3 className="text-lg font-bold text-text-900">Mid-Semester Exam (MSE)</h3>
             <p className="text-xs text-text-500 leading-relaxed">
-              Issues distinct Midterm admit cards with seat numbers prefix <code className="font-mono text-ink-900 font-semibold">MSE-001</code> for all enrolled courses.
+              {isMseGenerated
+                ? `${stats.mseCount} student admit cards active with prefix MSE-001. All enrolled candidates have allocated seats.`
+                : isMseReady
+                ? `${mseExamsCount} scheduled MSE exams detected. Ready to generate student hall tickets and assign exam halls.`
+                : 'No scheduled MSE examinations found for this term. Schedule exams under the Exams tab first.'}
             </p>
           </div>
-          <Button
-            variant="secondary"
-            onClick={() => handleOpenGenerateModal('MIDTERM')}
-            className="w-full flex items-center justify-center gap-2 text-xs font-semibold"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-info" />
-            <span>{stats.mseCount > 0 ? 'Re-generate / Update MSE' : 'Generate MSE Hall Tickets'}</span>
-          </Button>
+
+          {/* Stateful Action Button Row */}
+          <div className="flex items-center gap-2 pt-2 border-t border-border/60">
+            <Button
+              variant={isMseGenerated ? "secondary" : isMseReady ? "accent" : "ghost"}
+              onClick={() => handleOpenGenerateModal('MIDTERM')}
+              disabled={isMseEmpty || (isGenerating && generatingType === 'MIDTERM')}
+              loading={isGenerating && generatingType === 'MIDTERM'}
+              className="flex-1 flex items-center justify-center gap-2 text-xs font-semibold"
+            >
+              {isMseGenerated ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 text-ink-700" />
+                  <span>Re-generate / Update MSE</span>
+                </>
+              ) : isMseReady ? (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Generate MSE Hall Tickets</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-3.5 h-3.5 text-text-400" />
+                  <span>No Exams to Generate</span>
+                </>
+              )}
+            </Button>
+
+            {isMseGenerated && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const b = publishedBatches.find(batch => batch.examType === 'MIDTERM');
+                  if (b) setBatchToRevoke(b);
+                }}
+                className="p-2 text-text-400 hover:text-danger hover:bg-danger/10"
+                title="Revoke all active MSE hall tickets"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* ESE Card */}
         <div className="bg-surface-0 border border-border rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-ink-100 text-ink-900 border border-ink-200">
                 FINAL
               </span>
-              <span className="text-xs font-mono font-bold text-text-900">
-                {stats.eseCount} Tickets Issued
-              </span>
+
+              {/* Dynamic State Badge */}
+              {isEseGenerated ? (
+                <span className="text-[11px] font-bold text-success bg-success/10 border border-success/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                  <span>{stats.eseCount} Active</span>
+                </span>
+              ) : isEseReady ? (
+                <span className="text-[11px] font-bold text-warning bg-warning/10 border border-warning/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-warning" />
+                  <span>Ready ({eseExamsCount} Exams)</span>
+                </span>
+              ) : (
+                <span className="text-[11px] font-medium text-text-400 bg-surface-100 border border-border px-2 py-0.5 rounded-full">
+                  0 Exams Scheduled
+                </span>
+              )}
             </div>
+
             <h3 className="text-lg font-bold text-text-900">End-Semester Exam (ESE)</h3>
             <p className="text-xs text-text-500 leading-relaxed">
-              Issues distinct End-semester university admit cards with seat numbers prefix <code className="font-mono text-ink-900 font-semibold">ESE-001</code>.
+              {isEseGenerated
+                ? `${stats.eseCount} student admit cards active with prefix ESE-001. All enrolled candidates have allocated seats.`
+                : isEseReady
+                ? `${eseExamsCount} scheduled ESE exams detected. Ready to generate student hall tickets and assign exam halls.`
+                : 'No scheduled ESE examinations found for this term. Schedule exams under the Exams tab first.'}
             </p>
           </div>
-          <Button
-            variant="secondary"
-            onClick={() => handleOpenGenerateModal('FINAL')}
-            className="w-full flex items-center justify-center gap-2 text-xs font-semibold"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-ink-900" />
-            <span>{stats.eseCount > 0 ? 'Re-generate / Update ESE' : 'Generate ESE Hall Tickets'}</span>
-          </Button>
+
+          {/* Stateful Action Button Row */}
+          <div className="flex items-center gap-2 pt-2 border-t border-border/60">
+            <Button
+              variant={isEseGenerated ? "secondary" : isEseReady ? "accent" : "ghost"}
+              onClick={() => handleOpenGenerateModal('FINAL')}
+              disabled={isEseEmpty || (isGenerating && generatingType === 'FINAL')}
+              loading={isGenerating && generatingType === 'FINAL'}
+              className="flex-1 flex items-center justify-center gap-2 text-xs font-semibold"
+            >
+              {isEseGenerated ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 text-ink-700" />
+                  <span>Re-generate / Update ESE</span>
+                </>
+              ) : isEseReady ? (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Generate ESE Hall Tickets</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-3.5 h-3.5 text-text-400" />
+                  <span>No Exams to Generate</span>
+                </>
+              )}
+            </Button>
+
+            {isEseGenerated && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const b = publishedBatches.find(batch => batch.examType === 'FINAL');
+                  if (b) setBatchToRevoke(b);
+                }}
+                className="p-2 text-text-400 hover:text-danger hover:bg-danger/10"
+                title="Revoke all active ESE hall tickets"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Backlog / Makeup Card */}
         <div className="bg-surface-0 border border-border rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">
                 MAKEUP
               </span>
-              <span className="text-xs font-mono font-bold text-text-900">
-                {stats.makeupCount} Tickets Issued
-              </span>
+
+              {/* Dynamic State Badge */}
+              {isMakeupGenerated ? (
+                <span className="text-[11px] font-bold text-success bg-success/10 border border-success/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                  <span>{stats.makeupCount} Active</span>
+                </span>
+              ) : isMakeupReady ? (
+                <span className="text-[11px] font-bold text-warning bg-warning/10 border border-warning/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-warning" />
+                  <span>Ready ({makeupExamsCount} Exams)</span>
+                </span>
+              ) : (
+                <span className="text-[11px] font-medium text-text-400 bg-surface-100 border border-border px-2 py-0.5 rounded-full">
+                  0 Exams Scheduled
+                </span>
+              )}
             </div>
+
             <h3 className="text-lg font-bold text-text-900">Backlog Re-attempts</h3>
             <p className="text-xs text-text-500 leading-relaxed">
-              Issues separate hall tickets for re-attempts (Rule 18) under separate enrollment IDs with prefix <code className="font-mono text-ink-900 font-semibold">MK-001</code>.
+              {isMakeupGenerated
+                ? `${stats.makeupCount} backlog admit cards active with prefix MK-001 (Rule 18).`
+                : isMakeupReady
+                ? `${makeupExamsCount} scheduled Makeup exams detected for re-attempts.`
+                : 'Issues separate hall tickets for re-attempts (Rule 18) under separate enrollment IDs with prefix MK-001.'}
             </p>
           </div>
-          <Button
-            variant="secondary"
-            onClick={() => handleOpenGenerateModal('MAKEUP')}
-            className="w-full flex items-center justify-center gap-2 text-xs font-semibold"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-warning" />
-            <span>{stats.makeupCount > 0 ? 'Re-generate Backlogs' : 'Generate Backlog Tickets'}</span>
-          </Button>
+
+          {/* Stateful Action Button Row */}
+          <div className="flex items-center gap-2 pt-2 border-t border-border/60">
+            <Button
+              variant={isMakeupGenerated ? "secondary" : isMakeupReady ? "accent" : "secondary"}
+              onClick={() => handleOpenGenerateModal('MAKEUP')}
+              disabled={isGenerating && generatingType === 'MAKEUP'}
+              loading={isGenerating && generatingType === 'MAKEUP'}
+              className="flex-1 flex items-center justify-center gap-2 text-xs font-semibold"
+            >
+              {isMakeupGenerated ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 text-warning" />
+                  <span>Re-generate Backlogs</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Generate Backlog Tickets</span>
+                </>
+              )}
+            </Button>
+
+            {isMakeupGenerated && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const b = publishedBatches.find(batch => batch.examType === 'MAKEUP');
+                  if (b) setBatchToRevoke(b);
+                }}
+                className="p-2 text-text-400 hover:text-danger hover:bg-danger/10"
+                title="Revoke all active Backlog hall tickets"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -486,18 +732,32 @@ export default function HallTicketManagement() {
       <Modal
         isOpen={isGenerateModalOpen}
         onClose={() => setIsGenerateModalOpen(false)}
-        title="Generate & Publish Hall Tickets"
+        title={isSelectedSessionAlreadyGenerated ? "Re-generate & Update Hall Tickets" : "Generate & Publish Hall Tickets"}
+        maxWidth="max-w-2xl"
       >
         <form onSubmit={handleGenerateSubmit} className="space-y-4">
-          <div className="bg-surface-50 border border-border rounded p-3 text-xs text-text-600 space-y-1">
-            <div className="font-semibold text-text-900 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-ink-900" />
-              <span>Bulk Issuance & Publication Rules</span>
+          {/* Active Session Status Callout */}
+          {isSelectedSessionAlreadyGenerated ? (
+            <div className="bg-info/10 border border-info/20 rounded p-3 text-xs text-info flex items-start gap-2.5">
+              <RefreshCw className="w-4 h-4 shrink-0 mt-0.5 text-info" />
+              <div className="space-y-1">
+                <strong>Active Hall Tickets Detected for this Session:</strong>
+                <p className="text-text-700 leading-relaxed">
+                  Hall tickets already exist for this term and exam session. Generating again will update seat number allocations and include any newly enrolled students.
+                </p>
+              </div>
             </div>
-            <p>
-              Hall tickets will be created for all eligible students enrolled in scheduled examinations for the selected term and session. Once generated, students can immediately access them on their student portal.
-            </p>
-          </div>
+          ) : (
+            <div className="bg-surface-50 border border-border rounded p-3 text-xs text-text-600 space-y-1">
+              <div className="font-semibold text-text-900 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-ink-900" />
+                <span>Bulk Issuance & Publication Rules</span>
+              </div>
+              <p>
+                Hall tickets will be created for all eligible students enrolled in scheduled examinations for the selected term and session. Once generated, students can immediately access them on their student portal.
+              </p>
+            </div>
+          )}
 
           <Field label="Academic Term" required>
             <select
@@ -579,10 +839,19 @@ export default function HallTicketManagement() {
               type="submit"
               variant="accent"
               loading={isGenerating}
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-1.5 font-semibold"
             >
-              <Send className="w-4 h-4" />
-              <span>Generate & Publish to Students</span>
+              {isSelectedSessionAlreadyGenerated ? (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  <span>{isGenerating ? 'Updating & Re-issuing...' : 'Update & Re-publish Hall Tickets'}</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span>{isGenerating ? 'Generating & Publishing...' : 'Generate & Publish to Students'}</span>
+                </>
+              )}
             </Button>
           </div>
         </form>

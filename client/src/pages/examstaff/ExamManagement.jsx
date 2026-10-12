@@ -853,6 +853,7 @@ export default function ExamManagement() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title="Schedule New Examination"
+        maxWidth="max-w-3xl"
       >
         <form onSubmit={handleCreateSubmit} className="space-y-4">
           <Field label="Academic Term" required>
@@ -1039,6 +1040,7 @@ export default function ExamManagement() {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         title={`Edit Exam: ${activeExam?.subject?.name || ''}`}
+        maxWidth="max-w-3xl"
       >
         <form onSubmit={handleEditSubmit} className="space-y-4">
           <div className="p-3 bg-surface-50 border border-border rounded-md text-xs text-text-500 space-y-1">
@@ -1152,6 +1154,7 @@ export default function ExamManagement() {
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         title="Examination Details"
+        maxWidth="max-w-2xl"
       >
         {activeExam && (
           <div className="space-y-4">
@@ -1276,6 +1279,7 @@ export default function ExamManagement() {
           setRejectionRemarks('');
         }}
         title="Question Paper Verification"
+        maxWidth="max-w-3xl"
       >
         {activeExam && (
           <div className="space-y-5">

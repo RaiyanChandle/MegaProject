@@ -40,6 +40,7 @@ import ParentAssignments from './pages/parent/ParentAssignments';
 import ExamStaffDashboard from './pages/examstaff/ExamStaffDashboard';
 import ExamManagement from './pages/examstaff/ExamManagement';
 import HallTicketManagement from './pages/examstaff/HallTicketManagement';
+import ExamResultsVerification from './pages/examstaff/ExamResultsVerification';
 import StudentHallTicket from './pages/student/StudentHallTicket';
 
 import { SearchProvider } from './context/SearchContext';
@@ -135,7 +136,7 @@ function App() {
               <Route index element={<ExamStaffDashboard />} />
               <Route path="exams" element={<ExamManagement />} />
               <Route path="halltickets" element={<HallTicketManagement />} />
-              <Route path="results" element={<div className="p-6 text-text-900">Exam Results Verification (Task 11.5)</div>} />
+              <Route path="results" element={<ExamResultsVerification />} />
             </Route>
 
             {/* Catch-all */}

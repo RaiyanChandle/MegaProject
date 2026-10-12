@@ -460,6 +460,7 @@ export default function TeacherQuestionPapers() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Upload Examination Question Paper"
+        maxWidth="max-w-2xl"
       >
         {activeExam && (
           <form onSubmit={handleUploadPaper} className="space-y-4">
