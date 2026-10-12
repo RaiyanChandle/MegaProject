@@ -257,6 +257,7 @@ export default function HallTickets() {
       if (form.classId) params.append('classId', form.classId);
       if (form.departmentId) params.append('departmentId', form.departmentId);
       if (form.examType && form.examType !== 'ALL') params.append('examType', form.examType);
+      if (form.attemptFilter && form.attemptFilter !== 'ALL') params.append('attemptFilter', form.attemptFilter);
 
       const res = await apiClient.get(`/hall-tickets/preview-exams?${params.toString()}`);
       const discovered = res.exams || [];
@@ -1138,7 +1139,13 @@ export default function HallTickets() {
                 value={genForm.examType}
                 onChange={(e) => {
                   const exType = e.target.value;
-                  const updated = { ...genForm, examType: exType };
+                  const isMakeup = exType === 'MAKEUP';
+                  const updated = { 
+                    ...genForm, 
+                    examType: exType,
+                    attemptFilter: isMakeup ? 'BACKLOG' : (genForm.attemptFilter === 'BACKLOG' ? 'ALL' : genForm.attemptFilter),
+                    seatPrefix: isMakeup ? 'MAKEUP-' : (genForm.seatPrefix === 'MAKEUP-' ? 'HALL-A-' : genForm.seatPrefix)
+                  };
                   setGenForm(updated);
                   fetchPreview(updated);
                 }}

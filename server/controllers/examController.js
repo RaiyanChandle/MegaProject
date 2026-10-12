@@ -230,7 +230,23 @@ export const getExams = async (req, res) => {
       ]
     });
 
-    res.json(exams);
+    const { Enrollment } = await import('../models/index.js');
+    const examsWithCounts = await Promise.all(exams.map(async (exam) => {
+      const exJson = exam.toJSON();
+      if (exam.examType === 'MAKEUP') {
+        exJson.backlogCandidateCount = await Enrollment.count({
+          where: {
+            subjectId: exam.subjectId,
+            academicTermId: exam.academicTermId,
+            attemptNumber: { [Op.gt]: 1 },
+            status: 'ENROLLED'
+          }
+        });
+      }
+      return exJson;
+    }));
+
+    res.json(examsWithCounts);
   } catch (error) {
     console.error('Get Exams error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -451,12 +467,17 @@ export const getExamResults = async (req, res) => {
 
     // Find all active enrollments for this subject and term
     const { Enrollment, Student, Division } = await import('../models/index.js');
+    const enrollmentWhere = {
+      subjectId: exam.subjectId,
+      academicTermId: exam.academicTermId,
+      status: 'ENROLLED'
+    };
+    if (exam.examType === 'MAKEUP') {
+      enrollmentWhere.attemptNumber = { [Op.gt]: 1 };
+    }
+
     const enrollments = await Enrollment.findAll({
-      where: {
-        subjectId: exam.subjectId,
-        academicTermId: exam.academicTermId,
-        status: 'ENROLLED'
-      },
+      where: enrollmentWhere,
       include: [
         {
           model: Student,

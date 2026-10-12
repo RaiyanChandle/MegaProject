@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../api/client';
 import Button from '../../components/ui/Button';
 import { toast } from '../../components/ui/Toast';
@@ -20,11 +21,13 @@ import {
   ChevronRight,
   Check,
   X,
-  Info
+  Info,
+  FileText
 } from 'lucide-react';
 import { useSearch } from '../../context/SearchContext';
 
 export default function Backlogs() {
+  const navigate = useNavigate();
   const { searchQuery } = useSearch();
 
   const [terms, setTerms] = useState([]);
@@ -256,6 +259,28 @@ export default function Backlogs() {
           >
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
             Refresh
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/exam-staff/exams')}
+            className="flex items-center gap-1.5 text-xs border-amber-300 bg-amber-50/60 text-amber-900 hover:bg-amber-100"
+            title="Schedule MAKEUP exams for backlog courses"
+          >
+            <Calendar size={13} className="text-amber-700" />
+            Schedule Makeup Exam
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/exam-staff/hall-tickets')}
+            className="flex items-center gap-1.5 text-xs border-brass-300 bg-brass-50/60 text-ink-950 hover:bg-brass-100"
+            title="Generate hall tickets for re-attempts"
+          >
+            <FileText size={13} className="text-brass-600" />
+            Generate Makeup Tickets
           </Button>
 
           <Button
