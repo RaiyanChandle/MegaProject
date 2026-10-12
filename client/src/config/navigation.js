@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers, Megaphone } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers, Megaphone, CalendarDays } from 'lucide-react';
 
 export const navigationConfig = {
   SUPER_ADMIN: [
@@ -18,6 +18,7 @@ export const navigationConfig = {
     { name: 'Students', href: '/deptadmin/students', icon: Users },
     { name: 'Attendance Report', href: '/deptadmin/attendance', icon: Clock },
     { name: 'Announcements', href: '/deptadmin/announcements', icon: Megaphone },
+    { name: 'Leave Approvals', href: '/deptadmin/leaves', icon: CalendarDays },
     { name: 'Timetable', href: '/deptadmin/timetable', icon: Calendar },
   ],
   TEACHER: [
@@ -28,6 +29,7 @@ export const navigationConfig = {
     { name: 'Attendance', href: '/teacher/attendance', icon: Clock },
     { name: 'Study Notes', href: '/teacher/notes', icon: BookOpen },
     { name: 'Announcements', href: '/teacher/announcements', icon: Megaphone },
+    { name: 'Leave Requests', href: '/teacher/leaves', icon: CalendarDays },
     { name: 'Digital Library', href: '/teacher/library', icon: BookOpen },
     { name: 'Assignments', href: '/teacher/assignments', icon: FileText },
   ],
@@ -39,6 +41,7 @@ export const navigationConfig = {
     { name: 'Study Notes', href: '/student/notes', icon: FileText },
     { name: 'Assignments', href: '/student/assignments', icon: FileCheck },
     { name: 'Announcements', href: '/student/announcements', icon: Megaphone },
+    { name: 'Leave Requests', href: '/student/leaves', icon: CalendarDays },
     { name: 'Digital Library', href: '/student/library', icon: BookOpen },
     { name: 'Marks', href: '/student/marks', icon: FileCheck },
     { name: 'Hall Tickets', href: '/student/halltickets', icon: FileText },

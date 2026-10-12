@@ -16,6 +16,7 @@ import SubjectDetails from './pages/deptadmin/SubjectDetails';
 import Teachers from './pages/deptadmin/Teachers';
 import Students from './pages/deptadmin/Students';
 import AttendanceReport from './pages/deptadmin/AttendanceReport';
+import DeptAdminLeaveManagement from './pages/deptadmin/LeaveManagement';
 
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherClasses from './pages/teacher/TeacherClasses';
@@ -48,6 +49,8 @@ import DeptAdminAnnouncements from './pages/deptadmin/Announcements';
 import TeacherAnnouncements from './pages/teacher/TeacherAnnouncements';
 import StudentAnnouncements from './pages/student/StudentAnnouncements';
 import ExamStaffAnnouncements from './pages/examstaff/ExamStaffAnnouncements';
+import TeacherLeave from './pages/teacher/TeacherLeave';
+import StudentLeave from './pages/student/StudentLeave';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -92,6 +95,7 @@ function App() {
               <Route path="students" element={<Students />} />
               <Route path="attendance" element={<AttendanceReport />} />
               <Route path="announcements" element={<DeptAdminAnnouncements />} />
+              <Route path="leaves" element={<DeptAdminLeaveManagement />} />
             </Route>
 
             {/* Protected Routes: Teacher */}
@@ -105,6 +109,7 @@ function App() {
               <Route path="notes" element={<TeacherNotes />} />
               <Route path="assignments" element={<TeacherAssignments />} />
               <Route path="announcements" element={<TeacherAnnouncements />} />
+              <Route path="leaves" element={<TeacherLeave />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<TeacherMarks />} />
               <Route path="question-papers" element={<TeacherQuestionPapers />} />
@@ -122,6 +127,7 @@ function App() {
               <Route path="notes" element={<StudentNotes />} />
               <Route path="assignments" element={<StudentAssignments />} />
               <Route path="announcements" element={<StudentAnnouncements />} />
+              <Route path="leaves" element={<StudentLeave />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<StudentMarks />} />
               <Route path="halltickets" element={<StudentHallTicket />} />
