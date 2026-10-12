@@ -47,6 +47,7 @@ const ANNOUNCEMENT_TYPES = ['GLOBAL', 'DEPARTMENT', 'CLASS', 'DIVISION', 'TEACHE
 const SUBMISSION_STATUSES = ['UPLOAD', 'SUBMITTED', 'ACCEPTED'];
 const COMPONENT_CATEGORIES = ['INTERNAL', 'EXTERNAL'];
 const MARK_ENTRY_METHODS = ['MANUAL', 'ONLINE_TEST', 'FORMAL_EXAM'];
+const EXAM_RESULT_STATUSES = ['DRAFT', 'SUBMITTED', 'VERIFIED', 'REJECTED'];
 
 
 // =====================================================================
@@ -442,6 +443,7 @@ const Exam = sequelize.define('Exam', {
   examDate: { type: DataTypes.DATE, allowNull: true },
   maxMarks: { type: DataTypes.FLOAT, allowNull: false },
   passingMarks: { type: DataTypes.FLOAT, allowNull: false },
+  assessmentComponentId: { type: DataTypes.UUID, allowNull: true }, // Decision 3: explicit link to AssessmentComponent
   scheduledById: { type: DataTypes.UUID, allowNull: true }, // -> ExamStaff
 }, { tableName: 'exams', timestamps: true });
 
@@ -453,7 +455,12 @@ const ExamResult = sequelize.define('ExamResult', {
   enrollmentId: { type: DataTypes.UUID, allowNull: false },
   marksObtained: { type: DataTypes.FLOAT, allowNull: true },
   isPass: { type: DataTypes.BOOLEAN, allowNull: true },
+  status: { type: DataTypes.ENUM(...EXAM_RESULT_STATUSES), allowNull: false, defaultValue: 'DRAFT' },
+  enteredById: { type: DataTypes.UUID, allowNull: true }, // -> Teacher
   enteredAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+  verifiedById: { type: DataTypes.UUID, allowNull: true }, // -> ExamStaff
+  verifiedAt: { type: DataTypes.DATE, allowNull: true },
+  rejectionReason: { type: DataTypes.TEXT, allowNull: true },
 }, {
   tableName: 'exam_results',
   timestamps: true,
@@ -805,11 +812,17 @@ AcademicTerm.hasMany(Exam, { foreignKey: 'academicTermId', as: 'exams' });
 Exam.belongsTo(AcademicTerm, { foreignKey: 'academicTermId', as: 'academicTerm' });
 ExamStaff.hasMany(Exam, { foreignKey: 'scheduledById', as: 'examSchedules' });
 Exam.belongsTo(ExamStaff, { foreignKey: 'scheduledById', as: 'scheduledBy' });
+AssessmentComponent.hasMany(Exam, { foreignKey: 'assessmentComponentId', as: 'exams' });
+Exam.belongsTo(AssessmentComponent, { foreignKey: 'assessmentComponentId', as: 'assessmentComponent' });
 
 Exam.hasMany(ExamResult, { foreignKey: 'examId', as: 'results' });
 ExamResult.belongsTo(Exam, { foreignKey: 'examId', as: 'exam' });
 Enrollment.hasMany(ExamResult, { foreignKey: 'enrollmentId', as: 'examResults' });
 ExamResult.belongsTo(Enrollment, { foreignKey: 'enrollmentId', as: 'enrollment' });
+Teacher.hasMany(ExamResult, { foreignKey: 'enteredById', as: 'enteredExamResults' });
+ExamResult.belongsTo(Teacher, { foreignKey: 'enteredById', as: 'enteredByTeacher' });
+ExamStaff.hasMany(ExamResult, { foreignKey: 'verifiedById', as: 'verifiedExamResults' });
+ExamResult.belongsTo(ExamStaff, { foreignKey: 'verifiedById', as: 'verifiedByStaff' });
 
 Enrollment.hasMany(HallTicket, { foreignKey: 'enrollmentId', as: 'hallTickets' });
 HallTicket.belongsTo(Enrollment, { foreignKey: 'enrollmentId', as: 'enrollment' });

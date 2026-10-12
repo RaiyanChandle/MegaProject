@@ -266,11 +266,17 @@ AcademicTerm.hasMany(Exam, { foreignKey: 'academicTermId', as: 'exams' });
 Exam.belongsTo(AcademicTerm, { foreignKey: 'academicTermId', as: 'academicTerm' });
 ExamStaff.hasMany(Exam, { foreignKey: 'scheduledById', as: 'examSchedules' });
 Exam.belongsTo(ExamStaff, { foreignKey: 'scheduledById', as: 'scheduledBy' });
+AssessmentComponent.hasMany(Exam, { foreignKey: 'assessmentComponentId', as: 'exams' });
+Exam.belongsTo(AssessmentComponent, { foreignKey: 'assessmentComponentId', as: 'assessmentComponent' });
 
 Exam.hasMany(ExamResult, { foreignKey: 'examId', as: 'results' });
 ExamResult.belongsTo(Exam, { foreignKey: 'examId', as: 'exam' });
 Enrollment.hasMany(ExamResult, { foreignKey: 'enrollmentId', as: 'examResults' });
 ExamResult.belongsTo(Enrollment, { foreignKey: 'enrollmentId', as: 'enrollment' });
+Teacher.hasMany(ExamResult, { foreignKey: 'enteredById', as: 'enteredExamResults' });
+ExamResult.belongsTo(Teacher, { foreignKey: 'enteredById', as: 'enteredByTeacher' });
+ExamStaff.hasMany(ExamResult, { foreignKey: 'verifiedById', as: 'verifiedExamResults' });
+ExamResult.belongsTo(ExamStaff, { foreignKey: 'verifiedById', as: 'verifiedByStaff' });
 
 Enrollment.hasMany(HallTicket, { foreignKey: 'enrollmentId', as: 'hallTickets' });
 HallTicket.belongsTo(Enrollment, { foreignKey: 'enrollmentId', as: 'enrollment' });
