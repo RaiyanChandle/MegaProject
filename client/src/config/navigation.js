@@ -21,10 +21,11 @@ export const navigationConfig = {
   TEACHER: [
     { name: 'Dashboard', href: '/teacher', icon: LayoutDashboard },
     { name: 'My Classes', href: '/teacher/classes', icon: Users },
+    { name: 'Question Papers', href: '/teacher/question-papers', icon: FileText },
+    { name: 'Marks Entry', href: '/teacher/marks', icon: FileCheck },
     { name: 'Attendance', href: '/teacher/attendance', icon: Clock },
     { name: 'Study Notes', href: '/teacher/notes', icon: BookOpen },
     { name: 'Digital Library', href: '/teacher/library', icon: BookOpen },
-    { name: 'Marks Entry', href: '/teacher/marks', icon: FileCheck },
     { name: 'Assignments', href: '/teacher/assignments', icon: FileText },
   ],
   STUDENT: [

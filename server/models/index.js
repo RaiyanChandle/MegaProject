@@ -289,8 +289,12 @@ HallTicket.belongsTo(ExamStaff, { foreignKey: 'generatedById', as: 'generatedBy'
 
 Exam.hasMany(QuestionPaper, { foreignKey: 'examId', as: 'questionPapers' });
 QuestionPaper.belongsTo(Exam, { foreignKey: 'examId', as: 'exam' });
-ExamStaff.hasMany(QuestionPaper, { foreignKey: 'createdById', as: 'questionPapers' });
-QuestionPaper.belongsTo(ExamStaff, { foreignKey: 'createdById', as: 'createdBy' });
+ExamStaff.hasMany(QuestionPaper, { foreignKey: 'createdById', as: 'questionPapers', constraints: false });
+QuestionPaper.belongsTo(ExamStaff, { foreignKey: 'createdById', as: 'createdBy', constraints: false });
+Teacher.hasMany(QuestionPaper, { foreignKey: 'createdById', as: 'teacherQuestionPapers', constraints: false });
+QuestionPaper.belongsTo(Teacher, { foreignKey: 'createdById', as: 'teacherCreatedBy', constraints: false });
+ExamStaff.hasMany(QuestionPaper, { foreignKey: 'verifiedById', as: 'verifiedQuestionPapers', constraints: false });
+QuestionPaper.belongsTo(ExamStaff, { foreignKey: 'verifiedById', as: 'verifiedBy', constraints: false });
 
 Student.hasMany(ResultCard, { foreignKey: 'studentId', as: 'resultCards' });
 ResultCard.belongsTo(Student, { foreignKey: 'studentId', as: 'student' });

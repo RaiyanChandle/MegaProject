@@ -22,6 +22,7 @@ import TeacherClasses from './pages/teacher/TeacherClasses';
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import TeacherNotes from './pages/teacher/TeacherNotes';
 import TeacherAssignments from './pages/teacher/TeacherAssignments';
+import TeacherQuestionPapers from './pages/teacher/TeacherQuestionPapers';
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentSubjects from './pages/student/StudentSubjects';
 import StudentAttendance from './pages/student/StudentAttendance';
@@ -36,6 +37,8 @@ import TeacherMarks from './pages/teacher/TeacherMarks';
 import StudentMarks from './pages/student/StudentMarks';
 import ParentMarks from './pages/parent/ParentMarks';
 import ParentAssignments from './pages/parent/ParentAssignments';
+import ExamStaffDashboard from './pages/examstaff/ExamStaffDashboard';
+import ExamManagement from './pages/examstaff/ExamManagement';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -92,6 +95,7 @@ function App() {
               <Route path="assignments" element={<TeacherAssignments />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<TeacherMarks />} />
+              <Route path="question-papers" element={<TeacherQuestionPapers />} />
             </Route>
 
             {/* Protected Routes: Student */}
@@ -118,6 +122,17 @@ function App() {
               <Route path="attendance" element={<ParentAttendance />} />
               <Route path="marks" element={<ParentMarks />} />
               <Route path="assignments" element={<ParentAssignments />} />
+            </Route>
+
+            {/* Protected Routes: Exam Staff */}
+            <Route
+              path="/examstaff"
+              element={<ProtectedRoute allowedRoles={['EXAM_STAFF']} title="Examination Controller" />}
+            >
+              <Route index element={<ExamStaffDashboard />} />
+              <Route path="exams" element={<ExamManagement />} />
+              <Route path="halltickets" element={<div className="p-6 text-text-900">Hall Ticket Desk (Task 11.4)</div>} />
+              <Route path="results" element={<div className="p-6 text-text-900">Exam Results Verification (Task 11.5)</div>} />
             </Route>
 
             {/* Catch-all */}
