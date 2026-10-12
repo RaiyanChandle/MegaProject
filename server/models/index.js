@@ -266,11 +266,17 @@ AcademicTerm.hasMany(Exam, { foreignKey: 'academicTermId', as: 'exams' });
 Exam.belongsTo(AcademicTerm, { foreignKey: 'academicTermId', as: 'academicTerm' });
 ExamStaff.hasMany(Exam, { foreignKey: 'scheduledById', as: 'examSchedules' });
 Exam.belongsTo(ExamStaff, { foreignKey: 'scheduledById', as: 'scheduledBy' });
+AssessmentComponent.hasMany(Exam, { foreignKey: 'assessmentComponentId', as: 'exams' });
+Exam.belongsTo(AssessmentComponent, { foreignKey: 'assessmentComponentId', as: 'assessmentComponent' });
 
 Exam.hasMany(ExamResult, { foreignKey: 'examId', as: 'results' });
 ExamResult.belongsTo(Exam, { foreignKey: 'examId', as: 'exam' });
 Enrollment.hasMany(ExamResult, { foreignKey: 'enrollmentId', as: 'examResults' });
 ExamResult.belongsTo(Enrollment, { foreignKey: 'enrollmentId', as: 'enrollment' });
+Teacher.hasMany(ExamResult, { foreignKey: 'enteredById', as: 'enteredExamResults' });
+ExamResult.belongsTo(Teacher, { foreignKey: 'enteredById', as: 'enteredByTeacher' });
+ExamStaff.hasMany(ExamResult, { foreignKey: 'verifiedById', as: 'verifiedExamResults' });
+ExamResult.belongsTo(ExamStaff, { foreignKey: 'verifiedById', as: 'verifiedByStaff' });
 
 Enrollment.hasMany(HallTicket, { foreignKey: 'enrollmentId', as: 'hallTickets' });
 HallTicket.belongsTo(Enrollment, { foreignKey: 'enrollmentId', as: 'enrollment' });
@@ -283,8 +289,12 @@ HallTicket.belongsTo(ExamStaff, { foreignKey: 'generatedById', as: 'generatedBy'
 
 Exam.hasMany(QuestionPaper, { foreignKey: 'examId', as: 'questionPapers' });
 QuestionPaper.belongsTo(Exam, { foreignKey: 'examId', as: 'exam' });
-ExamStaff.hasMany(QuestionPaper, { foreignKey: 'createdById', as: 'questionPapers' });
-QuestionPaper.belongsTo(ExamStaff, { foreignKey: 'createdById', as: 'createdBy' });
+ExamStaff.hasMany(QuestionPaper, { foreignKey: 'createdById', as: 'questionPapers', constraints: false });
+QuestionPaper.belongsTo(ExamStaff, { foreignKey: 'createdById', as: 'createdBy', constraints: false });
+Teacher.hasMany(QuestionPaper, { foreignKey: 'createdById', as: 'teacherQuestionPapers', constraints: false });
+QuestionPaper.belongsTo(Teacher, { foreignKey: 'createdById', as: 'teacherCreatedBy', constraints: false });
+ExamStaff.hasMany(QuestionPaper, { foreignKey: 'verifiedById', as: 'verifiedQuestionPapers', constraints: false });
+QuestionPaper.belongsTo(ExamStaff, { foreignKey: 'verifiedById', as: 'verifiedBy', constraints: false });
 
 Student.hasMany(ResultCard, { foreignKey: 'studentId', as: 'resultCards' });
 ResultCard.belongsTo(Student, { foreignKey: 'studentId', as: 'student' });

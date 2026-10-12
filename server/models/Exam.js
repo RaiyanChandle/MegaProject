@@ -11,6 +11,7 @@ export default (sequelize) => {
   examDate: { type: DataTypes.DATE, allowNull: true },
   maxMarks: { type: DataTypes.FLOAT, allowNull: false },
   passingMarks: { type: DataTypes.FLOAT, allowNull: false },
+  assessmentComponentId: { type: DataTypes.UUID, allowNull: true }, // Decision 3: explicit link to AssessmentComponent
   scheduledById: { type: DataTypes.UUID, allowNull: true }, // -> ExamStaff
 }, { tableName: 'exams', timestamps: true });
   return Exam;

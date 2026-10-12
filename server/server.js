@@ -34,6 +34,12 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import noteRoutes from './routes/noteRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import assignmentRoutes from './routes/assignmentRoutes.js';
+import marksRoutes from './routes/marksRoutes.js';
+import examRoutes from './routes/examRoutes.js';
+import questionPaperRoutes from './routes/questionPaperRoutes.js';
+import hallTicketRoutes from './routes/hallTicketRoutes.js';
+import examResultRoutes from './routes/examResultRoutes.js';
+import resultCardRoutes from './routes/resultCardRoutes.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -55,6 +61,12 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/assignments', assignmentRoutes);
+app.use('/api/marks', marksRoutes);
+app.use('/api/exams', examRoutes);
+app.use('/api/question-papers', questionPaperRoutes);
+app.use('/api/hall-tickets', hallTicketRoutes);
+app.use('/api/exam-results', examResultRoutes);
+app.use('/api/result-cards', resultCardRoutes);
 
 app.get("/api/health", async (req, res) => {
   try {
@@ -82,12 +94,17 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+import { initElectiveLockJob } from './jobs/electiveLockJob.js';
+
 app.listen(PORT, async () => {
   try {
     await sequelize.authenticate();
 
     console.log("Database connected successfully");
     console.log(`${APP_NAME} running on port ${PORT}`);
+
+    // Initialize elective lock background job (runs every 5 minutes)
+    initElectiveLockJob(5);
   } catch (error) {
     console.error("Unable to connect to database:", error);
   }

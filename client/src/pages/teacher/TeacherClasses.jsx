@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { apiClient } from '../../api/client';
 import DataTable from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, FileCheck, Clock } from 'lucide-react';
 import { toast } from '../../components/ui/Toast';
 
 export default function TeacherClasses() {
@@ -56,6 +57,30 @@ export default function TeacherClasses() {
       title: 'Credits',
       key: 'credits',
       render: (_, row) => row.subject?.credits
+    },
+    {
+      title: 'Quick Actions',
+      key: 'actions',
+      render: (_, row) => (
+        <div className="flex items-center gap-2">
+          <Link
+            to="/teacher/marks"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-ink-50 text-ink-700 hover:bg-ink-100 transition-colors"
+            title="Enter Component Marks"
+          >
+            <FileCheck size={14} />
+            Enter Marks
+          </Link>
+          <Link
+            to="/teacher/attendance"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-surface-50 text-text-700 hover:bg-surface-100 border border-border transition-colors"
+            title="Take Attendance"
+          >
+            <Clock size={14} />
+            Attendance
+          </Link>
+        </div>
+      )
     }
   ];
 

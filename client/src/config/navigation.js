@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers } from 'lucide-react';
 
 export const navigationConfig = {
   SUPER_ADMIN: [
@@ -21,25 +21,30 @@ export const navigationConfig = {
   TEACHER: [
     { name: 'Dashboard', href: '/teacher', icon: LayoutDashboard },
     { name: 'My Classes', href: '/teacher/classes', icon: Users },
+    { name: 'Question Papers', href: '/teacher/question-papers', icon: FileText },
+    { name: 'Marks Entry', href: '/teacher/marks', icon: FileCheck },
     { name: 'Attendance', href: '/teacher/attendance', icon: Clock },
     { name: 'Study Notes', href: '/teacher/notes', icon: BookOpen },
     { name: 'Digital Library', href: '/teacher/library', icon: BookOpen },
-    { name: 'Marks Entry', href: '/teacher/marks', icon: FileCheck },
     { name: 'Assignments', href: '/teacher/assignments', icon: FileText },
   ],
   STUDENT: [
     { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
     { name: 'My Subjects', href: '/student/subjects', icon: BookOpen },
+    { name: 'Electives', href: '/student/electives', icon: Layers },
     { name: 'Attendance', href: '/student/attendance', icon: Clock },
     { name: 'Study Notes', href: '/student/notes', icon: FileText },
     { name: 'Assignments', href: '/student/assignments', icon: FileCheck },
     { name: 'Digital Library', href: '/student/library', icon: BookOpen },
     { name: 'Marks', href: '/student/marks', icon: FileCheck },
+    { name: 'Hall Tickets', href: '/student/halltickets', icon: FileText },
     { name: 'Fees', href: '/student/fees', icon: DollarSign },
   ],
   PARENT: [
     { name: 'Dashboard', href: '/parent', icon: LayoutDashboard },
     { name: 'Attendance', href: '/parent/attendance', icon: Clock },
+    { name: 'Marks & Results', href: '/parent/marks', icon: FileCheck },
+    { name: 'Assignments', href: '/parent/assignments', icon: FileText },
     { name: 'Children', href: '/parent/children', icon: Users },
     { name: 'Fees', href: '/parent/fees', icon: DollarSign },
   ],

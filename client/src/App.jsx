@@ -17,27 +17,42 @@ import Teachers from './pages/deptadmin/Teachers';
 import Students from './pages/deptadmin/Students';
 import AttendanceReport from './pages/deptadmin/AttendanceReport';
 
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherClasses from './pages/teacher/TeacherClasses';
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import TeacherNotes from './pages/teacher/TeacherNotes';
 import TeacherAssignments from './pages/teacher/TeacherAssignments';
+import TeacherQuestionPapers from './pages/teacher/TeacherQuestionPapers';
 import StudentDashboard from './pages/student/StudentDashboard';
+import StudentSubjects from './pages/student/StudentSubjects';
 import StudentAttendance from './pages/student/StudentAttendance';
 import StudentNotes from './pages/student/StudentNotes';
 import StudentAssignments from './pages/student/StudentAssignments';
+import StudentElectives from './pages/student/StudentElectives';
 import ParentDashboard from './pages/parent/ParentDashboard';
 import ParentAttendance from './pages/parent/ParentAttendance';
 import SuperAdminLibrary from './pages/superadmin/Library';
 import DigitalLibrary from './pages/common/Library';
+import TeacherMarks from './pages/teacher/TeacherMarks';
+import StudentMarks from './pages/student/StudentMarks';
+import ParentMarks from './pages/parent/ParentMarks';
+import ParentAssignments from './pages/parent/ParentAssignments';
+import ExamStaffDashboard from './pages/examstaff/ExamStaffDashboard';
+import ExamManagement from './pages/examstaff/ExamManagement';
+import HallTicketManagement from './pages/examstaff/HallTicketManagement';
+import ExamResultsVerification from './pages/examstaff/ExamResultsVerification';
+import StudentHallTicket from './pages/student/StudentHallTicket';
 
 import { SearchProvider } from './context/SearchContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <SearchProvider>
-          <Routes>
+          <LanguageProvider>
+            <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -76,12 +91,14 @@ function App() {
               path="/teacher"
               element={<ProtectedRoute allowedRoles={['TEACHER']} title="Teacher Dashboard" />}
             >
-              <Route index element={<div className="p-6 text-text-900">Teacher Dashboard (Coming Soon)</div>} />
+              <Route index element={<TeacherDashboard />} />
               <Route path="classes" element={<TeacherClasses />} />
               <Route path="attendance" element={<TeacherAttendance />} />
               <Route path="notes" element={<TeacherNotes />} />
               <Route path="assignments" element={<TeacherAssignments />} />
               <Route path="library" element={<DigitalLibrary />} />
+              <Route path="marks" element={<TeacherMarks />} />
+              <Route path="question-papers" element={<TeacherQuestionPapers />} />
             </Route>
 
             {/* Protected Routes: Student */}
@@ -90,10 +107,14 @@ function App() {
               element={<ProtectedRoute allowedRoles={['STUDENT']} title="Student Dashboard" />}
             >
               <Route index element={<StudentDashboard />} />
+              <Route path="subjects" element={<StudentSubjects />} />
+              <Route path="electives" element={<StudentElectives />} />
               <Route path="attendance" element={<StudentAttendance />} />
               <Route path="notes" element={<StudentNotes />} />
               <Route path="assignments" element={<StudentAssignments />} />
               <Route path="library" element={<DigitalLibrary />} />
+              <Route path="marks" element={<StudentMarks />} />
+              <Route path="halltickets" element={<StudentHallTicket />} />
             </Route>
 
             {/* Protected Routes: Parent */}
@@ -103,11 +124,25 @@ function App() {
             >
               <Route index element={<ParentDashboard />} />
               <Route path="attendance" element={<ParentAttendance />} />
+              <Route path="marks" element={<ParentMarks />} />
+              <Route path="assignments" element={<ParentAssignments />} />
+            </Route>
+
+            {/* Protected Routes: Exam Staff */}
+            <Route
+              path="/examstaff"
+              element={<ProtectedRoute allowedRoles={['EXAM_STAFF']} title="Examination Controller" />}
+            >
+              <Route index element={<ExamStaffDashboard />} />
+              <Route path="exams" element={<ExamManagement />} />
+              <Route path="halltickets" element={<HallTicketManagement />} />
+              <Route path="results" element={<ExamResultsVerification />} />
             </Route>
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </LanguageProvider>
         </SearchProvider>
       </AuthProvider>
     </Router>

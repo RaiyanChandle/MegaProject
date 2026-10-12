@@ -124,32 +124,32 @@ widening to more modules.
 ## Phase 9 — Elective registration · flows 5
 
 - [x] **T9.1** Migration: add `registrationOpensAt` / `registrationClosesAt` to `ElectiveSlot` (PRD open decision 4)
-- [ ] **T9.2** Student view of slots/options with seats remaining, within the window.
-- [ ] **T9.3** Choose + confirm in a transaction with a row lock; create the `Enrollment` on confirm (rules 12, 13).
-- [ ] **T9.4** Job that moves `CONFIRMED` → `LOCKED` when the window closes.
-- [ ] **T9.5** Admin-approved swap after lock (rules 15).
-- [ ] **T9.6** Concurrency test: N students racing for the last seat → exactly one succeeds.
+- [x] **T9.2** Student view of slots/options with seats remaining, within the window.--done
+- [x] **T9.3** Choose + confirm in a transaction with a row lock; create the `Enrollment` on confirm (rules 12, 13).--done
+- [x] **T9.4** Job that moves `CONFIRMED` → `LOCKED` when the window closes.--done
+- [x] **T9.5** Admin-approved swap after lock (rules 13, 15).--done
+- [x] **T9.6** Concurrency test: N students racing for the last seat → exactly one succeeds.--done
 
 ---
 
 ## Phase 10 — Marks & subject results · flows 10
 
-- [ ] **T10.1** Resolve PRD open decision 1 (pass criteria).
-- [ ] **T10.2** Teacher marks-entry grid per component (partial save, keyboard friendly).
-- [ ] **T10.3** `SubjectResult` computation service (sum of components, `isPass`).
-- [ ] **T10.4** Student/parent view of component marks and subject results.
+- [x] **T10.1** Resolve PRD open decision 1 (pass criteria).--done
+- [x] **T10.2** Teacher marks-entry grid per component (partial save, keyboard friendly).--done
+- [x] **T10.3** `SubjectResult` computation service (sum of components, `isPass`).--done
+- [x] **T10.4** Student/parent view of component marks and subject results.--done
 
 ---
 
 ## Phase 11 — Examinations · flows 11
 
-- [ ] **T11.1** Resolve PRD decisions 3 and 5 (exam → component mapping, who enters End Sem).
-- [ ] **T11.2** Exam scheduling by Exam Staff.
-- [ ] **T11.3** Question paper upload with draft → submitted → approved workflow.
-- [ ] **T11.4** Hall tickets per enrollment + printable PDF (Plex Serif, grayscale-safe) (rules 26).
-- [ ] **T11.5** Exam result entry (bulk); `isPass` from `Exam.passingMarks` (rules 27); sync into the mapped `ComponentMark`.
-- [ ] **T11.6** Result processing: `ResultCard` from `SubjectResult`s, SGPA per PRD decision 2 (rules 28).
-- [ ] **T11.7** Student/parent result view + printable marksheet.
+- [x] **T11.1** Resolve PRD decisions 3 and 5 (exam → component mapping via Exam.assessmentComponentId, two-stage marks workflow: Teacher entry → Exam Cell verification & publish)
+- [x] **T11.2** Exam scheduling by Exam Staff.--done
+- [x] **T11.3** Question paper upload with draft → submitted → approved workflow.--done
+- [x] **T11.4** Hall tickets per enrollment + printable PDF (Plex Serif, grayscale-safe) (rules 26).--done
+- [x] **T11.5** Exam result workflow: Teacher bulk marks entry & submit; Exam Cell verification & approval (rules 20, 27); on verify, compute `isPass` and sync into mapped `ComponentMark` & `SubjectResult`.--done
+- [x] **T11.6** Result processing: `ResultCard` from `SubjectResult`s, SGPA per PRD decision 2 (rules 28).--done
+- [x] **T11.7** Student/parent result view + printable marksheet.--done
 
 ---
 

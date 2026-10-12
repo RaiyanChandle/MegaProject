@@ -125,21 +125,26 @@ to arrive at that number.
 3. For each component, the teacher decides **how** to arrive at a student's mark — the schema does not force a method:
    - **Manual**: teacher directly enters a `ComponentMark.marksObtained` for each student based on their own assessment (assignments, classroom performance, viva, whatever they used).
    - **Online test**: teacher creates an `OnlineTest` (see Section 9), students attempt it, and the resulting `TestAttempt.score` is copied into `ComponentMark.marksObtained` with `sourceOnlineTestId` set for traceability.
-   - **Formal exam**: for components tied to a Exam Department-run exam (typically End Sem, sometimes Lab External), the mark comes from `ExamResult` once Exam Staff enters it — copy that value into `ComponentMark.marksObtained` with `sourceExamId` set.
+   - **Formal exam**: for components tied to an Exam Department-run exam (typically End Sem, Mid Sem, Lab External), the allocated teacher evaluates student answer papers and enters marks into `ExamResult` (in `SUBMITTED` status). Once Exam Staff verifies and approves the result (`VERIFIED`), the marks automatically sync into `ComponentMark.marksObtained` with `sourceExamId` set.
 4. Each `ComponentMark` is tied to an `enrollmentId`, not just a `studentId` — so a backlog student's re-attempt at a subject gets an entirely fresh set of component marks under their new `attemptNumber`, never mixed with the original attempt's marks.
 5. Once all of a subject's components have marks entered for a given enrollment, compute/update `SubjectResult`: sum `ComponentMark.marksObtained` against the subject's total `maxMarks`, derive `isPass` (compare against the subject's/department's passing threshold), and store it as one row per enrollment.
 6. `SubjectResult` rows across all of a student's subjects for a term are what feed into the term-level `ResultCard` (Section 11 below) — not raw `ExamResult` directly, since a subject's final score is a composition of multiple components, not just one exam.
 
 ---
 
-## 11. Examination Flow (Exam Department)
+## 11. Examination Flow (Exam Department & Faculty)
 
-1. Exam Staff schedules an `Exam` for a subject+class+term: exam type (MIDTERM/FINAL/INTERNAL/MAKEUP), date, max marks, passing marks.
+1. Exam Staff schedules an `Exam` for a subject+class+term: exam type (MIDTERM/FINAL/INTERNAL/MAKEUP), date, max marks, passing marks, and explicitly links it to the subject's `AssessmentComponent` via `assessmentComponentId`.
 2. Exam Staff creates/uploads a `QuestionPaper` for that exam, moving it through `DRAFT` → `SUBMITTED` → `APPROVED` status as it goes through review.
 3. Exam Staff generates `HallTicket`s — one per `enrollmentId` (not per student), so a student with both a current-term exam and a backlog exam gets two separate hall tickets, potentially different centers/times.
-4. After the exam, Exam Staff (or faculty, depending on your process) enters `ExamResult` rows per `enrollmentId`: marks obtained, `isPass` derived from the exam's `passingMarks`.
-5. **Backlog handling**: a re-attempt is just another `Exam` row with `examType = MAKEUP`, tied to the enrollment with the matching `attemptNumber`. No separate backlog-exam table is needed.
-6. Once all of a student's exam results for a term are in, Exam Staff triggers result processing, generating a `ResultCard`: aggregated total marks, percentage, SGPA for that `(student, academicTerm)` pair.
+4. **Marks Entry by Teacher**: After the exam, the allocated subject teacher enters marks for each student enrollment into `ExamResult`.
+   - The teacher can save as `DRAFT` or submit to Exam Cell as `SUBMITTED`.
+   - While in `DRAFT` or `SUBMITTED`, marks are pending verification and do NOT affect student marks or results.
+5. **Marks Verification by Exam Cell**: Exam Staff reviews the submitted marks sheet.
+   - If approved: Exam Staff marks them as `VERIFIED` (recording `verifiedById` and `verifiedAt`). This derives `isPass = marks >= passingMarks`, synchronizes the marks into `ComponentMark` (with `sourceExamId = exam.id`), and recalculates `SubjectResult`.
+   - If discrepancies exist: Exam Staff rejects the submission (`REJECTED`) with remarks (`rejectionReason`). The teacher is notified to correct the anomaly and resubmit.
+6. **Backlog handling**: a re-attempt is just another `Exam` row with `examType = MAKEUP`, tied to the enrollment with the matching `attemptNumber`. No separate backlog-exam table is needed.
+7. Once all of a student's exam results for a term are verified, Exam Staff triggers result processing, generating a `ResultCard`: aggregated total marks, percentage, SGPA for that `(student, academicTerm)` pair.
 
 ---
 

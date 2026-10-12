@@ -76,6 +76,46 @@ export const getResources = async (req, res) => {
 };
 
 /**
+ * Update Library Resource Title / File
+ */
+export const updateResource = async (req, res) => {
+  const { id } = req.params;
+  const { title } = req.body;
+  const user = req.user;
+
+  if (user.role !== 'SUPER_ADMIN' && user.role !== 'DEPARTMENT_ADMIN') {
+    return res.status(403).json({ error: 'Forbidden: Only administrators can modify library resources.' });
+  }
+
+  try {
+    const resource = await Library.findByPk(id);
+    if (!resource) {
+      return res.status(404).json({ error: 'Library resource not found.' });
+    }
+
+    if (title && title.trim()) {
+      resource.title = title.trim();
+    }
+    if (req.fileUrl) {
+      resource.url = req.fileUrl;
+    }
+
+    await resource.save();
+
+    const populatedItem = await Library.findByPk(resource.id, {
+      include: [
+        { model: SuperAdmin, as: 'uploadedBy', attributes: ['id', 'name', 'email'] }
+      ]
+    });
+
+    res.json(populatedItem);
+  } catch (error) {
+    console.error('Update library resource error:', error);
+    res.status(500).json({ error: 'Internal server error while updating library resource.' });
+  }
+};
+
+/**
  * Delete Library Resource
  */
 export const deleteResource = async (req, res) => {
@@ -100,3 +140,4 @@ export const deleteResource = async (req, res) => {
     res.status(500).json({ error: 'Internal server error while deleting library resource.' });
   }
 };
+

@@ -220,22 +220,42 @@ export default function Students() {
     }
   };
 
+  const [localSearch, setLocalSearch] = useState('');
+  const [assignmentFilter, setAssignmentFilter] = useState('ALL'); // 'ALL' | 'ASSIGNED' | 'UNASSIGNED'
+
   const columns = [
-    { title: 'ID', key: 'instituteId', className: 'font-mono text-sm' },
-    { title: 'Name', key: 'name', className: 'font-semibold' },
-    { title: 'Email', key: 'email', className: 'text-sm' },
-    { title: 'Roll No', key: 'rollNumber', className: 'font-mono' },
+    { title: 'ID', key: 'instituteId', className: 'font-mono text-xs font-semibold text-ink-900' },
+    { title: 'Name', key: 'name', className: 'font-semibold text-text-900' },
+    { title: 'Roll No', key: 'rollNumber', className: 'font-mono text-xs font-medium text-text-900' },
+    { title: 'Email', key: 'email', className: 'font-mono text-xs text-text-500' },
     { 
       title: 'Division', 
       key: 'division', 
-      render: (val) => val ? <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">{val.name}</span> : <span className="text-text-400 text-xs italic">Unassigned</span>
+      render: (val) => val ? (
+        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-xs font-semibold">
+          Div {val.name}
+        </span>
+      ) : (
+        <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-medium">
+          Unassigned
+        </span>
+      )
     },
-    { title: 'Created At', key: 'createdAt', render: (val) => new Date(val).toLocaleDateString(), className: 'text-sm text-text-500' },
+    { 
+      title: 'Created At', 
+      key: 'createdAt', 
+      render: (val) => new Date(val).toLocaleDateString(), 
+      className: 'text-xs text-text-500 font-mono' 
+    },
   ];
 
   const studentsInBatch = selectedBatchYear 
     ? students.filter(s => s.batchYear === selectedBatchYear)
     : students;
+
+  const totalInBatch = studentsInBatch.length;
+  const assignedInBatch = studentsInBatch.filter(s => !!s.divisionId).length;
+  const unassignedInBatch = totalInBatch - assignedInBatch;
 
   const filteredStudents = studentsInBatch.filter(s => {
     // Apply division filter
@@ -244,9 +264,14 @@ export default function Students() {
       if (selectedDivisionFilter !== 'UNASSIGNED' && s.division?.name !== selectedDivisionFilter) return false;
     }
 
-    // Apply search filter
-    if (searchQuery) {
-      const lowerQ = searchQuery.toLowerCase();
+    // Apply assignment status filter
+    if (assignmentFilter === 'ASSIGNED' && !s.divisionId) return false;
+    if (assignmentFilter === 'UNASSIGNED' && s.divisionId) return false;
+
+    // Apply global or local search filter
+    const activeQuery = localSearch.trim() || searchQuery.trim();
+    if (activeQuery) {
+      const lowerQ = activeQuery.toLowerCase();
       if (
         !s.name?.toLowerCase().includes(lowerQ) &&
         !s.email?.toLowerCase().includes(lowerQ) &&
@@ -264,19 +289,19 @@ export default function Students() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-text-900">Students</h2>
-          <p className="text-sm text-text-500 mt-1">Manage student records for your department.</p>
+          <h2 className="text-xl font-semibold text-text-900">Students Directory</h2>
+          <p className="text-sm text-text-500 mt-0.5">Manage departmental student admissions, division allocations, and core subject enrollments.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {selectedStudentIds.length > 0 && (
             <Button variant="primary" onClick={openAssignModal}>
               Assign Division ({selectedStudentIds.length})
             </Button>
           )}
           <Button variant="secondary" onClick={() => setIsBulkModalOpen(true)}>
-            Bulk Import
+            Bulk CSV Import
           </Button>
           <Button onClick={() => setIsModalOpen(true)}>
             <Plus size={16} />
@@ -285,45 +310,104 @@ export default function Students() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {availableBatchYears.length > 0 && (
-          <div className="flex border-b border-border overflow-x-auto w-full sm:w-auto">
-            {availableBatchYears.map(year => (
-              <button
-                key={year}
-                onClick={() => {
-                  setSelectedBatchYear(year);
-                  setSelectedDivisionFilter('ALL');
-                  setSelectedStudentIds([]); // clear selection when changing tabs
-                }}
-                className={`px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-                  selectedBatchYear === year
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-text-500 hover:text-text-900 hover:border-border'
-                }`}
-              >
-                Batch {year}
-              </button>
-            ))}
-          </div>
-        )}
+      {/* Cohort Summary Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="bg-surface-0 border border-border rounded-lg p-3 flex items-center justify-between shadow-xs">
+          <span className="text-xs text-text-500 font-medium uppercase tracking-wider">Cohort Strength</span>
+          <span className="font-mono text-base font-bold text-text-900">{totalInBatch} Students</span>
+        </div>
+        <div className="bg-surface-0 border border-border rounded-lg p-3 flex items-center justify-between shadow-xs">
+          <span className="text-xs text-emerald-700 font-medium uppercase tracking-wider">Assigned to Divisions</span>
+          <span className="font-mono text-base font-bold text-emerald-800">{assignedInBatch} Enrolled</span>
+        </div>
+        <div className="bg-surface-0 border border-border rounded-lg p-3 flex items-center justify-between shadow-xs">
+          <span className="text-xs text-amber-700 font-medium uppercase tracking-wider">Pending Assignment</span>
+          <span className="font-mono text-base font-bold text-amber-800">{unassignedInBatch} Pending</span>
+        </div>
+      </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-text-500">Filter by Division:</span>
-          <select 
-            value={selectedDivisionFilter}
-            onChange={(e) => {
-              setSelectedDivisionFilter(e.target.value);
-              setSelectedStudentIds([]);
-            }}
-            className="rounded-md border border-border px-3 py-1.5 text-sm focus:border-ink-700 focus:ring-1 focus:ring-ink-700 bg-surface-0"
-          >
-            <option value="ALL">All Divisions</option>
-            <option value="UNASSIGNED">Unassigned</option>
-            {availableDivisionsInBatch.map(divName => (
-              <option key={divName} value={divName}>Div {divName}</option>
-            ))}
-          </select>
+      {/* Filter and Tab Deck */}
+      <div className="bg-surface-0 border border-border rounded-xl p-4 shadow-xs space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-border pb-3">
+          {availableBatchYears.length > 0 && (
+            <div className="flex border-b sm:border-b-0 border-border overflow-x-auto gap-1">
+              {availableBatchYears.map(year => (
+                <button
+                  key={year}
+                  onClick={() => {
+                    setSelectedBatchYear(year);
+                    setSelectedDivisionFilter('ALL');
+                    setSelectedStudentIds([]);
+                  }}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                    selectedBatchYear === year
+                      ? 'bg-ink-900 text-white shadow-xs'
+                      : 'text-text-500 hover:text-text-900 hover:bg-surface-50'
+                  }`}
+                >
+                  Batch {year}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Quick search input */}
+            <input 
+              type="text"
+              placeholder="Filter by name, roll, ID..."
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              className="px-3 py-1.5 rounded-md border border-border text-xs focus:border-ink-700 focus:ring-1 focus:ring-ink-700 bg-surface-50 w-48"
+            />
+
+            {/* Division dropdown */}
+            <select 
+              value={selectedDivisionFilter}
+              onChange={(e) => {
+                setSelectedDivisionFilter(e.target.value);
+                setSelectedStudentIds([]);
+              }}
+              className="rounded-md border border-border px-2.5 py-1.5 text-xs focus:border-ink-700 focus:ring-1 focus:ring-ink-700 bg-surface-50"
+            >
+              <option value="ALL">All Divisions</option>
+              <option value="UNASSIGNED">Unassigned</option>
+              {availableDivisionsInBatch.map(divName => (
+                <option key={divName} value={divName}>Division {divName}</option>
+              ))}
+            </select>
+
+            {/* Assignment Status filter */}
+            <select 
+              value={assignmentFilter}
+              onChange={(e) => setAssignmentFilter(e.target.value)}
+              className="rounded-md border border-border px-2.5 py-1.5 text-xs focus:border-ink-700 focus:ring-1 focus:ring-ink-700 bg-surface-50"
+            >
+              <option value="ALL">All Status</option>
+              <option value="ASSIGNED">Assigned Only</option>
+              <option value="UNASSIGNED">Pending Only</option>
+            </select>
+
+            {(localSearch || selectedDivisionFilter !== 'ALL' || assignmentFilter !== 'ALL') && (
+              <button
+                onClick={() => {
+                  setLocalSearch('');
+                  setSelectedDivisionFilter('ALL');
+                  setAssignmentFilter('ALL');
+                }}
+                className="px-2 py-1 text-xs text-text-500 hover:text-text-900 underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-text-500 font-mono">
+          <span>Showing {filteredStudents.length} of {studentsInBatch.length} students in Batch {selectedBatchYear}</span>
+          {selectedStudentIds.length > 0 && (
+            <span className="text-ink-700 font-semibold">{selectedStudentIds.length} students selected for bulk assignment</span>
+          )}
         </div>
       </div>
 
