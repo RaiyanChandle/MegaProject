@@ -22,10 +22,12 @@ import {
   RefreshCw
 } from 'lucide-react';
 import Button from '../../components/ui/Button';
+import OfficialMarksheetView from '../../components/results/OfficialMarksheetView';
 
 export default function ParentMarks() {
   const { searchQuery } = useSearch();
   const { t, currentLanguage, changeLanguage, languages } = useLanguage();
+  const [activeMainTab, setActiveMainTab] = useState('marksheet');
   const [children, setChildren] = useState([]);
   const [selectedChildId, setSelectedChildId] = useState('');
   const [marksData, setMarksData] = useState(null);
@@ -199,8 +201,39 @@ export default function ParentMarks() {
         </div>
       )}
 
-      {/* Simple 3-Card Summary for Parents */}
-      {isLoadingMarks ? (
+      {/* Module Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-border pb-1 print:hidden">
+        <button
+          onClick={() => setActiveMainTab('marksheet')}
+          className={`px-4 py-2.5 text-xs font-semibold rounded-t-md transition-colors flex items-center gap-2 border-b-2 ${
+            activeMainTab === 'marksheet'
+              ? 'border-ink-900 text-ink-900 bg-surface-0 shadow-xs'
+              : 'border-transparent text-text-500 hover:text-text-900 hover:bg-surface-50'
+          }`}
+        >
+          <Award className="w-4 h-4 text-ink-700" />
+          <span>Official Grade Report & Marksheet</span>
+        </button>
+
+        <button
+          onClick={() => setActiveMainTab('assessment')}
+          className={`px-4 py-2.5 text-xs font-semibold rounded-t-md transition-colors flex items-center gap-2 border-b-2 ${
+            activeMainTab === 'assessment'
+              ? 'border-ink-900 text-ink-900 bg-surface-0 shadow-xs'
+              : 'border-transparent text-text-500 hover:text-text-900 hover:bg-surface-50'
+          }`}
+        >
+          <Layers className="w-4 h-4 text-text-500" />
+          <span>Continuous Assessment Components</span>
+        </button>
+      </div>
+
+      {activeMainTab === 'marksheet' ? (
+        <OfficialMarksheetView studentId={selectedChildId} isParent={true} />
+      ) : (
+        <>
+          {/* Simple 3-Card Summary for Parents */}
+          {isLoadingMarks ? (
         <div className="bg-surface-0 border border-border rounded-xl p-8 text-center text-xs text-text-500">
           <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-ink-700" />
           Loading academic performance...
@@ -501,6 +534,8 @@ export default function ParentMarks() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

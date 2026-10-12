@@ -21,9 +21,11 @@ import {
   RefreshCw
 } from 'lucide-react';
 import Button from '../../components/ui/Button';
+import OfficialMarksheetView from '../../components/results/OfficialMarksheetView';
 
 export default function StudentMarks() {
   const { searchQuery } = useSearch();
+  const [activeMainTab, setActiveMainTab] = useState('marksheet');
   const [marksData, setMarksData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -101,8 +103,39 @@ export default function StudentMarks() {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl pb-12">
-      {/* Top Banner */}
-      <div className="bg-surface-0 border border-border rounded-xl p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Module Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-border pb-1 print:hidden">
+        <button
+          onClick={() => setActiveMainTab('marksheet')}
+          className={`px-4 py-2.5 text-xs font-semibold rounded-t-md transition-colors flex items-center gap-2 border-b-2 ${
+            activeMainTab === 'marksheet'
+              ? 'border-ink-900 text-ink-900 bg-surface-0 shadow-xs'
+              : 'border-transparent text-text-500 hover:text-text-900 hover:bg-surface-50'
+          }`}
+        >
+          <Award className="w-4 h-4 text-ink-700" />
+          <span>Official Grade Report & Marksheet</span>
+        </button>
+
+        <button
+          onClick={() => setActiveMainTab('assessment')}
+          className={`px-4 py-2.5 text-xs font-semibold rounded-t-md transition-colors flex items-center gap-2 border-b-2 ${
+            activeMainTab === 'assessment'
+              ? 'border-ink-900 text-ink-900 bg-surface-0 shadow-xs'
+              : 'border-transparent text-text-500 hover:text-text-900 hover:bg-surface-50'
+          }`}
+        >
+          <Layers className="w-4 h-4 text-text-500" />
+          <span>Continuous Assessment Components</span>
+        </button>
+      </div>
+
+      {activeMainTab === 'marksheet' ? (
+        <OfficialMarksheetView />
+      ) : (
+        <>
+          {/* Top Banner */}
+          <div className="bg-surface-0 border border-border rounded-xl p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-ink-900 text-white flex items-center justify-center shrink-0 shadow-xs border border-ink-700">
             <Award size={22} className="text-brass-500" />
@@ -601,6 +634,8 @@ export default function StudentMarks() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );
