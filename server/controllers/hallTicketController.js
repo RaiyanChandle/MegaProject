@@ -137,8 +137,14 @@ export const generateHallTickets = async (req, res) => {
           continue;
         }
 
-        if (classId && enrollment.student?.division?.classId && enrollment.student.division.classId !== classId) {
-          continue;
+        // Rule 18 & Rule 10: Backlog re-attempts carry the original classId (curriculum class)
+        // Check if either the enrollment's classId or the student's current division classId matches
+        if (classId) {
+          const matchesEnrollmentClass = enrollment.classId === classId;
+          const matchesStudentDivisionClass = enrollment.student?.division?.classId === classId;
+          if (!matchesEnrollmentClass && !matchesStudentDivisionClass) {
+            continue;
+          }
         }
 
         // Check if student already has a seat number assigned in this academic term & exam series
@@ -199,7 +205,8 @@ export const getPreviewExams = async (req, res) => {
     academicTermId, 
     departmentId, 
     classId, 
-    examType 
+    examType,
+    attemptFilter 
   } = req.query;
 
   if (!classId && !academicTermId && !departmentId) {
@@ -236,15 +243,23 @@ export const getPreviewExams = async (req, res) => {
       order: [['examDate', 'ASC']]
     });
 
-    // For each exam, compute enrollmentCount and ticketCount
+    // For each exam, compute enrollmentCount and ticketCount (filtering attemptNumber by examType / attemptFilter)
     const examsWithStats = await Promise.all(exams.map(async (exam) => {
+      const enrollmentWhere = {
+        subjectId: exam.subjectId,
+        academicTermId: exam.academicTermId,
+        status: 'ENROLLED'
+      };
+
+      if (attemptFilter === 'REGULAR') {
+        enrollmentWhere.attemptNumber = 1;
+      } else if (attemptFilter === 'BACKLOG' || exam.examType === 'MAKEUP') {
+        enrollmentWhere.attemptNumber = { [Op.gt]: 1 };
+      }
+
       const [enrollmentCount, ticketCount] = await Promise.all([
         Enrollment.count({
-          where: {
-            subjectId: exam.subjectId,
-            academicTermId: exam.academicTermId,
-            status: 'ENROLLED'
-          }
+          where: enrollmentWhere
         }),
         HallTicket.count({
           where: { examId: exam.id }
@@ -257,9 +272,24 @@ export const getPreviewExams = async (req, res) => {
       return exJson;
     }));
 
-    // Find student count for the selected class
+    // Find student count for the selected class or backlog candidates
     let candidateStudentCount = 0;
-    if (classId) {
+    if (examType === 'MAKEUP' || attemptFilter === 'BACKLOG') {
+      const subjectIds = exams.map(e => e.subjectId);
+      if (subjectIds.length > 0) {
+        const distinctBacklogStudents = await Enrollment.findAll({
+          where: {
+            subjectId: { [Op.in]: subjectIds },
+            academicTermId: academicTermId || exams[0]?.academicTermId,
+            attemptNumber: { [Op.gt]: 1 },
+            status: 'ENROLLED'
+          },
+          attributes: ['studentId'],
+          group: ['studentId']
+        });
+        candidateStudentCount = distinctBacklogStudents.length;
+      }
+    } else if (classId) {
       const divisions = await Division.findAll({ where: { classId }, attributes: ['id'] });
       const divisionIds = divisions.map(d => d.id);
       if (divisionIds.length > 0) {
@@ -429,9 +459,22 @@ export const getStudentAdmitCard = async (req, res) => {
       ]
     });
 
+    // Find all ticket exam types available for this student in this term
+    const allTermTickets = await HallTicket.findAll({
+      where: { studentId },
+      include: [{
+        model: Exam,
+        as: 'exam',
+        where: academicTermId ? { academicTermId } : undefined,
+        attributes: ['id', 'examType', 'academicTermId']
+      }]
+    });
+    const availableExamTypes = [...new Set(allTermTickets.map(t => t.exam?.examType).filter(Boolean))];
+
     if (tickets.length === 0) {
       return res.status(404).json({ 
-        error: `No hall tickets found for ${examType ? `'${examType}' ` : ''}examinations in the selected academic term` 
+        error: `No hall tickets found for ${examType ? `'${examType}' ` : ''}examinations in the selected academic term`,
+        availableExamTypes
       });
     }
 
@@ -440,7 +483,10 @@ export const getStudentAdmitCard = async (req, res) => {
     const filteredTickets = tickets.filter(t => t.exam?.examType === targetType);
 
     if (filteredTickets.length === 0) {
-      return res.status(404).json({ error: `No hall tickets found for '${targetType}' examinations` });
+      return res.status(404).json({ 
+        error: `No hall tickets found for '${targetType}' examinations`,
+        availableExamTypes
+      });
     }
 
     const primary = filteredTickets[0];
@@ -468,11 +514,38 @@ export const getStudentAdmitCard = async (req, res) => {
       student,
       academicTerm: primary.exam?.academicTerm,
       enrollment: primary.enrollment,
-      allExams
+      allExams,
+      availableExamTypes
     });
 
   } catch (error) {
     console.error('Get Student Admit Card error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get distinct available hall ticket exam types for a student in a term
+ */
+export const getStudentTicketTypes = async (req, res) => {
+  const { studentId } = req.params;
+  const { academicTermId } = req.query;
+
+  try {
+    const tickets = await HallTicket.findAll({
+      where: { studentId },
+      include: [{
+        model: Exam,
+        as: 'exam',
+        where: academicTermId ? { academicTermId } : undefined,
+        attributes: ['id', 'examType', 'academicTermId']
+      }]
+    });
+
+    const types = [...new Set(tickets.map(t => t.exam?.examType).filter(Boolean))];
+    res.json({ availableExamTypes: types });
+  } catch (err) {
+    console.error('Error getting student ticket types:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

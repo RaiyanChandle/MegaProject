@@ -26,6 +26,7 @@ export default function StudentHallTicket() {
   const [terms, setTerms] = useState([]);
   const [selectedTermId, setSelectedTermId] = useState('');
   const [selectedExamType, setSelectedExamType] = useState('MIDTERM');
+  const [availableExamTypes, setAvailableExamTypes] = useState([]);
   
   const [admitCard, setAdmitCard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +55,29 @@ export default function StudentHallTicket() {
     fetchTerms();
   }, []);
 
-  // 2. Fetch Student Admit Card whenever term or exam type changes
+  // 2. Fetch available ticket types for student in selected term
+  useEffect(() => {
+    if (!selectedTermId || !user?.id) return;
+
+    const fetchTicketTypes = async () => {
+      try {
+        const res = await apiClient.get(`/hall-tickets/student/${user.id}/types?academicTermId=${selectedTermId}`);
+        const types = res.availableExamTypes || [];
+        setAvailableExamTypes(types);
+
+        // If currently selected exam type is not available but others are, auto-select the first available
+        if (types.length > 0 && !types.includes(selectedExamType)) {
+          setSelectedExamType(types[0]);
+        }
+      } catch (err) {
+        console.warn('Could not fetch student ticket types:', err);
+      }
+    };
+
+    fetchTicketTypes();
+  }, [selectedTermId, user?.id]);
+
+  // 3. Fetch Student Admit Card whenever term or exam type changes
   useEffect(() => {
     if (!selectedTermId || !user?.id) return;
 
@@ -70,8 +93,14 @@ export default function StudentHallTicket() {
 
         const res = await apiClient.get(`/hall-tickets/student/${user.id}?${params.toString()}`);
         setAdmitCard(res);
+        if (res.availableExamTypes) {
+          setAvailableExamTypes(res.availableExamTypes);
+        }
       } catch (err) {
         console.warn('Admit card fetch returned error/not found:', err.response?.data?.error);
+        if (err.response?.data?.availableExamTypes) {
+          setAvailableExamTypes(err.response.data.availableExamTypes);
+        }
         const msg = err.response?.data?.error || `No ${selectedExamType} hall ticket has been published for this semester yet.`;
         setErrorMsg(msg);
         setAdmitCard(null);
@@ -275,23 +304,71 @@ export default function StudentHallTicket() {
             </select>
           </div>
 
-          {/* Exam Type / Series Dropdown */}
+          {/* Exam Type / Series Selector with Visual Badges */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-text-600 mb-1.5">
               Examination Series / Type
             </label>
-            <select
-              value={selectedExamType}
-              onChange={(e) => setSelectedExamType(e.target.value)}
-              className="w-full text-sm rounded-lg border border-border bg-surface-50 px-3 py-2 text-text-900 focus:outline-none focus:border-brass-500 font-medium"
-            >
-              <option value="MIDTERM">MIDTERM (Mid-Semester Examination)</option>
-              <option value="FINAL">FINAL (End-Semester Examination)</option>
-              <option value="INTERNAL">INTERNAL (Continuous Evaluation / CIE)</option>
-              <option value="MAKEUP">MAKEUP (Backlog / Remedial Examination)</option>
-            </select>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { type: 'MIDTERM', label: 'Midterm', desc: 'Mid-Sem' },
+                { type: 'FINAL', label: 'Final', desc: 'End-Sem' },
+                { type: 'INTERNAL', label: 'Internal', desc: 'CIE' },
+                { type: 'MAKEUP', label: 'Makeup', desc: 'Backlog Re-exam', isBacklog: true }
+              ].map(item => {
+                const isSelected = selectedExamType === item.type;
+                const isAvailable = availableExamTypes.includes(item.type);
+                return (
+                  <button
+                    key={item.type}
+                    type="button"
+                    onClick={() => setSelectedExamType(item.type)}
+                    className={`p-2 rounded-lg border text-left flex flex-col justify-between transition-all relative ${
+                      isSelected
+                        ? item.isBacklog
+                          ? 'border-amber-500 bg-amber-50 text-amber-950 ring-1 ring-amber-500 shadow-2xs'
+                          : 'border-brass-500 bg-brass-50/70 text-ink-950 ring-1 ring-brass-500 shadow-2xs'
+                        : isAvailable
+                          ? 'border-border bg-surface-0 hover:bg-surface-50 text-text-800'
+                          : 'border-border/60 bg-surface-50/50 text-text-400 hover:text-text-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-bold text-xs">{item.label}</span>
+                      {isAvailable && (
+                        <span className={`w-2 h-2 rounded-full ${item.isBacklog ? 'bg-amber-500 animate-pulse' : 'bg-success'}`} title="Hall ticket ready" />
+                      )}
+                    </div>
+                    <span className="text-[10px] text-text-500 mt-1">{item.desc}</span>
+                    {item.isBacklog && isAvailable && (
+                      <span className="mt-1 text-[9px] font-mono font-bold text-amber-700 bg-amber-100/80 px-1 py-0.5 rounded text-center">
+                        ★ Backlog Ready
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
+
+        {/* Dual Hall Ticket Notice (Rule 18) */}
+        {availableExamTypes.includes('MAKEUP') && availableExamTypes.some(t => t !== 'MAKEUP') && (
+          <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-lg flex items-start gap-2.5 text-xs text-amber-900">
+            <Sparkles size={16} className="text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <div className="font-semibold flex items-center gap-1.5">
+                <span>Dual Hall Tickets Active (Rule 18)</span>
+                <span className="bg-amber-200 text-amber-900 text-[9px] font-mono font-bold px-1.5 py-0.2 rounded">
+                  REGULAR + MAKEUP
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-850">
+                You have separate hall tickets for your current regular semester and your backlog re-attempt examination. Click the tabs above to toggle between and print each admit card independently.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Selected Scope Banner */}
         <div className="p-3 bg-surface-50 border border-border rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -362,7 +439,9 @@ export default function StudentHallTicket() {
                   </h2>
                   <div className="pt-1">
                     <span className="inline-block px-3 py-0.5 border border-black font-mono font-bold text-xs tracking-wider uppercase bg-gray-100">
-                      {admitCard.examType || selectedExamType} EXAMINATION HALL TICKET / ADMIT CARD
+                      {(admitCard.examType || selectedExamType) === 'MAKEUP' 
+                        ? 'REMEDIAL / MAKEUP (BACKLOG) EXAMINATION HALL TICKET' 
+                        : `${admitCard.examType || selectedExamType} EXAMINATION HALL TICKET / ADMIT CARD`}
                     </span>
                   </div>
                   <div className="text-[10px] font-mono font-medium text-gray-800 pt-0.5">

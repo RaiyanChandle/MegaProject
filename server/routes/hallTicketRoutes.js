@@ -4,6 +4,7 @@ import {
   getHallTickets, 
   getHallTicketById, 
   getStudentAdmitCard,
+  getStudentTicketTypes,
   getPreviewExams,
   updateHallTicket, 
   deleteHallTicket 
@@ -17,6 +18,7 @@ router.use(requireAuth);
 // Read hall tickets (Exam Staff, Admins, Teachers, Students, Parents)
 router.get('/', requireRole('EXAM_STAFF', 'SUPER_ADMIN', 'DEPARTMENT_ADMIN', 'TEACHER', 'STUDENT', 'PARENT'), getHallTickets);
 router.get('/preview-exams', requireRole('EXAM_STAFF', 'SUPER_ADMIN'), getPreviewExams);
+router.get('/student/:studentId/types', getStudentTicketTypes);
 router.get('/student/:studentId', getStudentAdmitCard);
 router.get('/:id', getHallTicketById);
 

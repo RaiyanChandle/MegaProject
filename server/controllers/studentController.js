@@ -335,6 +335,7 @@ export const getMyEnrolledSubjects = async (req, res) => {
       });
 
       enrJson.teacher = allocation?.teacher || null;
+      enrJson.isBacklog = enr.attemptNumber > 1;
       return enrJson;
     }));
 

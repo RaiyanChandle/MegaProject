@@ -424,14 +424,21 @@ export default function Exams() {
               <span className="w-1.5 h-1.5 rounded-full bg-success" title="Current active term" />
             )}
           </span>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-            exam?.examType === 'FINAL' ? 'bg-purple-100 text-purple-800 border border-purple-200' :
-            exam?.examType === 'MIDTERM' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-            exam?.examType === 'MAKEUP' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-            'bg-slate-100 text-slate-800 border border-slate-200'
-          }`}>
-            {exam?.examType || 'FINAL'}
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              exam?.examType === 'FINAL' ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+              exam?.examType === 'MIDTERM' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+              exam?.examType === 'MAKEUP' ? 'bg-amber-100 text-amber-800 border border-amber-200 font-mono' :
+              'bg-slate-100 text-slate-800 border border-slate-200'
+            }`}>
+              {exam?.examType || 'FINAL'}
+            </span>
+            {exam?.examType === 'MAKEUP' && exam?.backlogCandidateCount !== undefined && (
+              <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded font-medium">
+                {exam.backlogCandidateCount} candidate{exam.backlogCandidateCount === 1 ? '' : 's'}
+              </span>
+            )}
+          </div>
         </div>
       )
     },
@@ -809,6 +816,18 @@ export default function Exams() {
               />
             </Field>
           </div>
+
+          {/* MAKEUP Re-Exam Notice (Rules 17 & 18) */}
+          {formData.examType === 'MAKEUP' && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
+              <div className="font-semibold flex items-center gap-1.5">
+                <span>🔄 Backlog Re-Attempt Examination (Rule 17)</span>
+              </div>
+              <p className="text-[11px] text-amber-800">
+                This MAKEUP examination specifically caters to students with active re-attempt enrollments (Attempt &gt; 1) for this course. Separate hall tickets will be generated per Rule 18 without mixing with regular semester examinations.
+              </p>
+            </div>
+          )}
 
           {/* Max Marks & Passing Marks */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

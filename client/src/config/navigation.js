@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers, Award } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers, Award, RotateCcw } from 'lucide-react';
 
 export const navigationConfig = {
   SUPER_ADMIN: [
@@ -56,5 +56,6 @@ export const navigationConfig = {
     { name: 'Hall Tickets', href: '/examstaff/halltickets', icon: BookOpen },
     { name: 'Results', href: '/examstaff/results', icon: FileCheck },
     { name: 'Result Processing', href: '/examstaff/result-processing', icon: Award },
+    { name: 'Backlog Re-attempts', href: '/examstaff/backlogs', icon: RotateCcw },
   ],
 };
