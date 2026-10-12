@@ -36,15 +36,20 @@ export const createDivision = async (req, res) => {
 
 export const getDivisions = async (req, res) => {
   const { classId } = req.query;
-  const departmentId = req.user.departmentId;
 
   if (!classId) {
     return res.status(400).json({ error: 'classId query parameter is required' });
   }
 
   try {
-    // Security check
-    const targetClass = await Class.findOne({ where: { id: classId, departmentId } });
+    const classWhere = { id: classId };
+    if (req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'EXAM_STAFF') {
+      if (req.user.departmentId) {
+        classWhere.departmentId = req.user.departmentId;
+      }
+    }
+
+    const targetClass = await Class.findOne({ where: classWhere });
     if (!targetClass) {
       return res.status(404).json({ error: 'Class not found' });
     }

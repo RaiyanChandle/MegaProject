@@ -175,8 +175,8 @@ widening to more modules.
 
 ## Phase 14 — Announcements & leave · flows 13, 14
 
-- [ ] **T14.1** Create announcements with targeting; wildcard nulls handled (rules 32).
-- [ ] **T14.2** Role-filtered notice feed for students, teachers, parents.
+- [x] **T14.1** Create announcements with targeting; wildcard nulls handled (rules 32).--done
+- [x] **T14.2** Role-filtered notice feed for students, teachers, parents.--done
 - [ ] **T14.3** Leave requests (student or teacher) with the exactly-one-requester hook (rules 33).
 - [ ] **T14.4** Department Admin approve/reject screen.
 

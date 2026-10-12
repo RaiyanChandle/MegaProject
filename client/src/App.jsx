@@ -42,6 +42,11 @@ import ExamManagement from './pages/examstaff/ExamManagement';
 import HallTicketManagement from './pages/examstaff/HallTicketManagement';
 import ExamResultsVerification from './pages/examstaff/ExamResultsVerification';
 import StudentHallTicket from './pages/student/StudentHallTicket';
+import SuperAdminAnnouncements from './pages/superadmin/Announcements';
+import DeptAdminAnnouncements from './pages/deptadmin/Announcements';
+import TeacherAnnouncements from './pages/teacher/TeacherAnnouncements';
+import StudentAnnouncements from './pages/student/StudentAnnouncements';
+import ExamStaffAnnouncements from './pages/examstaff/ExamStaffAnnouncements';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -67,6 +72,7 @@ function App() {
               <Route path="admins" element={<DeptAdmins />} />
               <Route path="exam-staff" element={<ExamStaff />} />
               <Route path="academic-terms" element={<AcademicTerms />} />
+              <Route path="announcements" element={<SuperAdminAnnouncements />} />
               <Route path="library" element={<SuperAdminLibrary />} />
               <Route path="settings" element={<Settings />} />
             </Route>
@@ -84,6 +90,7 @@ function App() {
               <Route path="teachers" element={<Teachers />} />
               <Route path="students" element={<Students />} />
               <Route path="attendance" element={<AttendanceReport />} />
+              <Route path="announcements" element={<DeptAdminAnnouncements />} />
             </Route>
 
             {/* Protected Routes: Teacher */}
@@ -96,6 +103,7 @@ function App() {
               <Route path="attendance" element={<TeacherAttendance />} />
               <Route path="notes" element={<TeacherNotes />} />
               <Route path="assignments" element={<TeacherAssignments />} />
+              <Route path="announcements" element={<TeacherAnnouncements />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<TeacherMarks />} />
               <Route path="question-papers" element={<TeacherQuestionPapers />} />
@@ -112,6 +120,7 @@ function App() {
               <Route path="attendance" element={<StudentAttendance />} />
               <Route path="notes" element={<StudentNotes />} />
               <Route path="assignments" element={<StudentAssignments />} />
+              <Route path="announcements" element={<StudentAnnouncements />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<StudentMarks />} />
               <Route path="halltickets" element={<StudentHallTicket />} />
@@ -137,6 +146,7 @@ function App() {
               <Route path="exams" element={<ExamManagement />} />
               <Route path="halltickets" element={<HallTicketManagement />} />
               <Route path="results" element={<ExamResultsVerification />} />
+              <Route path="announcements" element={<ExamStaffAnnouncements />} />
             </Route>
 
             {/* Catch-all */}

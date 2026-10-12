@@ -49,6 +49,14 @@ const statusMap = {
   CORE: 'bg-info/10 text-info',
   PROGRAM_ELECTIVE: 'bg-warning/10 text-warning',
   OPEN_ELECTIVE: 'bg-success/10 text-success',
+
+  // announcement types
+  GLOBAL: 'bg-[#5B3A73]/15 text-[#5B3A73]',
+  DEPARTMENT: 'bg-[#1F6F6F]/15 text-[#1F6F6F]',
+  CLASS: 'bg-info/10 text-info',
+  DIVISION: 'bg-brass-500/15 text-brass-600',
+  TEACHER: 'bg-[#C98A3E]/15 text-[#C98A3E]',
+  PARENT: 'bg-[#5B6B8C]/15 text-[#5B6B8C]',
 };
 
 export default function StatusBadge({ status, className = '' }) {

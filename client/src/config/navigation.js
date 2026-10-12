@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers, Megaphone } from 'lucide-react';
 
 export const navigationConfig = {
   SUPER_ADMIN: [
@@ -7,6 +7,7 @@ export const navigationConfig = {
     { name: 'Dept Admins', href: '/superadmin/admins', icon: Users },
     { name: 'Exam Staff', href: '/superadmin/exam-staff', icon: FileCheck },
     { name: 'Academic Terms', href: '/superadmin/academic-terms', icon: Calendar },
+    { name: 'Announcements', href: '/superadmin/announcements', icon: Megaphone },
     { name: 'Digital Library', href: '/superadmin/library', icon: BookOpen },
   ],
   DEPARTMENT_ADMIN: [
@@ -16,6 +17,7 @@ export const navigationConfig = {
     { name: 'Teachers', href: '/deptadmin/teachers', icon: Users },
     { name: 'Students', href: '/deptadmin/students', icon: Users },
     { name: 'Attendance Report', href: '/deptadmin/attendance', icon: Clock },
+    { name: 'Announcements', href: '/deptadmin/announcements', icon: Megaphone },
     { name: 'Timetable', href: '/deptadmin/timetable', icon: Calendar },
   ],
   TEACHER: [
@@ -25,6 +27,7 @@ export const navigationConfig = {
     { name: 'Marks Entry', href: '/teacher/marks', icon: FileCheck },
     { name: 'Attendance', href: '/teacher/attendance', icon: Clock },
     { name: 'Study Notes', href: '/teacher/notes', icon: BookOpen },
+    { name: 'Announcements', href: '/teacher/announcements', icon: Megaphone },
     { name: 'Digital Library', href: '/teacher/library', icon: BookOpen },
     { name: 'Assignments', href: '/teacher/assignments', icon: FileText },
   ],
@@ -35,6 +38,7 @@ export const navigationConfig = {
     { name: 'Attendance', href: '/student/attendance', icon: Clock },
     { name: 'Study Notes', href: '/student/notes', icon: FileText },
     { name: 'Assignments', href: '/student/assignments', icon: FileCheck },
+    { name: 'Announcements', href: '/student/announcements', icon: Megaphone },
     { name: 'Digital Library', href: '/student/library', icon: BookOpen },
     { name: 'Marks', href: '/student/marks', icon: FileCheck },
     { name: 'Hall Tickets', href: '/student/halltickets', icon: FileText },
@@ -53,5 +57,6 @@ export const navigationConfig = {
     { name: 'Exams', href: '/examstaff/exams', icon: Calendar },
     { name: 'Hall Tickets', href: '/examstaff/halltickets', icon: FileText },
     { name: 'Results', href: '/examstaff/results', icon: FileCheck },
+    { name: 'Announcements', href: '/examstaff/announcements', icon: Megaphone },
   ],
 };

@@ -36,11 +36,20 @@ export const createClass = async (req, res) => {
 };
 
 export const getClasses = async (req, res) => {
-  const departmentId = req.user.departmentId;
+  // Allow departmentId from query param (e.g. for Super Admin or client filter)
+  // or fall back to req.user.departmentId (for Dept Admin / Teacher)
+  const departmentId = req.query.departmentId || req.user.departmentId;
 
   try {
+    const where = {};
+    if (departmentId) {
+      where.departmentId = departmentId;
+    } else if (req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'EXAM_STAFF') {
+      return res.status(400).json({ error: 'Department ID is required' });
+    }
+
     const classes = await Class.findAll({
-      where: { departmentId },
+      where,
       order: [['batchYear', 'DESC'], ['semesterNumber', 'ASC']]
     });
     res.json(classes);
