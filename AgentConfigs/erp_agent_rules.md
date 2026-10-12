@@ -108,6 +108,19 @@ module below.
 19. `is_pass` on `exam_results` must be derived from `passing_marks` on the
     `exams` row at write time, not recomputed ad hoc elsewhere — if passing
     criteria differ by exam type, this keeps the logic in one place.
+20. **Two-stage Exam Marks Verification Workflow**:
+    Subject teachers evaluate student answer papers and enter marks into `exam_results`
+    in `DRAFT` or `SUBMITTED` status. These marks are then routed to the Exam Cell
+    (`EXKIT`) for formal verification. Marks **only** become official and affect
+    the student's record when Exam Cell approves them (`VERIFIED`).
+    Upon verification by Exam Cell:
+    - Status moves to `VERIFIED`, recording `verifiedById` and `verifiedAt`.
+    - If the exam links to an `AssessmentComponent`, marks automatically sync to
+      `ComponentMark` (with `sourceExamId`).
+    - `SubjectResult` is dynamically computed/updated.
+    Unverified or draft marks must **never** leak into published `SubjectResult`s
+    or term-level `ResultCard`s. If rejected by Exam Cell (`REJECTED`), the reason
+    is logged and the submission is returned to the teacher for revision.
 
 ---
 
