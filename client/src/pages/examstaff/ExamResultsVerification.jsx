@@ -24,8 +24,10 @@ import {
   TrendingUp,
   RotateCcw
 } from 'lucide-react';
+import ResultProcessingDesk from './ResultProcessingDesk';
 
 export default function ExamResultsVerification() {
+  const [activeTab, setActiveTab] = useState('verification');
   const [submissions, setSubmissions] = useState([]);
   const [formOptions, setFormOptions] = useState({ academicTerms: [], departments: [] });
   const [loading, setLoading] = useState(true);
@@ -293,15 +295,46 @@ export default function ExamResultsVerification() {
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
-          <h1 className="text-3xl font-semibold text-text-900 tracking-tight">Exam Results Verification Desk</h1>
+          <h1 className="text-3xl font-semibold text-text-900 tracking-tight">Examinations & Result Operations</h1>
           <p className="text-sm text-text-500 mt-1">
-            Formal verification and approval of faculty-submitted examination marksheets (Rule 20). Approving results automatically synchronizes component marks and recomputes subject results.
+            Exam Cell operations: Verify faculty-submitted marksheets and generate official semester ResultCards with SGPA (Rule 20 & 28).
           </p>
         </div>
       </div>
 
-      {/* Overview Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Module Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-border pb-1">
+        <button
+          onClick={() => setActiveTab('verification')}
+          className={`px-4 py-2.5 text-xs font-semibold rounded-t-md transition-colors flex items-center gap-2 border-b-2 ${
+            activeTab === 'verification'
+              ? 'border-ink-900 text-ink-900 bg-surface-0 shadow-xs'
+              : 'border-transparent text-text-500 hover:text-text-900 hover:bg-surface-50'
+          }`}
+        >
+          <FileCheck className="w-4 h-4" />
+          <span>Exam Marksheet Verification</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('processing')}
+          className={`px-4 py-2.5 text-xs font-semibold rounded-t-md transition-colors flex items-center gap-2 border-b-2 ${
+            activeTab === 'processing'
+              ? 'border-ink-900 text-ink-900 bg-surface-0 shadow-xs'
+              : 'border-transparent text-text-500 hover:text-text-900 hover:bg-surface-50'
+          }`}
+        >
+          <Award className="w-4 h-4" />
+          <span>Result Processing & SGPA Generation (ResultCard)</span>
+        </button>
+      </div>
+
+      {activeTab === 'processing' ? (
+        <ResultProcessingDesk />
+      ) : (
+        <>
+          {/* Overview Stat Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-surface-0 rounded-md border border-border p-4 flex flex-col">
           <span className="text-xs font-medium text-text-500 uppercase tracking-wider">Total Scheduled Exams</span>
           <span className="font-mono text-2xl font-bold text-text-900 mt-1">{stats.total}</span>
@@ -584,6 +617,8 @@ export default function ExamResultsVerification() {
           </div>
         </form>
       </Modal>
+        </>
+      )}
     </div>
   );
 }
