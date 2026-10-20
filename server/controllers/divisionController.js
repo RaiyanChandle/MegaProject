@@ -36,17 +36,26 @@ export const createDivision = async (req, res) => {
 
 export const getDivisions = async (req, res) => {
   const { classId } = req.query;
-  const departmentId = req.user.departmentId;
 
   if (!classId) {
     return res.status(400).json({ error: 'classId query parameter is required' });
   }
 
   try {
-    // Security check
-    const targetClass = await Class.findOne({ where: { id: classId, departmentId } });
+    const targetClass = await Class.findByPk(classId);
     if (!targetClass) {
       return res.status(404).json({ error: 'Class not found' });
+    }
+
+    let userDeptId = req.user.departmentId;
+    if (req.user.role === 'DEPARTMENT_ADMIN') {
+      if (!userDeptId) {
+        const da = await DepartmentAdmin.findByPk(req.user.id);
+        if (da) userDeptId = da.departmentId;
+      }
+      if (userDeptId && targetClass.departmentId !== userDeptId) {
+        return res.status(403).json({ error: 'Class does not belong to your department' });
+      }
     }
 
     const divisions = await Division.findAll({

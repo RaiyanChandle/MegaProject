@@ -16,6 +16,7 @@ import SubjectDetails from './pages/deptadmin/SubjectDetails';
 import Teachers from './pages/deptadmin/Teachers';
 import Students from './pages/deptadmin/Students';
 import AttendanceReport from './pages/deptadmin/AttendanceReport';
+import DeptAdminLeaveManagement from './pages/deptadmin/LeaveManagement';
 
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherClasses from './pages/teacher/TeacherClasses';
@@ -37,14 +38,23 @@ import TeacherMarks from './pages/teacher/TeacherMarks';
 import StudentMarks from './pages/student/StudentMarks';
 import ParentMarks from './pages/parent/ParentMarks';
 import ParentAssignments from './pages/parent/ParentAssignments';
+import ParentAnnouncements from './pages/parent/ParentAnnouncements';
 import ExamStaffDashboard from './pages/examstaff/ExamStaffDashboard';
 import ExamManagement from './pages/examstaff/ExamManagement';
 import HallTicketManagement from './pages/examstaff/HallTicketManagement';
 import ExamResultsVerification from './pages/examstaff/ExamResultsVerification';
 import StudentHallTicket from './pages/student/StudentHallTicket';
+import SuperAdminAnnouncements from './pages/superadmin/Announcements';
+import DeptAdminAnnouncements from './pages/deptadmin/Announcements';
+import TeacherAnnouncements from './pages/teacher/TeacherAnnouncements';
+import StudentAnnouncements from './pages/student/StudentAnnouncements';
+import ExamStaffAnnouncements from './pages/examstaff/ExamStaffAnnouncements';
+import TeacherLeave from './pages/teacher/TeacherLeave';
+import StudentLeave from './pages/student/StudentLeave';
 
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 function App() {
   return (
@@ -52,7 +62,8 @@ function App() {
       <AuthProvider>
         <SearchProvider>
           <LanguageProvider>
-            <Routes>
+            <NotificationProvider>
+              <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -67,6 +78,7 @@ function App() {
               <Route path="admins" element={<DeptAdmins />} />
               <Route path="exam-staff" element={<ExamStaff />} />
               <Route path="academic-terms" element={<AcademicTerms />} />
+              <Route path="announcements" element={<SuperAdminAnnouncements />} />
               <Route path="library" element={<SuperAdminLibrary />} />
               <Route path="settings" element={<Settings />} />
             </Route>
@@ -84,6 +96,8 @@ function App() {
               <Route path="teachers" element={<Teachers />} />
               <Route path="students" element={<Students />} />
               <Route path="attendance" element={<AttendanceReport />} />
+              <Route path="announcements" element={<DeptAdminAnnouncements />} />
+              <Route path="leaves" element={<DeptAdminLeaveManagement />} />
             </Route>
 
             {/* Protected Routes: Teacher */}
@@ -96,6 +110,8 @@ function App() {
               <Route path="attendance" element={<TeacherAttendance />} />
               <Route path="notes" element={<TeacherNotes />} />
               <Route path="assignments" element={<TeacherAssignments />} />
+              <Route path="announcements" element={<TeacherAnnouncements />} />
+              <Route path="leaves" element={<TeacherLeave />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<TeacherMarks />} />
               <Route path="question-papers" element={<TeacherQuestionPapers />} />
@@ -112,6 +128,8 @@ function App() {
               <Route path="attendance" element={<StudentAttendance />} />
               <Route path="notes" element={<StudentNotes />} />
               <Route path="assignments" element={<StudentAssignments />} />
+              <Route path="announcements" element={<StudentAnnouncements />} />
+              <Route path="leaves" element={<StudentLeave />} />
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<StudentMarks />} />
               <Route path="halltickets" element={<StudentHallTicket />} />
@@ -126,6 +144,7 @@ function App() {
               <Route path="attendance" element={<ParentAttendance />} />
               <Route path="marks" element={<ParentMarks />} />
               <Route path="assignments" element={<ParentAssignments />} />
+              <Route path="announcements" element={<ParentAnnouncements />} />
             </Route>
 
             {/* Protected Routes: Exam Staff */}
@@ -137,11 +156,13 @@ function App() {
               <Route path="exams" element={<ExamManagement />} />
               <Route path="halltickets" element={<HallTicketManagement />} />
               <Route path="results" element={<ExamResultsVerification />} />
+              <Route path="announcements" element={<ExamStaffAnnouncements />} />
             </Route>
 
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+            </NotificationProvider>
           </LanguageProvider>
         </SearchProvider>
       </AuthProvider>

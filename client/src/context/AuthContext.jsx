@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiClient } from '../api/client';
 
 const AuthContext = createContext(null);
 
@@ -15,7 +16,17 @@ export function AuthProvider({ children }) {
     
     if (token && savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        setUser(parsed);
+        // Silently refresh fresh user data from server (keeps departmentId updated)
+        apiClient.get('/auth/me')
+          .then((freshUser) => {
+            if (freshUser) {
+              setUser(freshUser);
+              sessionStorage.setItem('nexus_user', JSON.stringify(freshUser));
+            }
+          })
+          .catch(() => {});
       } catch (e) {
         sessionStorage.removeItem('nexus_token');
         sessionStorage.removeItem('nexus_user');
