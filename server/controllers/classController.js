@@ -1,4 +1,4 @@
-import { Class } from '../models/index.js';
+import { Class, DepartmentAdmin, Teacher, Student } from '../models/index.js';
 
 export const createClass = async (req, res) => {
   const { name, batchYear, semesterNumber } = req.body;
@@ -36,11 +36,34 @@ export const createClass = async (req, res) => {
 };
 
 export const getClasses = async (req, res) => {
-  const departmentId = req.user.departmentId;
-
   try {
+    let departmentId;
+    if (req.user.role === 'SUPER_ADMIN' || req.user.role === 'EXAM_STAFF') {
+      departmentId = req.query.departmentId || null;
+    } else {
+      // Dept Admin, Teacher, Student: STRICTLY forced to their own department
+      departmentId = req.user.departmentId;
+      if (!departmentId && req.user.role === 'DEPARTMENT_ADMIN') {
+        const da = await DepartmentAdmin.findByPk(req.user.id);
+        if (da) departmentId = da.departmentId;
+      } else if (!departmentId && req.user.role === 'TEACHER') {
+        const t = await Teacher.findByPk(req.user.id);
+        if (t) departmentId = t.departmentId;
+      } else if (!departmentId && req.user.role === 'STUDENT') {
+        const s = await Student.findByPk(req.user.id);
+        if (s) departmentId = s.departmentId;
+      }
+    }
+
+    const where = {};
+    if (departmentId) {
+      where.departmentId = departmentId;
+    } else if (req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'EXAM_STAFF') {
+      return res.status(400).json({ error: 'Department ID is required' });
+    }
+
     const classes = await Class.findAll({
-      where: { departmentId },
+      where,
       order: [['batchYear', 'DESC'], ['semesterNumber', 'ASC']]
     });
     res.json(classes);

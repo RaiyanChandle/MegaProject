@@ -237,6 +237,13 @@ Announcement.belongsTo(DepartmentAdmin, { foreignKey: 'createdByDeptAdminId', as
 Teacher.hasMany(Announcement, { foreignKey: 'createdByTeacherId', as: 'announcements' });
 Announcement.belongsTo(Teacher, { foreignKey: 'createdByTeacherId', as: 'createdByTeacher' });
 
+Announcement.belongsTo(Department, { foreignKey: 'targetDepartmentId', as: 'targetDepartment', constraints: false });
+Department.hasMany(Announcement, { foreignKey: 'targetDepartmentId', as: 'targetedAnnouncements', constraints: false });
+Announcement.belongsTo(Class, { foreignKey: 'targetClassId', as: 'targetClass', constraints: false });
+Class.hasMany(Announcement, { foreignKey: 'targetClassId', as: 'targetedAnnouncements', constraints: false });
+Announcement.belongsTo(Division, { foreignKey: 'targetDivisionId', as: 'targetDivision', constraints: false });
+Division.hasMany(Announcement, { foreignKey: 'targetDivisionId', as: 'targetedAnnouncements', constraints: false });
+
 Student.hasMany(LeaveRequest, { foreignKey: 'studentId', as: 'leaveRequests' });
 LeaveRequest.belongsTo(Student, { foreignKey: 'studentId', as: 'student' });
 Teacher.hasMany(LeaveRequest, { foreignKey: 'teacherId', as: 'leaveRequests' });

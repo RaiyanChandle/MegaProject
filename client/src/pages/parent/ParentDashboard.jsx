@@ -10,7 +10,8 @@ import {
   BookOpen, 
   GraduationCap, 
   RefreshCw,
-  FileCheck
+  FileCheck,
+  Megaphone
 } from 'lucide-react';
 import { apiClient } from '../../api/client';
 import { Link } from 'react-router-dom';
@@ -173,6 +174,13 @@ export default function ParentDashboard() {
           >
             <Award size={13} className="text-ink-900" />
             <span>{t('marks')}</span>
+          </Link>
+          <Link
+            to="/parent/announcements"
+            className="px-3 py-1.5 rounded-lg border border-border bg-surface-50 hover:bg-surface-100 text-text-900 text-xs font-semibold transition-colors inline-flex items-center gap-1.5 shadow-xs"
+          >
+            <Megaphone size={13} className="text-brass-500" />
+            <span>Notices</span>
           </Link>
           <Link
             to="/parent/assignments"
