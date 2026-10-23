@@ -240,12 +240,12 @@ export default function ParentAssignments() {
 
       {/* 3 Summary Cards */}
       {isLoadingAssignments ? (
-        <div className="bg-surface-0 border border-border rounded-xl p-8 text-center text-xs text-text-500">
+        <div key="loading-overview-panel" className="bg-surface-0 border border-border rounded-xl p-8 text-center text-xs text-text-500">
           <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-ink-700" />
-          Loading assignments overview...
+          <span>Loading assignments overview...</span>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div key="summary-overview-grid" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Pending Tasks */}
           <div className={`rounded-xl p-4 sm:p-5 border shadow-xs ${
             totalPending > 0 ? 'bg-amber-50/60 border-amber-200' : 'bg-surface-0 border-border'
@@ -266,7 +266,7 @@ export default function ParentAssignments() {
               </span>
             </div>
             <p className="text-xs text-text-500 mt-1.5">
-              {totalOverdue > 0 ? `${totalOverdue} ${t('pastScheduledDeadline')}` : t('noOverdueAssignments')}
+              <span>{totalOverdue > 0 ? `${totalOverdue} ${t('pastScheduledDeadline')}` : t('noOverdueAssignments')}</span>
             </p>
           </div>
 
@@ -284,7 +284,7 @@ export default function ParentAssignments() {
               </span>
             </div>
             <p className="text-xs text-text-500 mt-1.5">
-              {t('turnedInSubtext')}
+              <span>{t('turnedInSubtext')}</span>
             </p>
           </div>
 
@@ -302,7 +302,7 @@ export default function ParentAssignments() {
               </span>
             </div>
             <p className="text-xs text-text-500 mt-1.5">
-              {t('acrossRegistered')} ({subjectGroups.length})
+              <span>{t('acrossRegistered')}</span> ({subjectGroups.length})
             </p>
           </div>
         </div>
@@ -313,7 +313,9 @@ export default function ParentAssignments() {
         <div className="bg-danger/5 border border-danger/25 rounded-xl p-3.5 sm:p-4 flex items-start gap-3">
           <AlertTriangle className="text-danger shrink-0 mt-0.5" size={18} />
           <div className="text-xs text-danger leading-relaxed">
-            <strong className="font-bold">{t('overdueAlert')}:</strong> {selectedChild?.name} {t('overdueAlertNotice')}
+            <strong className="font-bold">{t('overdueAlert')}: </strong>
+            <span>{selectedChild?.name}</span>{' '}
+            <span>{t('overdueAlertNotice')}</span>
           </div>
         </div>
       )}

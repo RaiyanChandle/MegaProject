@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { 
   Department, 
@@ -14,7 +15,10 @@ import {
   IdSequence,
   AttendanceSession,
   AttendanceRecord,
-  Enrollment
+  Enrollment,
+  LeaveRequest,
+  Announcement,
+  SubjectAllocation
 } from '../models/index.js';
 
 export const getSuperAdminStats = async (req, res) => {
@@ -290,5 +294,298 @@ export const getIdRegistryUsers = async (req, res) => {
   } catch (error) {
     console.error('Error fetching ID registry users:', error);
     res.status(500).json({ error: 'Failed to fetch ID registry details' });
+  }
+};
+
+/**
+ * =====================================================================
+ * DEPARTMENT ADMIN DASHBOARD ANALYTICS
+ * Scoped strictly to the Department Admin's department
+ * =====================================================================
+ */
+export const getDeptAdminStats = async (req, res) => {
+  try {
+    let departmentId = req.user.departmentId;
+    let deptAdmin = null;
+
+    if (!departmentId) {
+      deptAdmin = await DepartmentAdmin.findByPk(req.user.id, {
+        include: [{ model: Department, as: 'department' }]
+      });
+      if (deptAdmin) {
+        departmentId = deptAdmin.departmentId;
+      }
+    } else {
+      deptAdmin = await DepartmentAdmin.findByPk(req.user.id, {
+        include: [{ model: Department, as: 'department' }]
+      });
+    }
+
+    if (!departmentId) {
+      return res.status(404).json({ error: 'Department Admin not assigned to any department' });
+    }
+
+    const department = deptAdmin?.department || await Department.findByPk(departmentId);
+    if (!department) {
+      return res.status(404).json({ error: 'Department not found' });
+    }
+
+    // Parallel fetch for departmental metrics
+    const [
+      studentsCount,
+      teachersCount,
+      classes,
+      subjects,
+      currentTerm,
+      pendingStudentLeaves,
+      pendingTeacherLeaves,
+      recentAnnouncements,
+      batchesData,
+      subjectAllocations
+    ] = await Promise.all([
+      Student.count({ where: { departmentId } }),
+      Teacher.count({ where: { departmentId } }),
+      Class.findAll({
+        where: { departmentId },
+        include: [
+          { model: Division, as: 'divisions', attributes: ['id', 'name'] },
+          { model: Subject, as: 'subjects', attributes: ['id', 'name', 'code', 'subjectType', 'credits'] }
+        ],
+        order: [['semesterNumber', 'ASC'], ['batchYear', 'DESC']]
+      }),
+      Subject.findAll({
+        where: { departmentId },
+        attributes: ['id', 'name', 'code', 'subjectType', 'credits', 'classId']
+      }),
+      AcademicTerm.findOne({ where: { isCurrent: true } }),
+      LeaveRequest.findAll({
+        where: { status: 'PENDING' },
+        include: [
+          {
+            model: Student,
+            as: 'student',
+            where: { departmentId },
+            attributes: ['id', 'name', 'rollNumber', 'batchYear', 'instituteId']
+          }
+        ],
+        order: [['createdAt', 'DESC']],
+        limit: 5
+      }),
+      LeaveRequest.findAll({
+        where: { status: 'PENDING' },
+        include: [
+          {
+            model: Teacher,
+            as: 'teacher',
+            where: { departmentId },
+            attributes: ['id', 'name', 'instituteId']
+          }
+        ],
+        order: [['createdAt', 'DESC']],
+        limit: 5
+      }),
+      Announcement.findAll({
+        where: {
+          [Op.or]: [
+            { targetDepartmentId: departmentId },
+            { targetDepartmentId: null }
+          ]
+        },
+        order: [['createdAt', 'DESC']],
+        limit: 5
+      }),
+      Student.findAll({
+        where: { departmentId },
+        attributes: [
+          'batchYear',
+          [sequelize.fn('COUNT', sequelize.col('id')), 'studentCount']
+        ],
+        group: ['batchYear'],
+        order: [['batchYear', 'ASC']]
+      }),
+      SubjectAllocation.findAll({
+        include: [
+          {
+            model: Subject,
+            as: 'subject',
+            where: { departmentId },
+            attributes: ['id', 'name', 'code']
+          },
+          {
+            model: Teacher,
+            as: 'teacher',
+            attributes: ['id', 'name', 'instituteId']
+          },
+          {
+            model: Class,
+            as: 'class',
+            attributes: ['id', 'name', 'batchYear', 'semesterNumber']
+          },
+          {
+            model: Division,
+            as: 'division',
+            attributes: ['id', 'name']
+          }
+        ]
+      })
+    ]);
+
+    // Subject allocation status
+    const allocatedSubjectIds = new Set(subjectAllocations.map(sa => sa.subjectId));
+    const totalSubjectsCount = subjects.length;
+    const allocatedSubjectsCount = subjects.filter(s => allocatedSubjectIds.has(s.id)).length;
+    const unallocatedSubjects = subjects
+      .filter(s => !allocatedSubjectIds.has(s.id))
+      .map(s => {
+        const cls = classes.find(c => c.id === s.classId);
+        return {
+          id: s.id,
+          name: s.name,
+          code: s.code,
+          subjectType: s.subjectType,
+          className: cls ? cls.name : 'Unknown Class',
+          classId: s.classId
+        };
+      });
+
+    // Classes summary with divisions
+    let totalDivisionsCount = 0;
+    const classesSummary = classes.map(c => {
+      const divCount = c.divisions ? c.divisions.length : 0;
+      totalDivisionsCount += divCount;
+      return {
+        id: c.id,
+        name: c.name,
+        batchYear: c.batchYear,
+        semesterNumber: c.semesterNumber,
+        divisionsCount: divCount,
+        divisions: c.divisions ? c.divisions.map(d => d.name) : [],
+        subjectsCount: c.subjects ? c.subjects.length : 0
+      };
+    });
+
+    // Subject type breakdown
+    const subjectTypesBreakdown = {
+      core: subjects.filter(s => s.subjectType === 'CORE').length,
+      programElective: subjects.filter(s => s.subjectType === 'PROGRAM_ELECTIVE').length,
+      openElective: subjects.filter(s => s.subjectType === 'OPEN_ELECTIVE').length
+    };
+
+    // Pending leaves list
+    const combinedPendingLeaves = [
+      ...pendingStudentLeaves.map(l => ({
+        id: l.id,
+        type: 'Student',
+        name: l.student?.name || 'Unknown Student',
+        instituteId: l.student?.instituteId,
+        fromDate: l.fromDate,
+        toDate: l.toDate,
+        reason: l.reason,
+        createdAt: l.createdAt
+      })),
+      ...pendingTeacherLeaves.map(l => ({
+        id: l.id,
+        type: 'Teacher',
+        name: l.teacher?.name || 'Unknown Faculty',
+        instituteId: l.teacher?.instituteId,
+        fromDate: l.fromDate,
+        toDate: l.toDate,
+        reason: l.reason,
+        createdAt: l.createdAt
+      }))
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Department Attendance Calculation
+    const classIds = classes.map(c => c.id);
+    let totalDeptSessions = 0;
+    let totalAttendanceRecords = 0;
+    let presentAttendanceRecords = 0;
+    let overallAttendanceRate = null;
+
+    if (classIds.length > 0) {
+      totalDeptSessions = await AttendanceSession.count({
+        where: { classId: { [Op.in]: classIds } }
+      }).catch(() => 0);
+
+      const sessions = await AttendanceSession.findAll({
+        where: { classId: { [Op.in]: classIds } },
+        attributes: ['id']
+      }).catch(() => []);
+
+      const sessionIds = sessions.map(s => s.id);
+      if (sessionIds.length > 0) {
+        totalAttendanceRecords = await AttendanceRecord.count({
+          where: { sessionId: { [Op.in]: sessionIds } }
+        }).catch(() => 0);
+
+        presentAttendanceRecords = await AttendanceRecord.count({
+          where: { 
+            sessionId: { [Op.in]: sessionIds },
+            present: true 
+          }
+        }).catch(() => 0);
+
+        if (totalAttendanceRecords > 0) {
+          overallAttendanceRate = Math.round((presentAttendanceRecords / totalAttendanceRecords) * 100);
+        }
+      }
+    }
+
+    const batchDistribution = batchesData.map(b => ({
+      batchYear: b.get('batchYear') || 'Unassigned',
+      count: parseInt(b.get('studentCount'), 10) || 0
+    }));
+
+    const studentTeacherRatio = teachersCount > 0 ? (studentsCount / teachersCount).toFixed(1) : 'N/A';
+
+    res.json({
+      department: {
+        id: department.id,
+        name: department.name,
+        code: department.code
+      },
+      admin: {
+        id: deptAdmin?.id || req.user.id,
+        name: deptAdmin?.name || 'Department Administrator',
+        email: deptAdmin?.email || '',
+        instituteId: deptAdmin?.instituteId || req.user.instituteId || 'DAKIT0001'
+      },
+      currentTerm: currentTerm ? {
+        id: currentTerm.id,
+        name: currentTerm.name,
+        startDate: currentTerm.startDate,
+        endDate: currentTerm.endDate,
+        isCurrent: currentTerm.isCurrent
+      } : null,
+      stats: {
+        studentsCount,
+        teachersCount,
+        classesCount: classes.length,
+        divisionsCount: totalDivisionsCount,
+        subjectsCount: totalSubjectsCount,
+        allocatedSubjectsCount,
+        unallocatedSubjectsCount: unallocatedSubjects.length,
+        allocationRate: totalSubjectsCount > 0 ? Math.round((allocatedSubjectsCount / totalSubjectsCount) * 100) : 100,
+        pendingLeavesCount: combinedPendingLeaves.length,
+        studentTeacherRatio,
+        overallAttendanceRate,
+        totalDeptSessions
+      },
+      subjectTypesBreakdown,
+      unallocatedSubjects: unallocatedSubjects.slice(0, 5),
+      classesSummary,
+      batchDistribution,
+      pendingLeaves: combinedPendingLeaves.slice(0, 5),
+      recentAnnouncements: recentAnnouncements.map(a => ({
+        id: a.id,
+        title: a.title,
+        message: a.message,
+        type: a.type,
+        createdAt: a.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching department admin stats:', error);
+    res.status(500).json({ error: 'Failed to fetch department analytics' });
   }
 };

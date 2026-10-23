@@ -8,7 +8,8 @@ import Departments from './pages/superadmin/Departments';
 import DeptAdmins from './pages/superadmin/DeptAdmins';
 import ExamStaff from './pages/superadmin/ExamStaff';
 import AcademicTerms from './pages/superadmin/AcademicTerms';
-import Settings from './pages/superadmin/Settings';
+import Settings from './pages/common/Settings';
+import DeptAdminDashboard from './pages/deptadmin/Dashboard';
 import Classes from './pages/deptadmin/Classes';
 import ClassDetails from './pages/deptadmin/ClassDetails';
 import Subjects from './pages/deptadmin/Subjects';
@@ -17,6 +18,10 @@ import Teachers from './pages/deptadmin/Teachers';
 import Students from './pages/deptadmin/Students';
 import AttendanceReport from './pages/deptadmin/AttendanceReport';
 import DeptAdminLeaveManagement from './pages/deptadmin/LeaveManagement';
+import DeptAdminTimetable from './pages/deptadmin/Timetable';
+import StudentFees from './pages/student/StudentFees';
+import ParentFees from './pages/parent/ParentFees';
+import ParentChildren from './pages/parent/ParentChildren';
 
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherClasses from './pages/teacher/TeacherClasses';
@@ -55,15 +60,17 @@ import StudentLeave from './pages/student/StudentLeave';
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { NotificationProvider } from './context/NotificationContext';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <SearchProvider>
-          <LanguageProvider>
-            <NotificationProvider>
-              <Routes>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <SearchProvider>
+            <LanguageProvider>
+              <NotificationProvider>
+                <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -88,7 +95,7 @@ function App() {
               path="/deptadmin"
               element={<ProtectedRoute allowedRoles={['DEPARTMENT_ADMIN']} title="Department Dashboard" />}
             >
-              <Route index element={<div className="p-6 text-text-900">Department Dashboard (Coming Soon)</div>} />
+              <Route index element={<DeptAdminDashboard />} />
               <Route path="classes" element={<Classes />} />
               <Route path="classes/:id" element={<ClassDetails />} />
               <Route path="subjects" element={<Subjects />} />
@@ -98,6 +105,8 @@ function App() {
               <Route path="attendance" element={<AttendanceReport />} />
               <Route path="announcements" element={<DeptAdminAnnouncements />} />
               <Route path="leaves" element={<DeptAdminLeaveManagement />} />
+              <Route path="timetable" element={<DeptAdminTimetable />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             {/* Protected Routes: Teacher */}
@@ -115,6 +124,7 @@ function App() {
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<TeacherMarks />} />
               <Route path="question-papers" element={<TeacherQuestionPapers />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             {/* Protected Routes: Student */}
@@ -133,6 +143,8 @@ function App() {
               <Route path="library" element={<DigitalLibrary />} />
               <Route path="marks" element={<StudentMarks />} />
               <Route path="halltickets" element={<StudentHallTicket />} />
+              <Route path="fees" element={<StudentFees />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             {/* Protected Routes: Parent */}
@@ -145,6 +157,9 @@ function App() {
               <Route path="marks" element={<ParentMarks />} />
               <Route path="assignments" element={<ParentAssignments />} />
               <Route path="announcements" element={<ParentAnnouncements />} />
+              <Route path="children" element={<ParentChildren />} />
+              <Route path="fees" element={<ParentFees />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             {/* Protected Routes: Exam Staff */}
@@ -157,6 +172,7 @@ function App() {
               <Route path="halltickets" element={<HallTicketManagement />} />
               <Route path="results" element={<ExamResultsVerification />} />
               <Route path="announcements" element={<ExamStaffAnnouncements />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             {/* Catch-all */}
@@ -167,6 +183,7 @@ function App() {
         </SearchProvider>
       </AuthProvider>
     </Router>
+  </ErrorBoundary>
   );
 }
 

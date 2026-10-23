@@ -1,7 +1,18 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
-import { SuperAdmin, DepartmentAdmin, Teacher, Student, ExamStaff, Parent } from '../models/index.js';
+import { 
+  SuperAdmin, 
+  DepartmentAdmin, 
+  Teacher, 
+  Student, 
+  ExamStaff, 
+  Parent,
+  Department,
+  Class,
+  Division,
+  ParentStudent
+} from '../models/index.js';
 
 export const login = async (req, res) => {
   const { identifier, password } = req.body;
@@ -175,18 +186,55 @@ export const getMe = async (req, res) => {
 
   try {
     let userModel;
+    let include = [];
+
     switch (role) {
-      case 'STUDENT': userModel = Student; break;
-      case 'TEACHER': userModel = Teacher; break;
-      case 'DEPARTMENT_ADMIN': userModel = DepartmentAdmin; break;
-      case 'SUPER_ADMIN': userModel = SuperAdmin; break;
-      case 'EXAM_STAFF': userModel = ExamStaff; break;
-      case 'PARENT': userModel = Parent; break;
+      case 'STUDENT': 
+        userModel = Student; 
+        include = [
+          { model: Department, as: 'department', attributes: ['id', 'name', 'code'] },
+          { 
+            model: Division, 
+            as: 'division', 
+            attributes: ['id', 'name'], 
+            include: [{ model: Class, as: 'class', attributes: ['id', 'name'] }] 
+          }
+        ];
+        break;
+      case 'TEACHER': 
+        userModel = Teacher; 
+        include = [
+          { model: Department, as: 'department', attributes: ['id', 'name', 'code'] }
+        ];
+        break;
+      case 'DEPARTMENT_ADMIN': 
+        userModel = DepartmentAdmin; 
+        include = [
+          { model: Department, as: 'department', attributes: ['id', 'name', 'code'] }
+        ];
+        break;
+      case 'SUPER_ADMIN': 
+        userModel = SuperAdmin; 
+        break;
+      case 'EXAM_STAFF': 
+        userModel = ExamStaff; 
+        break;
+      case 'PARENT': 
+        userModel = Parent; 
+        include = [
+          { 
+            model: ParentStudent, 
+            as: 'children', 
+            include: [{ model: Student, as: 'student', attributes: ['id', 'name', 'rollNumber', 'prn'] }] 
+          }
+        ];
+        break;
       default: return res.status(401).json({ error: 'Invalid user role' });
     }
 
     const user = await userModel.findByPk(id, {
-      attributes: { exclude: ['password'] }
+      attributes: { exclude: ['password'] },
+      include
     });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

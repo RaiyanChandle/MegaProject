@@ -104,6 +104,8 @@ const TRANSLATIONS = {
     pastDeadlineBadge: 'Past Deadline',
 
     myChildren: 'My Children',
+    fees: 'Fees',
+    settings: 'Settings',
     noChildrenLinked: 'No students currently linked to this guardian account.',
     noSubjectsFound: 'No subject records found.',
 
@@ -231,6 +233,8 @@ const TRANSLATIONS = {
     pastDeadlineBadge: 'समय समाप्त',
 
     myChildren: 'मेरे बच्चे',
+    fees: 'शुल्क (फीस)',
+    settings: 'सेटिंग्स',
     noChildrenLinked: 'इस खाते से कोई विद्यार्थी लिंक नहीं है।',
     noSubjectsFound: 'कोई विषय विवरण नहीं मिला।',
 
@@ -358,6 +362,8 @@ const TRANSLATIONS = {
     pastDeadlineBadge: 'मुदत संपली',
 
     myChildren: 'माझी मुले',
+    fees: 'शुल्क (फी)',
+    settings: 'सेटिंग्ज',
     noChildrenLinked: 'या खात्याशी कोणताही विद्यार्थी जोडलेला नाही.',
     noSubjectsFound: 'कोणतीही नोंद आढळली नाही.',
 
@@ -485,6 +491,8 @@ const TRANSLATIONS = {
     pastDeadlineBadge: 'તારીખ વીતી ગઈ',
 
     myChildren: 'મારા બાળકો',
+    fees: 'ફી',
+    settings: 'સેટિંગ્સ',
     noChildrenLinked: 'કોઈ વિદ્યાર્થી આ ખાતા સાથે જોડાયેલ નથી.',
     noSubjectsFound: 'કોઈ વિગત મળી નથી.',
 
@@ -612,6 +620,8 @@ const TRANSLATIONS = {
     pastDeadlineBadge: 'সময়সীমা শেষ',
 
     myChildren: 'আমার সন্তানরা',
+    fees: 'ফি',
+    settings: 'সেটিংস',
     noChildrenLinked: 'কোনো শিক্ষার্থী সংযুক্ত নেই।',
     noSubjectsFound: 'কোনো তথ্য পাওয়া যায়নি।',
 
@@ -739,6 +749,8 @@ const TRANSLATIONS = {
     pastDeadlineBadge: 'காலக்கெடு முடிந்தது',
 
     myChildren: 'என் பிள்ளைகள்',
+    fees: 'கட்டணம்',
+    settings: 'அமைப்புகள்',
     noChildrenLinked: 'மாணவர்கள் இணைக்கப்படவில்லை.',
     noSubjectsFound: 'விவரங்கள் இல்லை.',
 
@@ -866,6 +878,8 @@ const TRANSLATIONS = {
     pastDeadlineBadge: 'గడువు ముగిసింది',
 
     myChildren: 'నా పిల్లలు',
+    fees: 'ఫీజులు',
+    settings: 'సెట్టింగ్‌లు',
     noChildrenLinked: 'విద్యార్థి లింక్ చేయబడలేదు.',
     noSubjectsFound: 'సమాచారం లేదు.',
 
@@ -993,6 +1007,8 @@ const TRANSLATIONS = {
     pastDeadlineBadge: 'ದಿನಾಂಕ ಮುಗಿದಿದೆ',
 
     myChildren: 'ನನ್ನ ಮಕ್ಕಳು',
+    fees: 'ಶುಲ್ಕ',
+    settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
     noChildrenLinked: 'ಯಾವುದೇ ವಿದ್ಯಾರ್ಥಿ ಲಿಂಕ್ ಆಗಿಲ್ಲ.',
     noSubjectsFound: 'ಯಾವುದೇ ವಿವರಗಳಿಲ್ಲ.',
 
@@ -1034,6 +1050,13 @@ const TRANSLATIONS = {
   }
 };
 
+import { 
+  translateText, 
+  translateBatch, 
+  initGoogleTranslateWidget, 
+  setGoogleWebTranslatorLanguage 
+} from '../services/googleTranslateService';
+
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
@@ -1041,9 +1064,47 @@ export function LanguageProvider({ children }) {
     return localStorage.getItem('nexus_parent_lang') || 'en';
   });
 
+  // Check if current user is a Parent
+  const isParentUser = () => {
+    try {
+      const savedUser = sessionStorage.getItem('nexus_user');
+      if (savedUser) {
+        const userObj = JSON.parse(savedUser);
+        return userObj?.role === 'PARENT';
+      }
+    } catch (e) {}
+    return false;
+  };
+
+  // Initialize Google Translate widget for Parent users
+  useEffect(() => {
+    const isParent = isParentUser();
+    if (isParent) {
+      initGoogleTranslateWidget();
+      if (currentLanguage !== 'en') {
+        // Small delay to ensure widget is mounted
+        const timer = setTimeout(() => {
+          setGoogleWebTranslatorLanguage(currentLanguage);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      // Ensure non-parent users stay in pure English
+      setGoogleWebTranslatorLanguage('en');
+    }
+  }, [currentLanguage]);
+
   const changeLanguage = (code) => {
+    const isParent = isParentUser();
     setCurrentLanguage(code);
     localStorage.setItem('nexus_parent_lang', code);
+
+    // Apply Google Translate web translator for Parent users
+    if (isParent) {
+      setGoogleWebTranslatorLanguage(code);
+    } else {
+      setGoogleWebTranslatorLanguage('en');
+    }
   };
 
   const t = (key) => {
@@ -1063,8 +1124,24 @@ export function LanguageProvider({ children }) {
     return langDict[key] || TRANSLATIONS.en[key] || key;
   };
 
+  /**
+   * Translate any dynamic text from the database using Google Translate API.
+   * Cached automatically in memory & sessionStorage.
+   */
+  const translateDynamicText = async (text) => {
+    if (!isParentUser() || currentLanguage === 'en') return text;
+    return translateText(text, currentLanguage);
+  };
+
   return (
-    <LanguageContext.Provider value={{ currentLanguage, changeLanguage, t, languages: LANGUAGES }}>
+    <LanguageContext.Provider value={{ 
+      currentLanguage, 
+      changeLanguage, 
+      t, 
+      languages: LANGUAGES,
+      translateDynamicText,
+      translateText
+    }}>
       {children}
     </LanguageContext.Provider>
   );
@@ -1077,8 +1154,63 @@ export function useLanguage() {
       currentLanguage: 'en',
       changeLanguage: () => {},
       t: (k) => k,
-      languages: LANGUAGES
+      languages: LANGUAGES,
+      translateDynamicText: async (t) => t,
+      translateText: async (t) => t
     };
   }
   return context;
+}
+
+/**
+ * React hook to translate dynamic content on the fly using Google Translate API.
+ * 
+ * @param {string} text - Raw text from API/database
+ * @returns {string} - Translated text in the parent's chosen language
+ */
+export function useTranslatedContent(text) {
+  const { currentLanguage } = useLanguage();
+  const [translated, setTranslated] = useState(text);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Check if Parent role
+    let isParent = false;
+    try {
+      const savedUser = sessionStorage.getItem('nexus_user');
+      if (savedUser) {
+        const userObj = JSON.parse(savedUser);
+        isParent = userObj?.role === 'PARENT';
+      }
+    } catch (e) {}
+
+    if (!isParent || currentLanguage === 'en' || !text) {
+      setTranslated(text);
+      return;
+    }
+
+    translateText(text, currentLanguage)
+      .then((res) => {
+        if (isMounted) setTranslated(res || text);
+      })
+      .catch(() => {
+        if (isMounted) setTranslated(text);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [text, currentLanguage]);
+
+  return translated;
+}
+
+/**
+ * Component to inline translate dynamic strings in Parent UI.
+ */
+export function TranslatedText({ text, children }) {
+  const content = text || children;
+  const translated = useTranslatedContent(content);
+  return <>{translated}</>;
 }

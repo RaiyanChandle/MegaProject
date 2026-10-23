@@ -41,6 +41,8 @@ export default function Sidebar({ role = 'SUPER_ADMIN', isMobileOpen = false, on
       case 'Marks & Results': return t('marks');
       case 'Assignments': return t('assignments');
       case 'Children': return t('myChildren');
+      case 'Fees': return t('fees');
+      case 'Settings': return t('settings');
       default: return name;
     }
   };
