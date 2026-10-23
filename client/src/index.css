@@ -70,3 +70,40 @@ body {
 .always-visible-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #C98A3E !important;
 }
+
+/* =====================================================================
+   GOOGLE TRANSLATE SEAMLESS EMBED CLEANUP
+   Hides Google banners, frames, and popups for clean native NEXUS UX
+   ===================================================================== */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+.goog-te-banner {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}
+
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+.skiptranslate:not(.goog-te-combo) {
+  display: none !important;
+}
+
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+#google_translate_element {
+  display: none !important;
+}

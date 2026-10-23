@@ -60,15 +60,17 @@ import StudentLeave from './pages/student/StudentLeave';
 import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { NotificationProvider } from './context/NotificationContext';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <SearchProvider>
-          <LanguageProvider>
-            <NotificationProvider>
-              <Routes>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <SearchProvider>
+            <LanguageProvider>
+              <NotificationProvider>
+                <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -181,6 +183,7 @@ function App() {
         </SearchProvider>
       </AuthProvider>
     </Router>
+  </ErrorBoundary>
   );
 }
 
