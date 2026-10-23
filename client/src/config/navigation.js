@@ -1,14 +1,29 @@
-import { LayoutDashboard, Users, BookOpen, FileText, Settings, Calendar, DollarSign, Clock, FileCheck, Layers, Megaphone, CalendarDays } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Users, 
+  BookOpen, 
+  FileText, 
+  Settings, 
+  Calendar, 
+  DollarSign, 
+  Clock, 
+  FileCheck, 
+  Layers, 
+  Megaphone, 
+  CalendarDays,
+  Building2
+} from 'lucide-react';
 
 export const navigationConfig = {
   SUPER_ADMIN: [
     { name: 'Dashboard', href: '/superadmin', icon: LayoutDashboard },
-    { name: 'Departments', href: '/superadmin/departments', icon: Settings },
+    { name: 'Departments', href: '/superadmin/departments', icon: Building2 },
     { name: 'Dept Admins', href: '/superadmin/admins', icon: Users },
     { name: 'Exam Staff', href: '/superadmin/exam-staff', icon: FileCheck },
     { name: 'Academic Terms', href: '/superadmin/academic-terms', icon: Calendar },
     { name: 'Announcements', href: '/superadmin/announcements', icon: Megaphone },
     { name: 'Digital Library', href: '/superadmin/library', icon: BookOpen },
+    { name: 'Settings', href: '/superadmin/settings', icon: Settings },
   ],
   DEPARTMENT_ADMIN: [
     { name: 'Dashboard', href: '/deptadmin', icon: LayoutDashboard },
@@ -20,6 +35,7 @@ export const navigationConfig = {
     { name: 'Announcements', href: '/deptadmin/announcements', icon: Megaphone },
     { name: 'Leave Approvals', href: '/deptadmin/leaves', icon: CalendarDays },
     { name: 'Timetable', href: '/deptadmin/timetable', icon: Calendar },
+    { name: 'Settings', href: '/deptadmin/settings', icon: Settings },
   ],
   TEACHER: [
     { name: 'Dashboard', href: '/teacher', icon: LayoutDashboard },
@@ -32,6 +48,7 @@ export const navigationConfig = {
     { name: 'Leave Requests', href: '/teacher/leaves', icon: CalendarDays },
     { name: 'Digital Library', href: '/teacher/library', icon: BookOpen },
     { name: 'Assignments', href: '/teacher/assignments', icon: FileText },
+    { name: 'Settings', href: '/teacher/settings', icon: Settings },
   ],
   STUDENT: [
     { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
@@ -46,6 +63,7 @@ export const navigationConfig = {
     { name: 'Marks', href: '/student/marks', icon: FileCheck },
     { name: 'Hall Tickets', href: '/student/halltickets', icon: FileText },
     { name: 'Fees', href: '/student/fees', icon: DollarSign },
+    { name: 'Settings', href: '/student/settings', icon: Settings },
   ],
   PARENT: [
     { name: 'Dashboard', href: '/parent', icon: LayoutDashboard },
@@ -55,6 +73,7 @@ export const navigationConfig = {
     { name: 'Assignments', href: '/parent/assignments', icon: FileText },
     { name: 'Children', href: '/parent/children', icon: Users },
     { name: 'Fees', href: '/parent/fees', icon: DollarSign },
+    { name: 'Settings', href: '/parent/settings', icon: Settings },
   ],
   EXAM_STAFF: [
     { name: 'Dashboard', href: '/examstaff', icon: LayoutDashboard },
@@ -62,5 +81,6 @@ export const navigationConfig = {
     { name: 'Hall Tickets', href: '/examstaff/halltickets', icon: FileText },
     { name: 'Results', href: '/examstaff/results', icon: FileCheck },
     { name: 'Announcements', href: '/examstaff/announcements', icon: Megaphone },
+    { name: 'Settings', href: '/examstaff/settings', icon: Settings },
   ],
 };

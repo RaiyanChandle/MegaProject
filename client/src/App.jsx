@@ -8,7 +8,7 @@ import Departments from './pages/superadmin/Departments';
 import DeptAdmins from './pages/superadmin/DeptAdmins';
 import ExamStaff from './pages/superadmin/ExamStaff';
 import AcademicTerms from './pages/superadmin/AcademicTerms';
-import Settings from './pages/superadmin/Settings';
+import Settings from './pages/common/Settings';
 import DeptAdminDashboard from './pages/deptadmin/Dashboard';
 import Classes from './pages/deptadmin/Classes';
 import ClassDetails from './pages/deptadmin/ClassDetails';
