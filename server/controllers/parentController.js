@@ -147,3 +147,65 @@ export const getMyChildren = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// AI Assistant for Parents to query their ward's academic standing via Gemini
+export const parentAiAssistant = async (req, res) => {
+  const parentId = req.user.id;
+  const { studentId, query, language } = req.body;
+
+  if (!query || typeof query !== 'string' || !query.trim()) {
+    return res.status(400).json({ error: 'Query is required.' });
+  }
+
+  try {
+    let targetStudentId = studentId;
+
+    // If studentId not specified, default to first linked child
+    if (!targetStudentId) {
+      const firstLink = await ParentStudent.findOne({ where: { parentId } });
+      if (!firstLink) {
+        return res.status(400).json({ error: 'No student linked to this guardian account.' });
+      }
+      targetStudentId = firstLink.studentId;
+    } else {
+      // Ensure student is linked to this parent
+      const isLinked = await ParentStudent.findOne({
+        where: { parentId, studentId: targetStudentId }
+      });
+      if (!isLinked) {
+        return res.status(403).json({ error: 'Forbidden: You are not authorized to view this student.' });
+      }
+    }
+
+    const { getStudentAcademicDossier, generateGeminiParentResponse } = await import('../services/parentAiService.js');
+    
+    // 1. Gather fresh verified data
+    const dossier = await getStudentAcademicDossier(targetStudentId);
+
+    // 2. Call Gemini
+    const aiResponse = await generateGeminiParentResponse({
+      dossier,
+      query: query.trim(),
+      languageHint: language || 'auto'
+    });
+
+    res.json({
+      success: true,
+      response: aiResponse,
+      student: dossier.student,
+      metrics: {
+        attendancePercentage: dossier.attendance.overallPercentage,
+        isLowAttendance: dossier.attendance.isLowAttendance,
+        pendingAssignments: dossier.assignments.pendingCount,
+        overdueAssignments: dossier.assignments.overdueCount,
+        passedSubjects: dossier.marks.passedSubjects,
+        totalSubjects: dossier.marks.totalEvaluated,
+        pendingFees: dossier.fees.pendingFees
+      }
+    });
+  } catch (error) {
+    console.error('Parent AI Assistant Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to process AI assistant inquiry.' });
+  }
+};
+
