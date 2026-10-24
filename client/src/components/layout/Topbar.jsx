@@ -62,6 +62,7 @@ export default function Topbar({ title = 'Dashboard', onToggleMobileMenu }) {
     setIsDropdownOpen(false);
     const rolePath = user?.role === 'SUPER_ADMIN' ? 'superadmin' : 
                      user?.role === 'DEPARTMENT_ADMIN' ? 'deptadmin' : 
+                     user?.role === 'EXAM_STAFF' ? 'examstaff' : 
                      user?.role?.toLowerCase();
     navigate(`/${rolePath}/settings`);
   };
