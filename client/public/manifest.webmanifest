@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "id": "/?source=pwa",
+  "name": "NEXUS - KITCoEK College Portal",
+  "short_name": "NEXUS KIT",
+  "description": "Kolhapur Institute of Technology's College of Engineering (Autonomous) Academic & ERP Portal",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0B0F17",
+  "theme_color": "#352085",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/kitcoek.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Parent Portal",
+      "short_name": "Parents",
+      "description": "Access attendance, marks and AI counselor for ward",
+      "url": "/parent",
+      "icons": [{ "src": "/icons/pwa-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Student Dashboard",
+      "short_name": "Student",
+      "description": "Access classes, submissions and grades",
+      "url": "/student",
+      "icons": [{ "src": "/icons/pwa-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Faculty Portal",
+      "short_name": "Faculty",
+      "description": "Attendance sessions and exam grading",
+      "url": "/teacher",
+      "icons": [{ "src": "/icons/pwa-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
