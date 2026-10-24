@@ -225,7 +225,7 @@ export const getMe = async (req, res) => {
           { 
             model: ParentStudent, 
             as: 'children', 
-            include: [{ model: Student, as: 'student', attributes: ['id', 'name', 'rollNumber', 'prn'] }] 
+            include: [{ model: Student, as: 'student', attributes: ['id', 'name', 'rollNumber', 'instituteId'] }] 
           }
         ];
         break;

@@ -61,6 +61,7 @@ import { SearchProvider } from './context/SearchContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import PwaInstallPrompt from './components/common/PwaInstallPrompt';
 
 function App() {
   return (
@@ -178,6 +179,7 @@ function App() {
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <PwaInstallPrompt />
             </NotificationProvider>
           </LanguageProvider>
         </SearchProvider>

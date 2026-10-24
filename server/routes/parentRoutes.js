@@ -14,4 +14,7 @@ router.delete('/student/:studentId/parent/:parentId', requireRole('DEPARTMENT_AD
 // Parent gets linked children
 router.get('/my-children', requireRole('PARENT'), parentController.getMyChildren);
 
+// Voice AI Assistant for Parents (Gemini Powered)
+router.post('/ai-assistant', requireRole('PARENT'), parentController.parentAiAssistant);
+
 export default router;

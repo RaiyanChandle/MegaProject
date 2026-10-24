@@ -11,10 +11,13 @@ import {
   GraduationCap, 
   RefreshCw,
   FileCheck,
-  Megaphone
+  Megaphone,
+  Sparkles,
+  Mic
 } from 'lucide-react';
 import { apiClient } from '../../api/client';
 import { Link } from 'react-router-dom';
+import ParentVoiceAssistant from '../../components/parent/ParentVoiceAssistant';
 
 export default function ParentDashboard() {
   const { user } = useAuth();
@@ -29,6 +32,7 @@ export default function ParentDashboard() {
   const [childAssignments, setChildAssignments] = useState([]);
   const [isLoadingChildren, setIsLoadingChildren] = useState(true);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [isVoiceAssistantOpen, setIsVoiceAssistantOpen] = useState(false);
 
   // 1. Fetch linked children
   useEffect(() => {
@@ -189,6 +193,66 @@ export default function ParentDashboard() {
             <BookOpen size={13} />
             <span>{t('assignments')}</span>
           </Link>
+
+          {/* Talk with AI Header Button */}
+          <button
+            type="button"
+            onClick={() => setIsVoiceAssistantOpen(true)}
+            className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-ink-900 via-indigo-950 to-ink-900 text-white hover:from-ink-800 hover:to-indigo-900 text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-sm border border-brass-500/40 hover:scale-[1.02]"
+            title="Ask AI about student by voice"
+          >
+            <Sparkles size={13} className="text-brass-400 animate-pulse" />
+            <span>
+              {currentLanguage === 'mr' ? 'AI सहपालक' :
+               currentLanguage === 'hi' ? 'AI से बात करें' :
+               'Talk with AI'}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Voice AI Assistant Hero Callout Banner */}
+      <div className="bg-gradient-to-r from-ink-900 via-indigo-950 to-ink-900 rounded-2xl p-4 sm:p-5 text-white border border-brass-500/30 shadow-md relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Glow backdrop decorative effect */}
+        <div className="absolute -right-8 -top-8 w-36 h-36 bg-brass-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute left-1/3 -bottom-10 w-44 h-44 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex items-start sm:items-center gap-3.5 z-10 min-w-0">
+          <div className="w-12 h-12 rounded-2xl bg-brass-500/20 border border-brass-400/30 flex items-center justify-center text-brass-400 shrink-0 shadow-inner">
+            <Mic size={24} className="animate-pulse" />
+          </div>
+          <div className="space-y-0.5 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                {currentLanguage === 'mr' ? 'AI सहपालक - बोलून माहिती मिळवा' :
+                 currentLanguage === 'hi' ? 'AI से बात करें - बोलकर जानकारी पाएं' :
+                 'Talk with AI Counselor (Voice Inquiry)'}
+              </h3>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brass-500 text-white font-bold tracking-wider">
+                Google Gemini
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+              {currentLanguage === 'mr' ? 'माइक दाबा आणि आपल्या मातृभाषेत विचारा — हजेरी, परीक्षेचे गुण, बाकी गृहपाठ आणि कॉलेज अपडेट्सची त्वरित माहिती मिळवा.' :
+               currentLanguage === 'hi' ? 'माइक दबाकर अपनी भाषा में पूछें — उपस्थिति, अंक, बकाया असाइनमेंट और कॉलेज अपडेट तुरंत जानें।' :
+               'Ask by voice in Hindi, Marathi, or English to get live attendance records, exam scores, homework, and fee dues for your ward.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 z-10 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsVoiceAssistantOpen(true)}
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-brass-500 hover:bg-brass-400 text-ink-900 font-extrabold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Sparkles size={16} />
+            <span>
+              {currentLanguage === 'mr' ? 'बोलणे सुरू करा' :
+               currentLanguage === 'hi' ? 'बातचीत शुरू करें' :
+               'Talk with AI'}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -412,6 +476,37 @@ export default function ParentDashboard() {
           </div>
         </div>
       )}
+
+      {/* Floating Action Button (FAB) for Quick Voice Query */}
+      <button
+        type="button"
+        onClick={() => setIsVoiceAssistantOpen(true)}
+        className="fixed bottom-6 right-6 z-40 px-4 py-3 rounded-full bg-ink-900 text-white shadow-2xl hover:shadow-brass-500/20 border border-brass-500/50 flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95 group"
+        title="Talk with AI Assistant"
+      >
+        <div className="w-8 h-8 rounded-full bg-brass-500/25 text-brass-400 flex items-center justify-center shrink-0 shadow-inner">
+          <Mic size={17} className="animate-pulse" />
+        </div>
+        <div className="text-left hidden sm:block pr-1">
+          <span className="text-xs font-extrabold block leading-tight text-white group-hover:text-brass-400 transition-colors">
+            {currentLanguage === 'mr' ? 'AI सहपालक' :
+             currentLanguage === 'hi' ? 'AI से बात करें' :
+             'Talk with AI'}
+          </span>
+          <span className="text-[10px] text-slate-300 font-mono leading-tight block">
+            Voice Assistant
+          </span>
+        </div>
+      </button>
+
+      {/* Voice AI Assistant Modal */}
+      <ParentVoiceAssistant
+        isOpen={isVoiceAssistantOpen}
+        onClose={() => setIsVoiceAssistantOpen(false)}
+        childrenList={children}
+        selectedChildId={selectedChildId}
+        onSelectChild={(id) => setSelectedChildId(id)}
+      />
     </div>
   );
 }
